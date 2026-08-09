@@ -1,0 +1,457 @@
+[07-Aug-2026 23:40:34 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[07-Aug-2026 23:40:37 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[07-Aug-2026 23:47:23 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[08-Aug-2026 00:10:16 Asia/Tehran] PHP Parse error:  syntax error, unexpected identifier "mysq", expecting "]" in /home2/belitia/public_html/wh/config/config.php on line 20
+[08-Aug-2026 00:10:19 Asia/Tehran] PHP Parse error:  syntax error, unexpected identifier "mysq", expecting "]" in /home2/belitia/public_html/wh/config/config.php on line 20
+[08-Aug-2026 00:10:20 Asia/Tehran] PHP Parse error:  syntax error, unexpected identifier "mysq", expecting "]" in /home2/belitia/public_html/wh/config/config.php on line 20
+[08-Aug-2026 00:10:20 Asia/Tehran] PHP Parse error:  syntax error, unexpected identifier "mysq", expecting "]" in /home2/belitia/public_html/wh/config/config.php on line 20
+[08-Aug-2026 00:10:21 Asia/Tehran] PHP Parse error:  syntax error, unexpected identifier "mysq", expecting "]" in /home2/belitia/public_html/wh/config/config.php on line 20
+[08-Aug-2026 00:13:24 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[08-Aug-2026 00:13:25 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[08-Aug-2026 00:13:26 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Controllers\BaseController" not found in /home2/belitia/public_html/wh/app/Controllers/MainController.php:23
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Core/Bootstrap.php(259): require()
+#1 [internal function]: WHCM\Core\Bootstrap::autoload()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(82): class_exists()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 23
+[08-Aug-2026 02:17:30 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:17:30 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:17:30 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:24:49 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:24:49 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:24:49 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:24:58 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:24:58 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:25:03 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:25:03 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:26:42 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:26:42 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:26:42 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:26:56 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:26:56 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:28:08 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:28:08 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:28:08 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:28:08 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:28:34 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:28:34 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:28:34 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:31:30 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:31:30 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:31:30 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:31:35 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:31:35 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:31:35 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:35:54 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:35:54 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 02:35:54 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 02:48:16 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:48:16 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:48:16 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:48:16 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:48:36 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:48:36 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:48:36 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:48:36 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:49:46 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:49:46 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:49:46 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:49:46 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:52:45 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:52:45 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 19
+[08-Aug-2026 02:52:45 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 02:52:45 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 152
+[08-Aug-2026 03:58:59 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: user_id in /home2/belitia/public_html/wh/app/Controllers/MainController.php:167
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(167): PDO->prepare()
+#1 [internal function]: WHCM\Controllers\MainController->dashboard()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 167
+[08-Aug-2026 03:59:01 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: user_id in /home2/belitia/public_html/wh/app/Controllers/MainController.php:167
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(167): PDO->prepare()
+#1 [internal function]: WHCM\Controllers\MainController->dashboard()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 167
+[08-Aug-2026 03:59:03 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: user_id in /home2/belitia/public_html/wh/app/Controllers/MainController.php:167
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(167): PDO->prepare()
+#1 [internal function]: WHCM\Controllers\MainController->dashboard()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 167
+[08-Aug-2026 03:59:07 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such table: discounts in /home2/belitia/public_html/wh/app/Controllers/MainController.php:489
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(489): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 489
+[08-Aug-2026 04:12:55 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: user_id in /home2/belitia/public_html/wh/app/Controllers/MainController.php:167
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(167): PDO->prepare()
+#1 [internal function]: WHCM\Controllers\MainController->dashboard()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 167
+[08-Aug-2026 04:12:57 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: user_id in /home2/belitia/public_html/wh/app/Controllers/MainController.php:167
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(167): PDO->prepare()
+#1 [internal function]: WHCM\Controllers\MainController->dashboard()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 167
+[08-Aug-2026 04:13:08 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such table: discounts in /home2/belitia/public_html/wh/app/Controllers/MainController.php:489
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(489): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 489
+[08-Aug-2026 04:25:51 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 04:25:51 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 04:25:51 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 13:57:40 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 13:57:40 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 13:57:40 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 13:57:40 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:00:00 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 14:00:00 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 14:00:00 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 14:08:59 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:08:59 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:08:59 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:08:59 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:09:23 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 14:09:23 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 14:09:23 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 14:19:50 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:19:50 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:19:50 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:19:50 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:20:58 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:20:58 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:20:58 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:20:58 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:21:05 Asia/Tehran] PHP Warning:  Undefined variable $users in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 85
+[08-Aug-2026 14:21:05 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, null given in /home2/belitia/public_html/wh/app/Views/dashboard.php:85
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include()
+#1 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#2 [internal function]: WHCM\Controllers\MainController->dashboard()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#5 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#6 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#7 {main}
+  thrown in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 85
+[08-Aug-2026 14:23:17 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:23:17 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:23:17 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:23:17 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:25:44 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:25:44 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:25:44 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:25:44 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:27:59 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:27:59 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:27:59 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:27:59 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:29:55 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:29:55 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 14:29:55 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 14:29:55 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 20:02:52 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /home2/belitia/public_html/wh/app/Controllers/MainController.php:503
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(503): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 503
+[08-Aug-2026 20:07:59 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: u.phone in /home2/belitia/public_html/wh/app/Controllers/MainController.php:578
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(578): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 578
+[08-Aug-2026 20:08:01 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: u.phone in /home2/belitia/public_html/wh/app/Controllers/MainController.php:578
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(578): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 578
+[08-Aug-2026 20:09:17 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /home2/belitia/public_html/wh/app/Controllers/MainController.php:969
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(969): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 969
+[08-Aug-2026 20:14:52 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: is_active in /home2/belitia/public_html/wh/app/Controllers/MainController.php:49
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(49): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->index()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 49
+[08-Aug-2026 20:17:29 Asia/Tehran] PHP Warning:  Undefined array key "days_left" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 223
+[08-Aug-2026 20:17:29 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 223 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(223): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(301): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 20:21:13 Asia/Tehran] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such column: u.phone in /home2/belitia/public_html/wh/app/Controllers/MainController.php:572
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Controllers/MainController.php(572): PDO->query()
+#1 [internal function]: WHCM\Controllers\MainController->admin()
+#2 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#3 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#4 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#5 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#6 {main}
+  thrown in /home2/belitia/public_html/wh/app/Controllers/MainController.php on line 572
+[08-Aug-2026 20:44:00 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 20:44:00 Asia/Tehran] PHP Warning:  Undefined array key "remaining_posts" in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111
+[08-Aug-2026 20:44:00 Asia/Tehran] PHP Fatal error:  Uncaught TypeError: WHCM\Domain\TextFormat::fa_digits(): Argument #1 ($str) must be of type string, null given, called in /home2/belitia/public_html/wh/app/Views/dashboard.php on line 111 and defined in /home2/belitia/public_html/wh/app/Domain/TextFormat.php:22
+Stack trace:
+#0 /home2/belitia/public_html/wh/app/Views/dashboard.php(111): WHCM\Domain\TextFormat::fa_digits()
+#1 /home2/belitia/public_html/wh/app/Controllers/BaseController.php(69): include('/home2/belitia/...')
+#2 /home2/belitia/public_html/wh/app/Controllers/MainController.php(241): WHCM\Controllers\BaseController->render()
+#3 [internal function]: WHCM\Controllers\MainController->dashboard()
+#4 /home2/belitia/public_html/wh/app/Core/Router.php(85): call_user_func_array()
+#5 /home2/belitia/public_html/wh/app/Core/Router.php(66): WHCM\Core\Router::execute()
+#6 /home2/belitia/public_html/wh/public/index.php(59): WHCM\Core\Router::dispatch()
+#7 /home2/belitia/public_html/wh/index.php(8): require_once('/home2/belitia/...')
+#8 {main}
+  thrown in /home2/belitia/public_html/wh/app/Domain/TextFormat.php on line 22
+[08-Aug-2026 20:44:12 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 20:44:12 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 20
+[08-Aug-2026 20:44:12 Asia/Tehran] PHP Warning:  Undefined variable $user in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 20:44:12 Asia/Tehran] PHP Warning:  Trying to access array offset on null in /home2/belitia/public_html/wh/app/Views/admin.php on line 198
+[08-Aug-2026 21:49:53 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 702
+[08-Aug-2026 21:50:51 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 702
+[08-Aug-2026 21:58:03 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 687
+[08-Aug-2026 21:58:06 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 687
+[08-Aug-2026 21:58:07 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 687
+[08-Aug-2026 21:58:19 Asia/Tehran] PHP Parse error:  syntax error, unexpected token "endif", expecting end of file in /home2/belitia/public_html/wh/app/Views/admin.php on line 702
+[09-Aug-2026 00:41:19 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Modules\ModuleLoader" not found in /home2/belitia/public_html/wh/public/index.php:20
+Stack trace:
+#0 /home2/belitia/public_html/wh/index.php(8): require_once()
+#1 {main}
+  thrown in /home2/belitia/public_html/wh/public/index.php on line 20
+[09-Aug-2026 00:41:39 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Modules\ModuleLoader" not found in /home2/belitia/public_html/wh/public/index.php:20
+Stack trace:
+#0 /home2/belitia/public_html/wh/index.php(8): require_once()
+#1 {main}
+  thrown in /home2/belitia/public_html/wh/public/index.php on line 20
+[09-Aug-2026 00:45:32 Asia/Tehran] PHP Fatal error:  Uncaught Error: Class "WHCM\Modules\ModuleLoader" not found in /home2/belitia/public_html/wh/public/index.php:20
+Stack trace:
+#0 /home2/belitia/public_html/wh/index.php(8): require_once()
+#1 {main}
+  thrown in /home2/belitia/public_html/wh/public/index.php on line 20

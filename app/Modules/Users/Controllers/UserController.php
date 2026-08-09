@@ -1,0 +1,128 @@
+<?php
+namespace WHCM\Modules\Users\Controllers;
+
+use WHCM\Core\Bootstrap;
+use WHCM\Core\Auth;
+use WHCM\Core\Csrf;
+use WHCM\Controllers\BaseController;
+
+/**
+ * کنترلر ماژول Users — مدیریت کاربران
+ * قدم ۲-الف
+ */
+class UserController extends BaseController
+{
+    public function addManual()
+    {
+        $this->checkSuperAdmin();
+        $name = trim($_POST['name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $business_name = trim($_POST['business_name'] ?? '');
+        $business_type = trim($_POST['business_type'] ?? '');
+        if (empty($name) || empty($email) || empty($password)) {
+            $this->setFlashMessage('پر کردن فیلدهای نام، ایمیل و کلمه عبور الزامی است.');
+            $this->redirect('/hnnh');
+        }
+        $res = Auth::register($name, $email, $password, $business_name, $business_type);
+        if ($res['success']) {
+            $this->setFlashMessage('کاربر جدید با موفقیت به صورت دستی ثبت و ایجاد شد! ✔');
+        } else {
+            $this->setFlashMessage($res['message']);
+        }
+        $this->redirect('/hnnh');
+    }
+
+    public function grantSubscription()
+    {
+        $this->checkSuperAdmin();
+        $user_id = (int)($_POST['user_id'] ?? 0);
+        $plan_id = (int)($_POST['plan_id'] ?? 0);
+        if ($user_id <= 0 || $plan_id <= 0) {
+            $this->setFlashMessage('لطفاً کاربر و پلن اشتراک مورد نظر را انتخاب کنید.');
+            $this->redirect('/hnnh');
+        }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("SELECT duration_days FROM plans WHERE id = ? LIMIT 1");
+        $stmt->execute([$plan_id]);
+        $plan = $stmt->fetch();
+        if (!$plan) {
+            $this->setFlashMessage('پلن انتخابی نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $db->beginTransaction();
+        try {
+            $stmt = $db->prepare("UPDATE subscriptions SET status = 'expired' WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $now = date('Y-m-d H:i:s');
+            $duration = (int)$plan['duration_days'];
+            $end_date = $duration > 0 ? date('Y-m-d H:i:s', strtotime("+{$duration} days")) : '2099-12-30 00:00:00';
+            $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
+            $stmt->execute([$user_id, $plan_id, $now, $end_date]);
+            $db->commit();
+            $this->setFlashMessage('اشتراک انتخابی با موفقیت به صورت دستی به کاربر اعطا و فعال گردید! ✔💎');
+        } catch (\Exception $e) {
+            $db->rollBack();
+            $this->setFlashMessage('خطا در اعطای اشتراک: ' . $e->getMessage());
+        }
+        $this->redirect('/hnnh');
+    }
+
+    public function suspend()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $id = (int)($_POST['user_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("UPDATE users SET status = 'suspended' WHERE id = ? AND role != 'superadmin'");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت معلق و مسدود گردید. 🚫');
+        $this->redirect('/hnnh');
+    }
+
+    public function activate()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $id = (int)($_POST['user_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("UPDATE users SET status = 'active' WHERE id = ?");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت مجدداً فعال شد. ✔');
+        $this->redirect('/hnnh');
+    }
+
+    public function delete()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $id = (int)($_POST['user_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("DELETE FROM users WHERE id = ? AND role != 'superadmin'");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت به طور کامل حذف گردید.');
+        $this->redirect('/hnnh');
+    }
+
+    public function wipeTestData()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $db = Bootstrap::getDB();
+        $db->exec("DELETE FROM users WHERE email = 'stranger@belitia.ir' OR email = 'hooman@belitia.ir' OR name = 'هومن راد'");
+        $this->setFlashMessage('تمامی اطلاعات تستی و فرضی قبلی با موفقیت ۱۰۰٪ از دیتابیس پاکسازی شدند! ✔');
+        $this->redirect('/hnnh');
+    }
+}

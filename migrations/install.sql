@@ -1,3 +1,8 @@
+-- ============================================================
+-- اسکیمای کامل دیتابیس پُست‌یار (شامل تمام مایگریشن‌های v2 تا v6)
+-- این فایل برای نصب تازه استفاده می‌شود.
+-- ============================================================
+
 -- جدول کاربران (شامل مدیران کل و مستاجرین)
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -6,23 +11,33 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user', -- 'superadmin' یا 'user'
     status VARCHAR(20) DEFAULT 'active', -- 'active'، 'suspended'، 'inactive'
-    business_name VARCHAR(150) NULL, -- نام کسب و کار
-    business_type VARCHAR(150) NULL, -- نوع کسب و کار
+    business_name VARCHAR(150) NULL,
+    business_type VARCHAR(150) NULL,
+    phone VARCHAR(15) NULL,
+    referral_code VARCHAR(20) NULL,
+    referred_by INTEGER NULL,
+    referral_points DECIMAL(15,2) DEFAULT 0,
+    wallet_balance DECIMAL(15,2) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL;
 
 -- جدول پلن‌های اشتراک (مدیریت توسط مدیر کل)
 CREATE TABLE IF NOT EXISTS plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title VARCHAR(100) NOT NULL,
     price DECIMAL(12,2) DEFAULT 0.00,
-    duration_days INTEGER DEFAULT 30, -- مدت اعتبار به روز
-    max_channels INTEGER DEFAULT 1, -- حداکثر کانال متصل
-    max_posts INTEGER DEFAULT 10, -- حداکثر پست ارسالی در ماه (۰ = نامحدود)
-    features TEXT, -- قالب JSON ویژگی‌ها (مانند طلا، پاسخگو، ووکامرس و غیره)
-    payment_url TEXT, -- لینک پرداخت اختصاصی هر پلن
-    image_url TEXT, -- آدرس تصویر شاخص پلن اشتراکی
-    description TEXT, -- توضیحات اختصاصی هر پلن
+    duration_days INTEGER DEFAULT 30,
+    max_channels INTEGER DEFAULT 1,
+    max_posts INTEGER DEFAULT 10,
+    features TEXT,
+    payment_url TEXT,
+    image_url TEXT,
+    description TEXT,
+    early_renewal_discount INTEGER DEFAULT 0,
+    general_discount INTEGER DEFAULT 0,
+    discount_badge_text VARCHAR(150) NULL,
+    is_featured INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,33 +48,33 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     plan_id INTEGER NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    status VARCHAR(20) DEFAULT 'active', -- 'active'، 'expired'، 'cancelled'
+    status VARCHAR(20) DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
 );
 
--- جدول ثبت جهانی کانال‌ها (ضد تقلب - قفل همیشگی آیدی کانال به اولین ثبت‌کننده)
+-- جدول ثبت جهانی کانال‌ها (ضد تقلب)
 CREATE TABLE IF NOT EXISTS channel_registry (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id VARCHAR(150) NOT NULL, -- مثلاً MyGoldShop@ یا chat_id عددی
-    platform VARCHAR(20) NOT NULL, -- 'telegram' یا 'bale'
-    owner_user_id INTEGER NOT NULL, -- اولین مالک
+    channel_id VARCHAR(150) NOT NULL,
+    platform VARCHAR(20) NOT NULL,
+    owner_user_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(platform, channel_id),
     FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- جدول کانال‌های اختصاصی هر مستاجر (Tenant Channels)
+-- جدول کانال‌های اختصاصی هر مستاجر
 CREATE TABLE IF NOT EXISTS channels (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id INTEGER NOT NULL, -- شناسه‌ کاربری مستاجر
+    tenant_id INTEGER NOT NULL,
     name VARCHAR(150) NOT NULL,
-    platform VARCHAR(20) NOT NULL, -- 'telegram' یا 'bale'
+    platform VARCHAR(20) NOT NULL,
     channel_id VARCHAR(150) NOT NULL,
     token TEXT NOT NULL,
-    link_config TEXT, -- قالب JSON لینک‌های سه‌گانه
-    button_config TEXT, -- قالب JSON دکمه‌های شیشه‌ای تعاملی زیرین
+    link_config TEXT,
+    button_config TEXT,
     webhook_active INTEGER DEFAULT 0,
     webhook_secret VARCHAR(100),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -73,13 +88,13 @@ CREATE TABLE IF NOT EXISTS posts (
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     media_url TEXT,
-    status VARCHAR(20) DEFAULT 'draft', -- 'draft'، 'scheduled'، 'sent'، 'failed'
+    status VARCHAR(20) DEFAULT 'draft',
     scheduled_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- جدول پیگیری پیام‌های ارسال‌شده به کانال‌ها جهت ویرایش زنده
+-- جدول پیگیری پیام‌های ارسال‌شده
 CREATE TABLE IF NOT EXISTS channel_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -91,7 +106,7 @@ CREATE TABLE IF NOT EXISTS channel_messages (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 );
 
--- جدول آمار کلیک و بازدید پست‌ها در هر کانال
+-- جدول آمار کلیک و بازدید پست‌ها
 CREATE TABLE IF NOT EXISTS post_channel_stats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -102,7 +117,7 @@ CREATE TABLE IF NOT EXISTS post_channel_stats (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 );
 
--- جدول لاگ جزئیات کلیک‌ها جهت آمار دقیق جغرافیایی و دستگاهی
+-- جدول لاگ جزئیات کلیک‌ها
 CREATE TABLE IF NOT EXISTS clicks_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     post_id INTEGER NOT NULL,
@@ -114,7 +129,7 @@ CREATE TABLE IF NOT EXISTS clicks_log (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 );
 
--- جدول پیام‌های دریافتی ربات‌ها (صندوق پیام)
+-- جدول صندوق پیام
 CREATE TABLE IF NOT EXISTS inbox (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER NOT NULL,
@@ -127,7 +142,7 @@ CREATE TABLE IF NOT EXISTS inbox (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 );
 
--- جدول پاسخ‌های خودکار تعاملی (Auto-responders)
+-- جدول پاسخ‌های خودکار
 CREATE TABLE IF NOT EXISTS auto_replies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tenant_id INTEGER NOT NULL,
@@ -139,25 +154,25 @@ CREATE TABLE IF NOT EXISTS auto_replies (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 );
 
--- جدول کدهای تخفیف عمومی (مدیریت توسط مدیر کل)
+-- جدول کدهای تخفیف عمومی
 CREATE TABLE IF NOT EXISTS discount_codes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code VARCHAR(50) NOT NULL UNIQUE,
-    type VARCHAR(20) DEFAULT 'percent', -- 'percent' یا 'fixed'
+    type VARCHAR(20) DEFAULT 'percent',
     amount DECIMAL(12,2) NOT NULL,
-    max_uses INTEGER DEFAULT 0, -- ۰ = بی‌نهایت
+    max_uses INTEGER DEFAULT 0,
     used INTEGER DEFAULT 0,
     expires_at DATETIME,
     active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- جدول تخفیف‌های اختصاصی به یک کاربر مشخص
+-- جدول تخفیف‌های اختصاصی
 CREATE TABLE IF NOT EXISTS discount_offers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     plan_id INTEGER NOT NULL,
-    type VARCHAR(20) DEFAULT 'percent', -- 'percent' یا 'fixed'
+    type VARCHAR(20) DEFAULT 'percent',
     amount DECIMAL(12,2) NOT NULL,
     expires_at DATETIME,
     used INTEGER DEFAULT 0,
@@ -166,18 +181,18 @@ CREATE TABLE IF NOT EXISTS discount_offers (
     FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
 );
 
--- جدول پرداخت‌های کاربران (تراکنش‌های کارت به کارت / لینک بلو بانک و تایید دستی)
+-- جدول پرداخت‌ها
 CREATE TABLE IF NOT EXISTS payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     plan_id INTEGER NOT NULL,
     amount DECIMAL(12,2) NOT NULL,
     discount_code_id INTEGER,
-    payment_method VARCHAR(50) DEFAULT 'card_to_card', -- کارت به کارت یا لینک مستقیم
-    receipt_photo TEXT, -- مسیر فایل رسید آپلود شده
-    reference_num VARCHAR(100), -- شماره ارجاع تراکنش
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending'، 'approved'، 'rejected'
-    admin_notes TEXT, -- یادداشت‌های مدیر کل
+    payment_method VARCHAR(50) DEFAULT 'card_to_card',
+    receipt_photo TEXT,
+    reference_num VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'pending',
+    admin_notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     verified_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -185,7 +200,7 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (discount_code_id) REFERENCES discount_codes(id) ON DELETE SET NULL
 );
 
--- جدول وب پوش VAPID برای ارسال اعلان به موبایل/PWA
+-- جدول وب پوش
 CREATE TABLE IF NOT EXISTS push_subscriptions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -196,16 +211,16 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- جدول تنظیمات کلیدی (تنظیمات عمومی پلتفرم و تنظیمات مستاجرین)
+-- جدول تنظیمات
 CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id INTEGER DEFAULT 0, -- ۰ نشان‌دهنده‌ی تنظیمات عمومی کل پلتفرم (سوپر ادمین) است
+    tenant_id INTEGER DEFAULT 0,
     key_name VARCHAR(100) NOT NULL,
     key_value TEXT,
     UNIQUE(tenant_id, key_name)
 );
 
--- جدول محدودیت نرخ درخواست‌ها (جلوگیری از حملات بروت‌فورس)
+-- جدول محدودیت نرخ درخواست‌ها
 CREATE TABLE IF NOT EXISTS rate_limits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ip VARCHAR(50) NOT NULL,
@@ -214,19 +229,162 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     last_attempt INTEGER NOT NULL
 );
 
--- جدول تیکت‌های پشتیبانی داخلی پستیار
+-- جدول تیکت‌های پشتیبانی
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     subject VARCHAR(255) NOT NULL,
     category VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
-    status VARCHAR(50) DEFAULT 'open', -- 'open', 'replied', 'resolved'
+    status VARCHAR(50) DEFAULT 'open',
+    attachment TEXT NULL,
+    assigned_to INTEGER NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ایندکس‌های بهینه‌سازی برای کارایی بالا
+-- ---- فاز ۲: سیستم زیرمجموعه‌گیری و کیف پول ----
+
+-- جدول زیرمجموعه‌ها
+CREATE TABLE IF NOT EXISTS referrals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    referrer_id INTEGER NOT NULL,
+    referred_id INTEGER NOT NULL UNIQUE,
+    referral_code VARCHAR(20) NOT NULL,
+    reward_type VARCHAR(20) DEFAULT 'points',
+    reward_value DECIMAL(10,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    rewarded_at DATETIME NULL,
+    FOREIGN KEY (referrer_id) REFERENCES users(id),
+    FOREIGN KEY (referred_id) REFERENCES users(id)
+);
+
+-- جدول تراکنش‌های کیف پول
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    balance_after DECIMAL(15,2) NOT NULL,
+    description TEXT,
+    reference_type VARCHAR(50),
+    reference_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- جدول تنظیمات سیستم زیرمجموعه‌گیری
+CREATE TABLE IF NOT EXISTS referral_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    setting_key VARCHAR(50) NOT NULL UNIQUE,
+    setting_value TEXT NOT NULL
+);
+
+-- ---- فاز ۳: سیستم پیامک (SMS.ir) ----
+
+-- جدول قالب‌های پیامک
+CREATE TABLE IF NOT EXISTS sms_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_key VARCHAR(50) NOT NULL UNIQUE,
+    template_name VARCHAR(100) NOT NULL,
+    template_id VARCHAR(50) NULL,
+    parameters TEXT DEFAULT '[]',
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول لاگ ارسال پیامک
+CREATE TABLE IF NOT EXISTS sms_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NULL,
+    phone VARCHAR(15) NOT NULL,
+    user_id INTEGER NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    response_code VARCHAR(50) NULL,
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---- فاز ۴: سیستم ایمیل ----
+
+-- جدول قالب‌های ایمیل
+CREATE TABLE IF NOT EXISTS email_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_key VARCHAR(50) NOT NULL UNIQUE,
+    template_name VARCHAR(100) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    body_html TEXT NOT NULL,
+    variables TEXT DEFAULT '[]',
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- جدول لاگ ارسال ایمیل
+CREATE TABLE IF NOT EXISTS email_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NULL,
+    to_address VARCHAR(255) NOT NULL,
+    user_id INTEGER NULL,
+    subject VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'pending',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ---- فاز ۵: ردیابی لینک و بازیابی رمز ----
+
+-- جدول ردیابی لینک
+CREATE TABLE IF NOT EXISTS link_tracking (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    original_url TEXT NOT NULL,
+    post_id INTEGER NOT NULL,
+    channel_id INTEGER NOT NULL,
+    tenant_id INTEGER NOT NULL,
+    total_clicks INTEGER DEFAULT 0,
+    unique_clicks INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id),
+    FOREIGN KEY (channel_id) REFERENCES channels(id)
+);
+
+-- جدول کلیک‌های لینک
+CREATE TABLE IF NOT EXISTS link_clicks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    link_id INTEGER NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    referer TEXT,
+    is_unique INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (link_id) REFERENCES link_tracking(id)
+);
+
+-- جدول کدهای تایید (SMS بازیابی رمز)
+CREATE TABLE IF NOT EXISTS verification_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- ---- تیکت‌ها: ریپلای‌ها ----
+CREATE TABLE IF NOT EXISTS ticket_replies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id INTEGER NOT NULL,
+    user_id INTEGER NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+);
+
+-- ---- ایندکس‌های بهینه‌سازی ----
 CREATE INDEX IF NOT EXISTS idx_channels_tenant_id ON channels(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_channels_platform_cid ON channels(platform, channel_id);
 CREATE INDEX IF NOT EXISTS idx_posts_tenant_id ON posts(tenant_id);
@@ -244,3 +402,12 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referred ON referrals(referred_id);
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sms_log_phone ON sms_log(phone);
+CREATE INDEX IF NOT EXISTS idx_email_log_user ON email_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_link_tracking_code ON link_tracking(code);
+CREATE INDEX IF NOT EXISTS idx_link_clicks_link ON link_clicks(link_id);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_user ON verification_codes(user_id, type);
+CREATE INDEX IF NOT EXISTS idx_ticket_replies_ticket ON ticket_replies(ticket_id);

@@ -1,85 +1,91 @@
--- جدول کاربران (شامل مدیران کل و مستاجرین)
+-- ============================================================
+-- اسکیمای کامل دیتابیس پُست‌یار — MySQL
+-- ============================================================
+
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'user', -- 'superadmin' یا 'user'
-    status VARCHAR(20) DEFAULT 'active', -- 'active'، 'suspended'، 'inactive'
-    business_name VARCHAR(150) NULL, -- نام کسب و کار
-    business_type VARCHAR(150) NULL, -- نوع کسب و کار (گالری طلا، صرافی، ...)
+    role VARCHAR(20) DEFAULT 'user',
+    status VARCHAR(20) DEFAULT 'active',
+    business_name VARCHAR(150) NULL,
+    business_type VARCHAR(150) NULL,
+    phone VARCHAR(15) NULL,
+    referral_code VARCHAR(20) NULL UNIQUE,
+    referred_by INT NULL,
+    referral_points DECIMAL(15,2) DEFAULT 0,
+    wallet_balance DECIMAL(15,2) DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پلن‌های اشتراک (مدیریت توسط مدیر کل)
 CREATE TABLE IF NOT EXISTS plans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     price DECIMAL(12,2) DEFAULT 0.00,
-    duration_days INT DEFAULT 30, -- مدت اعتبار به روز
-    max_channels INT DEFAULT 1, -- حداکثر کانال متصل
-    max_posts INT DEFAULT 10, -- حداکثر پست ارسالی در ماه (۰ = نامحدود)
-    features TEXT, -- قالب JSON ویژگی‌ها
-    payment_url TEXT NULL, -- لینک پرداخت اختصاصی هر پلن
-    image_url TEXT NULL, -- آدرس تصویر شاخص پلن اشتراکی
-    description TEXT NULL, -- توضیحات اختصاصی هر پلن
+    duration_days INT DEFAULT 30,
+    max_channels INT DEFAULT 1,
+    max_posts INT DEFAULT 10,
+    features TEXT,
+    payment_url TEXT NULL,
+    image_url TEXT NULL,
+    description TEXT NULL,
+    early_renewal_discount INT DEFAULT 0,
+    general_discount INT DEFAULT 0,
+    discount_badge_text VARCHAR(150) NULL,
+    is_featured INT DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول اشتراک‌های فعال کاربران
 CREATE TABLE IF NOT EXISTS subscriptions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     plan_id INT NOT NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    status VARCHAR(20) DEFAULT 'active', -- 'active'، 'expired'، 'cancelled'
+    status VARCHAR(20) DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول ثبت جهانی کانال‌ها (ضد تقلب)
 CREATE TABLE IF NOT EXISTS channel_registry (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    channel_id VARCHAR(150) NOT NULL, -- مثلاً MyGoldShop@ یا chat_id عددی
-    platform VARCHAR(20) NOT NULL, -- 'telegram' یا 'bale'
-    owner_user_id INT NOT NULL, -- اولین مالک
+    channel_id VARCHAR(150) NOT NULL,
+    platform VARCHAR(20) NOT NULL,
+    owner_user_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_platform_channel (platform, channel_id),
     FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول کانال‌های اختصاصی هر مستاجر (Tenant Channels)
 CREATE TABLE IF NOT EXISTS channels (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tenant_id INT NOT NULL, -- شناسه‌ کاربری مستاجر
+    tenant_id INT NOT NULL,
     name VARCHAR(150) NOT NULL,
-    platform VARCHAR(20) NOT NULL, -- 'telegram' یا 'bale'
+    platform VARCHAR(20) NOT NULL,
     channel_id VARCHAR(150) NOT NULL,
     token TEXT NOT NULL,
-    link_config TEXT, -- قالب JSON لینک‌های سه‌گانه
-    button_config TEXT, -- قالب JSON دکمه‌های تعاملی زیرین
+    link_config TEXT,
+    button_config TEXT,
     webhook_active INT DEFAULT 0,
     webhook_secret VARCHAR(100),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پست‌های تولیدشده توسط کاربران
 CREATE TABLE IF NOT EXISTS posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tenant_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     media_url TEXT,
-    status VARCHAR(20) DEFAULT 'draft', -- 'draft'، 'scheduled'، 'sent'، 'failed'
+    status VARCHAR(20) DEFAULT 'draft',
     scheduled_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پیگیری پیام‌های ارسال‌شده به کانال‌ها جهت ویرایش زنده
 CREATE TABLE IF NOT EXISTS channel_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT NOT NULL,
@@ -91,7 +97,6 @@ CREATE TABLE IF NOT EXISTS channel_messages (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول آمار کلیک و بازدید پست‌ها در هر کانال
 CREATE TABLE IF NOT EXISTS post_channel_stats (
     id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT NOT NULL,
@@ -103,7 +108,6 @@ CREATE TABLE IF NOT EXISTS post_channel_stats (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول لاگ جزئیات کلیک‌ها
 CREATE TABLE IF NOT EXISTS clicks_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT NOT NULL,
@@ -115,7 +119,6 @@ CREATE TABLE IF NOT EXISTS clicks_log (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پیام‌های دریافتی ربات‌ها (صندوق پیام)
 CREATE TABLE IF NOT EXISTS inbox (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tenant_id INT NOT NULL,
@@ -128,7 +131,6 @@ CREATE TABLE IF NOT EXISTS inbox (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پاسخ‌های خودکار تعاملی (Auto-responders)
 CREATE TABLE IF NOT EXISTS auto_replies (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tenant_id INT NOT NULL,
@@ -140,25 +142,23 @@ CREATE TABLE IF NOT EXISTS auto_replies (
     FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول کدهای تخفیف عمومی
 CREATE TABLE IF NOT EXISTS discount_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,
-    type VARCHAR(20) DEFAULT 'percent', -- 'percent' یا 'fixed'
+    type VARCHAR(20) DEFAULT 'percent',
     amount DECIMAL(12,2) NOT NULL,
-    max_uses INT DEFAULT 0, -- ۰ = بی‌نهایت
+    max_uses INT DEFAULT 0,
     used INT DEFAULT 0,
     expires_at DATETIME,
     active INT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول تخفیف‌های اختصاصی به یک کاربر مشخص
 CREATE TABLE IF NOT EXISTS discount_offers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     plan_id INT NOT NULL,
-    type VARCHAR(20) DEFAULT 'percent', -- 'percent' یا 'fixed'
+    type VARCHAR(20) DEFAULT 'percent',
     amount DECIMAL(12,2) NOT NULL,
     expires_at DATETIME,
     used INT DEFAULT 0,
@@ -167,18 +167,17 @@ CREATE TABLE IF NOT EXISTS discount_offers (
     FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول پرداخت‌های کاربران (تایید دستی رسید)
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     plan_id INT NOT NULL,
     amount DECIMAL(12,2) NOT NULL,
     discount_code_id INT NULL,
-    payment_method VARCHAR(50) DEFAULT 'card_to_card', -- کارت به کارت یا لینک مستقیم
-    receipt_photo TEXT, -- مسیر فایل رسید آپلود شده
-    reference_num VARCHAR(100), -- شماره ارجاع تراکنش
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending'، 'approved'، 'rejected'
-    admin_notes TEXT, -- یادداشت‌های مدیر کل
+    payment_method VARCHAR(50) DEFAULT 'card_to_card',
+    receipt_photo TEXT,
+    reference_num VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'pending',
+    admin_notes TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     verified_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -186,7 +185,6 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (discount_code_id) REFERENCES discount_codes(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول وب پوش VAPID برای ارسال اعلان
 CREATE TABLE IF NOT EXISTS push_subscriptions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -197,16 +195,14 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول تنظیمات کلیدی
 CREATE TABLE IF NOT EXISTS settings (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tenant_id INT DEFAULT 0, -- ۰ نشان‌دهنده‌ی تنظیمات عمومی کل پلتفرم (سوپر ادمین) است
+    tenant_id INT DEFAULT 0,
     key_name VARCHAR(100) NOT NULL,
     key_value TEXT,
     UNIQUE KEY uq_tenant_key (tenant_id, key_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول محدودیت نرخ درخواست‌ها (جلوگیری از حملات بروت‌فورس)
 CREATE TABLE IF NOT EXISTS rate_limits (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ip VARCHAR(50) NOT NULL,
@@ -215,19 +211,133 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     last_attempt INT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- جدول تیکت‌های پشتیبانی داخلی پستیار
 CREATE TABLE IF NOT EXISTS tickets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     subject VARCHAR(255) NOT NULL,
     category VARCHAR(100) NOT NULL,
     message TEXT NOT NULL,
-    status VARCHAR(50) DEFAULT 'open', -- 'open', 'replied', 'resolved'
+    status VARCHAR(50) DEFAULT 'open',
+    attachment TEXT NULL,
+    assigned_to INT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ایندکس‌های بهینه‌سازی برای کارایی بالا
+CREATE TABLE IF NOT EXISTS referrals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    referrer_id INT NOT NULL,
+    referred_id INT NOT NULL UNIQUE,
+    referral_code VARCHAR(20) NOT NULL,
+    reward_type VARCHAR(20) DEFAULT 'points',
+    reward_value DECIMAL(10,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    rewarded_at DATETIME NULL,
+    FOREIGN KEY (referrer_id) REFERENCES users(id),
+    FOREIGN KEY (referred_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    balance_after DECIMAL(15,2) NOT NULL,
+    description TEXT,
+    reference_type VARCHAR(50),
+    reference_id INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS referral_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(50) NOT NULL UNIQUE,
+    setting_value TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sms_templates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_key VARCHAR(50) NOT NULL UNIQUE,
+    template_name VARCHAR(100) NOT NULL,
+    template_id VARCHAR(50) NULL,
+    parameters TEXT DEFAULT '[]',
+    is_active INT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sms_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    template_id INT NULL,
+    phone VARCHAR(15) NOT NULL,
+    user_id INT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    response_code VARCHAR(50) NULL,
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS email_templates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_key VARCHAR(50) NOT NULL UNIQUE,
+    template_name VARCHAR(100) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    body_html TEXT NOT NULL,
+    variables TEXT DEFAULT '[]',
+    is_active INT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS email_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    template_id INT NULL,
+    to_address VARCHAR(255) NOT NULL,
+    user_id INT NULL,
+    subject VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'pending',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS link_tracking (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    original_url TEXT NOT NULL,
+    post_id INT NOT NULL,
+    channel_id INT NOT NULL,
+    tenant_id INT NOT NULL,
+    total_clicks INT DEFAULT 0,
+    unique_clicks INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id),
+    FOREIGN KEY (channel_id) REFERENCES channels(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS link_clicks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    link_id INT NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    referer TEXT,
+    is_unique INT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (link_id) REFERENCES link_tracking(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS verification_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ایندکس‌ها
 CREATE INDEX idx_channels_tenant_id ON channels(tenant_id);
 CREATE INDEX idx_channels_platform_cid ON channels(platform, channel_id);
 CREATE INDEX idx_posts_tenant_id ON posts(tenant_id);
@@ -245,3 +355,11 @@ CREATE INDEX idx_payments_status ON payments(status);
 CREATE INDEX idx_payments_user ON payments(user_id);
 CREATE INDEX idx_tickets_status ON tickets(status);
 CREATE INDEX idx_tickets_user ON tickets(user_id);
+CREATE INDEX idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX idx_referrals_referred ON referrals(referred_id);
+CREATE INDEX idx_wallet_transactions_user ON wallet_transactions(user_id);
+CREATE INDEX idx_sms_log_phone ON sms_log(phone);
+CREATE INDEX idx_email_log_user ON email_log(user_id);
+CREATE INDEX idx_link_tracking_code ON link_tracking(code);
+CREATE INDEX idx_link_clicks_link ON link_clicks(link_id);
+CREATE INDEX idx_verification_codes_user ON verification_codes(user_id, type);

@@ -303,7 +303,7 @@ class Bootstrap {
                 // اضافه کردن ستون‌های جدید به جدول users
                 $user_cols = [
                     'phone VARCHAR(15) NULL',
-                    'referral_code VARCHAR(20) NULL UNIQUE',
+                    'referral_code VARCHAR(20) NULL',
                     'referred_by INTEGER NULL',
                     'referral_points DECIMAL(15,2) DEFAULT 0',
                     'wallet_balance DECIMAL(15,2) DEFAULT 0',
@@ -311,6 +311,8 @@ class Bootstrap {
                 foreach ($user_cols as $col) {
                     try { $db->exec("ALTER TABLE users ADD COLUMN $col"); } catch (\Exception $e) {}
                 }
+                // ایندکس یکتا برای referral_code (جداسازی شده برای سازگاری با SQLite قدیمی‌تر)
+                try { $db->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL"); } catch (\Exception $e) {}
 
                 // ایجاد جدول referrals
                 try {

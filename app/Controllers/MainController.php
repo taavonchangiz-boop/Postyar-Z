@@ -140,14 +140,16 @@ class MainController extends BaseController {
 
         $res = Auth::register($name, $email, $password, $business_name, $business_type);
         if ($res['success']) {
-            // ---- پردازش سیستم زیرمجموعه‌گیری ----
-            $referralCode = trim($_GET['ref'] ?? '');
+            // ---- پردازش‌های پس از ثبت‌نام (غیرمسدودکننده) ----
             if (!empty($res['user_id'])) {
-                Referral::processRegistration((int)$res['user_id'], !empty($referralCode) ? $referralCode : null);
-                // تولید کد معرف برای کاربر جدید
-                Referral::getUserReferralCode((int)$res['user_id']);
+                try {
+                    $referralCode = trim($_GET['ref'] ?? '');
+                    Referral::processRegistration((int)$res['user_id'], !empty($referralCode) ? $referralCode : null);
+                    Referral::getUserReferralCode((int)$res['user_id']);
+                } catch (\Exception $e) {
+                    error_log('[Postyar] Post-register referral error: ' . $e->getMessage());
+                }
 
-                // ---- ارسال ایمیل خوش‌آمدگویی ----
                 try {
                     EmailTemplate::sendByEvent('welcome', (int)$res['user_id']);
                 } catch (\Exception $e) {
@@ -155,7 +157,7 @@ class MainController extends BaseController {
                 }
             }
 
-            // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق (اگر قبلاً لاگین نشده باشد)
+            // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق
             if (!Auth::check()) {
                 Auth::login($email, $password);
             }

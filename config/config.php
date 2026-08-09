@@ -13,7 +13,7 @@ return [
     // تنظیمات عمومی
     'app' => [
         'name' => 'پُست‌یار',
-        'url' => 'http://localhost:8000', // خالی یا localhost = تشخیص خودکار آدرس از سرور
+        'url' => '', // خالی = تشخیص خودکار آدرس از سرور
         'locale' => 'fa',
         'timezone' => 'Asia/Tehran',
         'env' => 'production', // 'production' یا 'development'

@@ -46,3 +46,18 @@ function autoDismissAlert(elementId, timeoutMs) {
         }
     }, timeoutMs);
 }
+
+/* تبدیل خودکار تمام اعداد لاتین نمایشی به فارسی */
+function autoConvertToPersianDigits() {
+    var walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    var node;
+    var skips = ['SCRIPT', 'STYLE', 'INPUT', 'TEXTAREA', 'CODE', 'PRE'];
+    while (node = walk.nextNode()) {
+        if (skips.indexOf(node.parentElement.tagName) !== -1) continue;
+        if (skips.indexOf(node.parentNode.tagName) !== -1) continue;
+        var original = node.nodeValue;
+        if (/[0-9]/.test(original)) {
+            node.nodeValue = toFaDigits(original);
+        }
+    }
+}

@@ -168,7 +168,7 @@ class Auth {
         }
 
         $db = Bootstrap::getDB();
-        $stmt = $db->prepare("SELECT id, name, email, role, status, created_at FROM users WHERE id = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, name, email, role, status, birthday, created_at FROM users WHERE id = ? LIMIT 1");
         $stmt->execute([$user_id]);
         $user = $stmt->fetch();
 

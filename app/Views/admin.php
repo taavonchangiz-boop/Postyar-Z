@@ -156,38 +156,76 @@
             <!-- ========================================== -->
             <div id="section-dashboard" class="tab-content active">
                 <div class="grid-stats">
+                    <a href="javascript:switchSection('users')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.05) 100%); color:#818cf8;">👥</div>
+                            <div class="card-stat-info">
+                                <span class="title">کل کاربران ثبت‌نام شده</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($total_users); ?> نفر</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('users')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%); color:#10b981;">✅</div>
+                            <div class="card-stat-info">
+                                <span class="title">کاربران فعال</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($active_users_count); ?> نفر</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('payments')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.05) 100%); color:#f59e0b;">💳</div>
+                            <div class="card-stat-info">
+                                <span class="title">پرداخت‌های در انتظار تایید</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($pending_p_count); ?> فیش</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('tickets')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.05) 100%); color:#ef4444;">🎟</div>
+                            <div class="card-stat-info">
+                                <span class="title">تیکت‌های باز منتظر پاسخ</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($open_t_count); ?> تیکت</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('plans')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(168,85,247,0.05) 100%); color:#a855f7;">💎</div>
+                            <div class="card-stat-info">
+                                <span class="title">پلن‌های اشتراک</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits(count($plans)); ?> پلن</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('subscriptions')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(34,211,238,0.2) 0%, rgba(34,211,238,0.05) 100%); color:#22d3ee;">🎯</div>
+                            <div class="card-stat-info">
+                                <span class="title">اشتراک‌های فعال</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($active_subs_count); ?> اشتراک</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="javascript:switchSection('sms-settings')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0.05) 100%); color:#38bdf8;">📱</div>
+                            <div class="card-stat-info">
+                                <span class="title">کل کانال‌های ثبت شده</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($total_channels); ?> کانال</span>
+                            </div>
+                        </div>
+                    </a>
                     <div class="card-stat">
-                        <div class="card-stat-icon">👥</div>
+                        <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 100%); color:#fbbf24;">💰</div>
                         <div class="card-stat-info">
-                            <span class="title">تعداد کل مستاجرین پُست‌یار</span>
-                            <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits(count($users)); ?> کاربر فعال</span>
+                            <span class="title">کل درآمد تایید شده</span>
+                            <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_num($total_revenue); ?> تومان</span>
                         </div>
                     </div>
-                    <div class="card-stat">
-                        <div class="card-stat-icon">💳</div>
-                        <div class="card-stat-info">
-                            <span class="title">تراکنش‌های در انتظار تأیید</span>
-                            <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($pending_p_count); ?> فیش پرداخت</span>
-                        </div>
-                    </div>
-                    <div class="card-stat">
-                        <div class="card-stat-icon">🎫</div>
-                        <div class="card-stat-info">
-                            <span class="title">تیکت‌های باز منتظر پاسخ</span>
-                            <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_digits($open_t_count); ?> تیکت فعال</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2>⚙ مدیریت یکپارچه پورتال پُست‌یار</h2>
-                    <p style="color:var(--text-muted); line-height:2; font-size:0.92rem; margin-bottom:1.5rem;">
-                        به پنل مدیریت یکپارچه پُست‌یار خوش آمدید. از این بخش شما کنترل کاملی بر روی کاربران، اشتراک‌های تهیه شده، ایجاد پلن‌های جدید اشتراک، پاسخ به تیکت‌ها و تنظیمات حساب کارت بانکی دارید. 
-                    </p>
-                    <?php $has_test_data=false; try{ $chk=\WHCM\Core\Bootstrap::getDB()->query("SELECT COUNT(*) FROM users WHERE email IN ('stranger@belitia.ir','hooman@belitia.ir') OR name='هومن راد'"); $has_test_data=(int)$chk->fetchColumn()>0; }catch(\Exception $e){ $has_test_data=false; } ?>
-                    <?php if($has_test_data): ?>
-                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/wipe-test-data'); ?>" method="POST" style="margin:0;"><?php echo $csrf_field; ?><button type="submit" class="btn btn-danger" onclick="return confirm('آیا از پاکسازی تمام اطلاعات فرضی آزمایشی مطمئن هستید؟');">🗑 حذف و پاکسازی کامل اطلاعات آزمایشی و فرضی تستی</button></form>
-                    <?php else: ?><div style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:1rem;text-align:center;color:#10b981;font-weight:700;">✔ اطلاعات آزمایشی قبلاً پاکسازی شده است</div><?php endif; ?>
                 </div>
             </div>
 
@@ -789,7 +827,7 @@
                             </div>
                             <div class="form-group">
                                 <label>تاریخ انقضا (انتخاب از تقویم شمسی - خالی برای بدون انقضا):</label>
-                                <input type="text" name="expires_at" id="admin-discount-date" data-jdp placeholder="مثلاً: 1405/01/15 23:59" class="dir-ltr" onfocus="if(typeof jalaliDatepicker !== 'undefined'){try{jalaliDatepicker.show(this);}catch(e){}}" onclick="if(typeof jalaliDatepicker !== 'undefined'){try{jalaliDatepicker.show(this);}catch(e){}}" readonly style="cursor: pointer; background: var(--bg-dark); color: #34d399; font-weight: bold; border: 2px solid #34d399;">
+                                <input type="text" name="expires_at" id="admin-discount-date" data-jdp placeholder="مثلاً: 1405/01/15 23:59" class="dir-ltr" readonly style="cursor: pointer; background: var(--bg-dark); color: #34d399; font-weight: bold; border: 2px solid #34d399;">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success" style="width: 100%;">ثبت و فعال‌سازی کد تخفیف 🎁</button>
@@ -1119,17 +1157,6 @@
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
-    <script>
-        if (typeof jalaliDatepicker !== 'undefined') {
-            try {
-                jalaliDatepicker.startWatch({
-                    minDate: "today",
-                    showTodayBtn: true,
-                    showEmptyBtn: false
-                });
-            } catch (e) {}
-        }
-    </script>
     <!-- مدال هدیه دادن اشتراک به کاربر -->
     <div id="giftModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
         <div class="card" style="width:100%; max-width:480px; margin:0; position:relative; background:#1e293b; border:1px solid #334155;">

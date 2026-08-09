@@ -784,6 +784,10 @@ class Bootstrap {
                     }
                 } catch (\Exception $e) {}
             },
+
+            'v7_birthday_column' => function($db) {
+                try { $db->exec("ALTER TABLE users ADD COLUMN birthday VARCHAR(10) NULL"); } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

@@ -47,6 +47,13 @@ android-webview-app/*.aab
 android-webview-app/*.keystore
 android-webview-app/*.jks
 
+# ---- فایل‌های دیباگ و تست ----
+public/check.php
+public/debug.php
+tests/
+cron.php
+README.md
+
 # ---- متفرقه ----
 deprecated.php
 node_modules/

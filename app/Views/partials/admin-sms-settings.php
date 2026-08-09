@@ -187,7 +187,7 @@ $recipient_count = count($active_users);
             <label for="bulk_template_id">قالب پیامک:</label>
             <select name="bulk_template_id" id="bulk_template_id" style="width:100%; padding:0.6rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
                 <option value="0">-- انتخاب قالب --</option>
-                <?php foreach ($templates as $t): if ($t['is_active'] && $t['template_id'] > 0): ?>
+                <?php foreach ($templates as $t): if ($t['is_active']): ?>
                     <option value="<?php echo $t['template_id']; ?>"><?php echo htmlspecialchars($t['template_name']) . ' (' . $tf::fa_digits($t['template_id']) . ')'; ?></option>
                 <?php endif; endforeach; ?>
             </select>
@@ -233,7 +233,8 @@ $recipient_count = count($active_users);
     </p>
 
     <!-- فیلتر -->
-    <form method="GET" action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/sms-settings'); ?>" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; align-items:flex-end; flex-wrap:wrap;">
+    <form method="GET" action="/index.php" style="display:flex; gap:0.75rem; margin-bottom:1.25rem; align-items:flex-end; flex-wrap:wrap;">
+        <input type="hidden" name="route" value="/hnnh/sms-settings">
         <div class="form-group" style="flex:1; min-width:150px; margin-bottom:0;">
             <label for="log_filter_status">وضعیت:</label>
             <select name="filter_status" id="log_filter_status" style="width:100%; padding:0.5rem; border-radius:8px; background:#1e293b; color:white; border:1px solid #334155;">
@@ -248,7 +249,7 @@ $recipient_count = count($active_users);
             <input type="text" name="filter_phone" id="log_filter_phone" value="<?php echo htmlspecialchars($filter_phone ?? ''); ?>" placeholder="0912..." style="width:100%; padding:0.5rem; border-radius:8px; background:#1e293b; color:white; border:1px solid #334155; direction:ltr; text-align:left;">
         </div>
         <button type="submit" class="btn btn-outline" style="background:rgba(99,102,241,0.15); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); padding:0.5rem 1rem; border-radius:8px; white-space:nowrap; margin-bottom:0;">🔍 فیلتر</button>
-        <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/sms-settings'); ?>" class="btn btn-outline" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border); padding:0.5rem 1rem; border-radius:8px; white-space:nowrap; text-decoration:none; margin-bottom:0;">پاک کردن فیلتر</a>
+        <a href="/index.php?route=%2Fhnnh%2Fsms-settings" class="btn btn-outline" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border); padding:0.5rem 1rem; border-radius:8px; white-space:nowrap; text-decoration:none; margin-bottom:0;">پاک کردن فیلتر</a>
     </form>
 
     <?php if (empty($logs)): ?>
@@ -310,7 +311,7 @@ function editSmsTemplate(tpl) {
     document.getElementById('sms_tpl_db_id').value = tpl.id || 0;
     document.getElementById('sms_event_key').value = tpl.event_key || '';
     document.getElementById('sms_tpl_name').value = tpl.template_name || '';
-    document.getElementById('sms_tpl_id').value = tpl.template_id || '';
+    document.getElementById('sms_tpl_id').value = (tpl.template_id !== null && tpl.template_id !== undefined) ? tpl.template_id : '';
     document.getElementById('sms_tpl_params').value = tpl.parameters || '[]';
 
     var activeCheckbox = document.querySelector('#sms-template-form input[name="is_active"]');

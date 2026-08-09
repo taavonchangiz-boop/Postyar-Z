@@ -238,9 +238,9 @@
                             <circle cx="470" cy="60" r="5" fill="#10b981" />
 
                             <!-- محور افقی روزهای شمسی دوره -->
-                            <text x="50" y="190" fill="var(--text-muted)" font-size="8" font-family="Vazirmatn">شروع دوره</text>
+                            <text x="50" y="190" fill="var(--text-muted)" font-size="8" font-family="Vazirmatn">امروز شمسی</text>
                             <text x="250" y="190" fill="var(--text-muted)" font-size="8" font-family="Vazirmatn">میانه دوره</text>
-                            <text x="440" y="190" fill="var(--text-muted)" font-size="8" font-family="Vazirmatn">امروز شمسی</text>
+                            <text x="440" y="190" fill="var(--text-muted)" font-size="8" font-family="Vazirmatn">شروع دوره</text>
                         </svg>
                     </div>
                 </div>
@@ -322,7 +322,7 @@
                             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem;">
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">انتخاب روز از تقویم:</label>
-                                    <input type="text" name="sched_date" id="sched_date_input" data-jdp placeholder="کلیک کنید تا تقویم باز شود..." style="background-color: rgba(15,23,42,0.6); color: #34d399; font-weight: bold; border: 2px solid #34d399; border-radius:12px; padding:0.85rem 1rem; cursor: pointer;" readonly onfocus="if(typeof jalaliDatepicker !== 'undefined'){try{jalaliDatepicker.show(this);}catch(e){}}" onclick="if(typeof jalaliDatepicker !== 'undefined'){try{jalaliDatepicker.show(this);}catch(e){}}">
+                                    <input type="text" name="sched_date" id="sched_date_input" data-jdp placeholder="کلیک کنید تا تقویم باز شود..." style="background-color: rgba(15,23,42,0.6); color: #34d399; font-weight: bold; border: 2px solid #34d399; border-radius:12px; padding:0.85rem 1rem; cursor: pointer;" readonly>
                                 </div>
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">ساعت:</label>
@@ -829,29 +829,7 @@
                     <?php endif; ?>
                 </div>
 
-                <!-- راه‌های ارتباطی فرعی -->
-                <?php
-                    // لود راه‌های ارتباطی فرعی پشتیبانی ادمین
-                    $stmt = \WHCM\Core\Bootstrap::getDB()->prepare("SELECT key_name, key_value FROM settings WHERE tenant_id = 0 AND key_name IN ('support_telegram_url', 'support_bale_url', 'support_email')");
-                    $stmt->execute();
-                    $global_support_rows = $stmt->fetchAll();
-                    $global_support = [];
-                    foreach ($global_support_rows as $row) {
-                        $global_support[$row['key_name']] = $row['key_value'];
-                    }
-                    $saved_tele_url = $global_support['support_telegram_url'] ?? 'https://t.me/asovin_support';
-                    $saved_bale_url = $global_support['support_bale_url'] ?? 'https://ble.ir/asovin_support';
-                    $saved_support_email = $global_support['support_email'] ?? 'support@asovin.ir';
-                ?>
-                <div class="card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%);">
-                    <h2>📞 سایر روش‌های تماس با پشتیبانی</h2>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem; line-height:1.7;">علاوه بر ارسال تیکت، می‌توانید از راه‌های مستقیم زیر نیز با کارشناسان پُست‌یار در ارتباط باشید:</p>
-                    <div style="display:flex; flex-wrap:wrap; gap:1rem;">
-                        <a href="<?php echo htmlspecialchars($saved_tele_url); ?>" target="_blank" class="btn btn-outline" style="border-color:#38bdf8; color:#38bdf8;">🌐 پشتیبانی تلگرام</a>
-                        <a href="<?php echo htmlspecialchars($saved_bale_url); ?>" target="_blank" class="btn btn-outline" style="border-color:#fbbf24; color:#fbbf24;">💬 پشتیبانی بله</a>
-                        <a href="mailto:<?php echo htmlspecialchars($saved_support_email); ?>" class="btn btn-outline">✉ ایمیل مستقیم</a>
-                    </div>
-                </div>
+                <!-- راه‌های ارتباطی فرعی — حذف شد (تکراریِ بالای صفحه) -->
             </div>
 
             <!-- ========================================== -->
@@ -906,6 +884,11 @@
                                 <label for="u-email">نشانی ایمیل:</label>
                                 <input type="email" name="email" id="u-email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile_birthday">تاریخ تولد (شمسی):</label>
+                            <input type="text" name="birthday" id="profile_birthday" data-jdp placeholder="مثلاً: ۱۳۷۰/۰۶/۱۵" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>" style="background-color:rgba(15,23,42,0.6); color:#34d399; font-weight:bold; border:2px solid #34d399; border-radius:12px; padding:0.85rem 1rem; cursor:pointer;" readonly>
+                            <small style="color:var(--text-muted); font-size:0.78rem; margin-top:0.25rem; display:block;">تاریخ تولد به صورت شمسی (مثلاً: ۱۳۷۰/۰۶/۱۵)</small>
                         </div>
                         <button type="submit" class="btn btn-success">بروزرسانی مشخصات کاربری ✔</button>
                     </form>
@@ -1289,7 +1272,7 @@
 
                             <!-- دکمه اتصال مستقیم به برنامه همراه بانک بلو جهت کارت به کارت فوری -->
                             <div style="margin-bottom: 1.5rem; text-align: center;">
-                                <a href="blubank://transfer" target="_blank" class="btn btn-outline" style="width: 100%; border-color: #3b82f6; color: #3b82f6; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
+                                <a href="blubank://transfer" target="_blank" class="btn btn-outline btn-bluebank" style="width: 100%; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
                                     🚀 کارت به کارت فوری در اپلیکیشن بلو بانک (مخصوص گوشی)
                                 </a>
                             </div>

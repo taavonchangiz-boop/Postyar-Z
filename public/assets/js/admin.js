@@ -361,3 +361,38 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 })();
+
+/* ===== راه‌اندازی تقویم شمسی جلالی (ادمین) ===== */
+(function(){
+    function initJalaliDatepicker(){
+        if(typeof jalaliDatepicker === 'undefined') return false;
+        try{
+            var inputs = document.querySelectorAll('[data-jdp]');
+            for(var i=0;i<inputs.length;i++){
+                jalaliDatepicker.startWatch({
+                    minDate: inputs[i].getAttribute('data-jdp-min'),
+                    maxDate: inputs[i].getAttribute('data-jdp-max'),
+                    separatorChar: '/',
+                    openOnFocus: true
+                });
+                inputs[i].removeAttribute('data-jdp');
+            }
+            return true;
+        }catch(e){ return false; }
+    }
+    if(!initJalaliDatepicker()){
+        var timer = setInterval(function(){
+            if(initJalaliDatepicker()) clearInterval(timer);
+        }, 200);
+        setTimeout(function(){ clearInterval(timer); }, 10000);
+    }
+})();
+
+/* ===== تبدیل خودکار اعداد به فارسی ===== */
+if(typeof autoConvertToPersianDigits === 'function'){
+    if(document.readyState === 'complete' || document.readyState === 'interactive'){
+        autoConvertToPersianDigits();
+    } else {
+        window.addEventListener('DOMContentLoaded', function(){ autoConvertToPersianDigits(); });
+    }
+}

@@ -1,5 +1,3 @@
-@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
-        
         :root {
             --primary: #f59e0b; /* رنگ طلایی مقتدرانه ویژه مدیریت ارشد */
             --primary-hover: #d97706;
@@ -589,4 +587,14 @@ header {
     #admin-bell-popup {
         top: 60px !important;
     }
+}
+
+/* ===== حذف فلش‌های بالا/پایین از اینپوت‌های عددی ===== */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
 }

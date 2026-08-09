@@ -299,6 +299,8 @@ class MainController extends BaseController {
             $this->redirect('/dashboard');
         }
 
+        $birthday = trim($_POST['birthday'] ?? '');
+
         $db = Bootstrap::getDB();
         // چک کردن یکتایی ایمیل برای دیگران
         $stmt = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
@@ -308,8 +310,8 @@ class MainController extends BaseController {
             $this->redirect('/dashboard');
         }
 
-        $stmt = $db->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
-        $stmt->execute([$name, $email, $tenant_id]);
+        $stmt = $db->prepare("UPDATE users SET name = ?, email = ?, birthday = ? WHERE id = ?");
+        $stmt->execute([$name, $email, $birthday, $tenant_id]);
 
         $this->setFlashMessage('پروفایل کاربری شما با موفقیت بروزرسانی شد. ✔');
         $this->redirect('/dashboard');
@@ -540,10 +542,16 @@ class MainController extends BaseController {
             SELECT u.id, u.name, u.email, u.role, u.status, u.created_at,
                    u.business_name, u.business_type,
                    COALESCE(c.cnt, 0) as channel_count,
+                   COALESCE(pc.cnt, 0) as posts_count,
+                   COALESCE(tc.cnt, 0) as tickets_count,
+                   COALESCE(ps.total_spent, 0) as total_spent,
                    s.end_date,
                    p.title as plan_title
             FROM users u
             LEFT JOIN (SELECT tenant_id, COUNT(*) as cnt FROM channels GROUP BY tenant_id) c ON c.tenant_id = u.id
+            LEFT JOIN (SELECT tenant_id, COUNT(*) as cnt FROM posts GROUP BY tenant_id) pc ON pc.tenant_id = u.id
+            LEFT JOIN (SELECT user_id, COUNT(*) as cnt FROM tickets GROUP BY user_id) tc ON tc.user_id = u.id
+            LEFT JOIN (SELECT user_id, COALESCE(SUM(amount), 0) as total_spent FROM payments WHERE status = 'approved' GROUP BY user_id) ps ON ps.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
                  AND s.id = (SELECT MAX(id) FROM subscriptions WHERE user_id = u.id AND status = 'active')
             LEFT JOIN plans p ON s.plan_id = p.id
@@ -612,6 +620,14 @@ class MainController extends BaseController {
         $total_tickets = (int)$stmt_count_tickets->fetchColumn();
         $total_ticket_pages = max(1, (int)ceil($total_tickets / $per_page));
 
+        // ۶. آمار داشبورد مدیریت
+        $active_users_count = (int)$db->query("SELECT COUNT(*) FROM users WHERE id != " . (int)$admin_id . " AND status = 'active'")->fetchColumn();
+        $pending_p_count = (int)$db->query("SELECT COUNT(*) FROM payments WHERE status = 'pending'")->fetchColumn();
+        $open_t_count = (int)$db->query("SELECT COUNT(*) FROM tickets WHERE status = 'open'")->fetchColumn();
+        $active_subs_count = (int)$db->query("SELECT COUNT(*) FROM subscriptions WHERE status = 'active'")->fetchColumn();
+        $total_channels = (int)$db->query("SELECT COUNT(*) FROM channels")->fetchColumn();
+        $total_revenue = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status = 'approved'")->fetchColumn();
+
         $this->render('admin', [
             'title' => 'پنل مدیریت ارشد کل',
             'users' => $users,
@@ -622,7 +638,14 @@ class MainController extends BaseController {
             'edit_plan' => $edit_plan,
             'tickets' => $tickets,
             'csrf_field' => Csrf::field(),
-            'message' => $this->getFlashMessage()
+            'message' => $this->getFlashMessage(),
+            'total_users' => $total_users,
+            'active_users_count' => $active_users_count,
+            'pending_p_count' => $pending_p_count,
+            'open_t_count' => $open_t_count,
+            'active_subs_count' => $active_subs_count,
+            'total_channels' => $total_channels,
+            'total_revenue' => $total_revenue
         ]);
     }
 

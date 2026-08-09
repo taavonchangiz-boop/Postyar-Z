@@ -1,5 +1,3 @@
-@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
-        
         :root {
             --primary: #6366f1;
             --primary-hover: #4f46e5;
@@ -931,4 +929,14 @@ header {
     #user-bell-popup {
         top: 60px !important;
     }
+}
+
+/* ===== حذف فلش‌های بالا/پایین از اینپوت‌های عددی ===== */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
 }

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
     referred_by INTEGER NULL,
     referral_points DECIMAL(15,2) DEFAULT 0,
     wallet_balance DECIMAL(15,2) DEFAULT 0,
+    birthday VARCHAR(10) NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL;

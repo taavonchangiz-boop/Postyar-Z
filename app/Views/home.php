@@ -26,7 +26,7 @@
     <link rel="apple-touch-startup-image" href="<?php echo $baseUrl; ?>/assets/icons/icon-512x512.png">
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>')</script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/home.css">
     <script>
         tailwind.config = {

@@ -1,7 +1,64 @@
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Thin.woff2') format('woff2');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Vazirmatn';
+    src: url('../fonts/Vazirmatn-Black.woff2') format('woff2');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* ==========================================================================
    فایل استایل‌های مشترک و قابل استفاده مجدد (Shared/Reusable CSS)
    سامانه مدیریت کانال‌ها و انتشار خودکار پُست‌یار
-   شامل: تقویم شمسی جلالی، انیمیشن‌ها، کلاس‌های عمومی
+   شامل: فونت Vazirmatn، تقویم شمسی جلالی، انیمیشن‌ها، کلاس‌های عمومی
    ========================================================================== */
 
 /* ===== ظاهر شیک و مدرن هماهنگ با تم تاریک پُست‌یار برای تقویم شمسی ===== */
@@ -52,4 +109,21 @@
     border-radius: 8px !important;
     font-weight: bold !important;
     padding: 0.35rem 1rem !important;
+}
+
+/* ===== حذف فلش‌های بالا/پایین از اینپوت‌های عددی ===== */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ===== دکمه بانک آبی ===== */
+.btn-bluebank {
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
 }

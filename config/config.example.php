@@ -8,6 +8,11 @@
  *      ۲. مقادیر واقعی را جایگزین placeholderها کنید.
  *      ۳. هرگز config.php را در گیت‌هاب آپلود نکنید.
  *
+ *      نکته مهم درباره app.url:
+ *      اگر آدرس سایت را http://localhost:8000 بگذارید یا خالی بگذارید،
+ *      سیستم به‌صورت خودکار آدرس واقعی را از سرور تشخیص می‌دهد.
+ *      این بهترین گزینه برای هاست‌های اشتراکی (مثل LiteSpeed) است.
+ *
  * @package WHCM_SaaS
  */
 
@@ -15,7 +20,7 @@ return [
     // تنظیمات عمومی
     'app' => [
         'name' => 'پُست‌یار',
-        'url' => 'https://your-domain.com/wh',          // ← آدرس واقعی پروژه
+        'url' => 'http://localhost:8000',              // خالی یا localhost = تشخیص خودکار آدرس واقعی از سرور
         'locale' => 'fa',
         'timezone' => 'Asia/Tehran',
         'env' => 'production',                              // 'production' یا 'development'
@@ -67,5 +72,13 @@ return [
         'encryption' => 'tls',
         'from_address' => 'noreply@your-domain.ir',          // ← ایمیل فرستنده
         'from_name' => 'پُست‌یار',
+    ],
+
+    // تنظیمات پیامک (SMS.ir)
+    'sms' => [
+        'enabled' => false,                                  // ← true برای فعال‌سازی
+        'provider' => 'smsir',
+        'api_key' => '',                                     // ← کلید API sms.ir
+        'line_number' => '',                                 // ← شماره خط ارسال
     ],
 ];

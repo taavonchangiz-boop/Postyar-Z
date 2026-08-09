@@ -5,10 +5,6 @@
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
-<IfModule mod_authz_core>
-    Options -Indexes
-</IfModule>
-
 <FilesMatch "^\\.">
     <IfModule !mod_authz_core>
         Order allow,deny

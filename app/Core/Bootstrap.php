@@ -555,6 +555,7 @@ class Bootstrap {
                         "<title>$title</title>" .
                         "<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->" .
                         "</head><body style='margin:0; padding:0; background:#f1f5f9;'>";
+                };
 
                 $emailFooter = function($app_name) {
                     return "<tr><td style='background:#f1f5f9; padding:20px 30px; text-align:center;'>" .

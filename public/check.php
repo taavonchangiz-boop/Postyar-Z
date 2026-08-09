@@ -1,85 +1,113 @@
 <?php
 /**
- * فایل تشخیصی — بعد از رفع مشکل حتماً پاک کنید!
+ * فایل تشخیصی پیشرفته — خطای ۵۰۰ را پیدا می‌کند
+ * ⚠️ بعد از رفع مشکل حتماً پاک کنید!
  */
 header('Content-Type: text/html; charset=utf-8');
-echo '<h2>🔍 تشخیص سرور پُست‌یار</h2>';
-echo '<div style="font-family:Tahoma,Arial;direction:rtl;line-height:2.2;">';
+echo '<div style="font-family:Tahoma,Arial;direction:rtl;line-height:2.2;font-size:14px;">';
+echo '<h2>🔍 تشخیص پیشرفته پُست‌یار</h2>';
 
-// 1. PHP Version
-echo '<b>نسخه PHP:</b> ' . PHP_VERSION . '<br>';
-if (version_compare(PHP_VERSION, '7.4', '<')) {
-    echo '<span style="color:red;font-weight:bold;">❌ نسخه PHP باید 7.4 یا بالاتر باشد!</span><br>';
-} else {
-    echo '<span style="color:green;">✅ نسخه PHP مناسب است</span><br>';
-}
-
-// 2. Extensions
-$exts = ['pdo', 'pdo_sqlite', 'pdo_mysql', 'json', 'mbstring', 'curl', 'openssl', 'session'];
-echo '<br><b>افزونه‌های مورد نیاز:</b><br>';
-foreach ($exts as $ext) {
-    $loaded = extension_loaded($ext);
-    echo ($loaded ? '✅' : '❌') . ' ' . $ext . '<br>';
-}
-
-// 3. mod_rewrite
-echo '<br><b>mod_rewrite:</b> ';
-echo (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules())) ? '✅ فعال' : '⚠️ بررسی نشد (طبیعی در بعضی هاست‌ها)';
-echo '<br>';
-
-// 4. Config file
+// مرحله ۱: لود کانفیگ
 $config_path = __DIR__ . '/../config/config.php';
-echo '<br><b>فایل تنظیمات:</b> ';
-if (file_exists($config_path)) {
-    echo '<span style="color:green;">✅ وجود دارد</span><br>';
-    $config = @include $config_path;
-    if (is_array($config)) {
-        echo '&nbsp;&nbsp;✅ فرمت صحیح است<br>';
-        if (!empty($config['app']['url'])) {
-            echo '&nbsp;&nbsp;آدرس: ' . htmlspecialchars($config['app']['url']) . '<br>';
-        }
-        if (!empty($config['database']['driver'])) {
-            echo '&nbsp;&nbsp;درایور دیتابیس: ' . htmlspecialchars($config['database']['driver']) . '<br>';
-        }
-    } else {
-        echo '&nbsp;&nbsp;<span style="color:red;">❌ فایل config.php خطای سینتکس دارد!</span><br>';
+echo '<b>۱. بارگذاری config.php:</b> ';
+try {
+    $config = require $config_path;
+    if (!is_array($config)) throw new Exception('خروجی آرایه نیست');
+    echo '<span style="color:green;">✅ موفق</span><br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . '</span></div>';
+    return;
+}
+
+// مرحله ۲: تست سشن
+echo '<b>۲. شروع سشن:</b> ';
+try {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
-} else {
-    echo '<span style="color:red;">❌ فایل config.php وجود ندارد!</span><br>';
+    echo '<span style="color:green;">✅ موفق</span><br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . '</span></div>';
+    return;
 }
 
-// 5. Writable directories
-$dirs = [
-    __DIR__ . '/../storage' => 'storage/',
-    __DIR__ . '/../storage/db' => 'storage/db/',
-    __DIR__ . '/../storage/logs' => 'storage/logs/',
-    __DIR__ . '/assets/uploads' => 'public/assets/uploads/',
-];
-echo '<br><b>دایرکتوری‌ها (قابلیت نوشتن):</b><br>';
-foreach ($dirs as $path => $label) {
-    $exists = is_dir($path);
-    $writable = is_writable($path);
-    $icon = (!$exists) ? '❌' : (!$writable) ? '⚠️' : '✅';
-    echo $icon . ' ' . $label;
-    if (!$exists) echo ' (وجود ندارد)';
-    if ($exists && !$writable) echo ' (بدون اجازه نوشتن)';
-    echo '<br>';
+// مرحله ۳: اتصال به دیتابیس
+echo '<b>۳. اتصال به SQLite:</b> ';
+try {
+    $db_path = $config['database']['sqlite']['path'];
+    $db = new PDO("sqlite:" . $db_path);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo '<span style="color:green;">✅ موفق</span><br>';
+    echo '&nbsp;&nbsp;فایل: ' . htmlspecialchars($db_path) . '<br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . '</span></div>';
+    return;
 }
 
-// 6. Try loading Bootstrap
-echo '<br><b>تست بارگذاری Bootstrap:</b> ';
-$bootstrap_path = __DIR__ . '/../app/Core/Bootstrap.php';
-if (file_exists($bootstrap_path)) {
-    echo '<span style="color:green;">✅ فایل وجود دارد</span><br>';
-} else {
-    echo '<span style="color:red;">❌ فایل Bootstrap.php پیدا نشد!</span><br>';
+// مرحله ۴: تست ساخت جدول
+echo '<b>۴. تست کوئری:</b> ';
+try {
+    $stmt = $db->query("SELECT name FROM sqlite_master WHERE type='table' LIMIT 5");
+    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    echo '<span style="color:green;">✅ موفق</span> — ' . count($tables) . ' جدول: ' . implode(', ', $tables) . '<br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . '</span></div>';
+    return;
 }
 
-// 7. Apache version
-echo '<br><b>سرور:</b> ' . $_SERVER['SERVER_SOFTWARE'] . '<br>';
+// مرحله ۵: لود Bootstrap
+echo '<b>۵. بارگذاری Bootstrap.php:</b> ';
+try {
+    require_once __DIR__ . '/../app/Core/Bootstrap.php';
+    echo '<span style="color:green;">✅ موفق</span><br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . ' — فایل: ' . $e->getFile() . ':' . $e->getLine() . '</span></div>';
+    return;
+}
 
-// 8. Document root
-echo '<b>Document Root:</b> ' . $_SERVER['DOCUMENT_ROOT'] . '<br>';
+// مرحله ۶: اجرای Bootstrap::run()
+echo '<b>۶. اجرای Bootstrap::run():</b> ';
+try {
+    \WHCM\Core\Bootstrap::run();
+    echo '<span style="color:green;">✅ موفق</span><br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;font-weight:bold;">❌ خطا در Bootstrap!</span><br>';
+    echo '<pre style="background:#fef2f2;padding:15px;border-radius:8px;border:1px solid #fca5a5;direction:ltr;text-align:left;font-size:13px;overflow-x:auto;">';
+    echo 'Type: ' . get_class($e) . "\n";
+    echo 'Message: ' . $e->getMessage() . "\n";
+    echo 'File: ' . $e->getFile() . ':' . $e->getLine() . "\n";
+    echo "\n--- Stack Trace ---\n";
+    foreach ($e->getTrace() as $i => $t) {
+        echo "#$i " . ($t['class'] ?? '') . ($t['type'] ?? '') . $t['function'] . '() in ' . ($t['file'] ?? 'unknown') . ':' . ($t['line'] ?? '?') . "\n";
+    }
+    echo '</pre></div>';
+    return;
+}
 
-echo '<br><span style="color:red;font-weight:bold;">⚠️ بعد از رفع مشکل، حتماً فایل check.php را پاک کنید!</span>';
+// مرحله ۷: لود ModuleLoader
+echo '<b>۷. بارگذاری ماژول‌ها:</b> ';
+try {
+    $loader = __DIR__ . '/../app/Modules/ModuleLoader.php';
+    if (file_exists($loader)) {
+        require_once $loader;
+        \WHCM\Modules\ModuleLoader::load();
+        echo '<span style="color:green;">✅ موفق</span><br>';
+    } else {
+        echo '<span style="color:orange;">⚠️ فایل وجود ندارد (طبیعی)</span><br>';
+    }
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . ' — ' . $e->getFile() . ':' . $e->getLine() . '</span><br>';
+}
+
+// مرحله ۸: تست روتر
+echo '<b>۸. تست روتر:</b> ';
+try {
+    \WHCM\Core\Router::get('/test-check', function() { echo 'OK'; });
+    echo '<span style="color:green;">✅ موفق</span><br>';
+} catch (\Throwable $e) {
+    echo '<span style="color:red;">❌ خطا: ' . htmlspecialchars($e->getMessage()) . '</span><br>';
+}
+
+echo '<br><span style="color:green;font-size:18px;font-weight:bold;">✅ تمام مراحل با موفقیت انجام شد!</span>';
+echo '<br><br><span style="color:red;font-weight:bold;">⚠️ حالا فایل check.php را پاک کنید و سایت را رفرش کنید.</span>';
 echo '</div>';

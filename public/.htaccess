@@ -5,12 +5,10 @@
     RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
 
-# امنیت: جلوگیری از لیست دایرکتوری
 <IfModule mod_authz_core>
     Options -Indexes
 </IfModule>
 
-# امنیت: جلوگیری از دسترسی به فایل‌های حساس (سازگار Apache 2.2 و 2.4)
 <FilesMatch "^\\.">
     <IfModule !mod_authz_core>
         Order allow,deny

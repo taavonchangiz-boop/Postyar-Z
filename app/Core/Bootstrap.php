@@ -841,19 +841,21 @@ class Bootstrap {
     public static function getAssetsUrl() {
         $app_url = rtrim(self::getConfig('app.url'), '/');
         $script = $_SERVER['SCRIPT_NAME'] ?? '';
+        $filename = $_SERVER['SCRIPT_FILENAME'] ?? '';
 
+        // حالت ۱: فایل‌ها در ساب‌دایرکتوری public/ هستند و مستقیم اجرا می‌شوند
         if (strpos($script, '/public/') !== false) {
             return $app_url . '/public/assets';
-        } else {
-            $filename = $_SERVER['SCRIPT_FILENAME'] ?? '';
-            $name = $_SERVER['SCRIPT_NAME'] ?? '';
+        }
 
-            if (strpos($filename, 'public/index.php') !== false && strpos($name, '/public/') === false) {
-                return $app_url . '/assets';
-            }
-
+        // حالت ۲: index.php از روت public/ را include کرده
+        if (strpos($filename, 'public/index.php') !== false && strpos($script, '/public/') === false) {
             return $app_url . '/public/assets';
         }
+
+        // حالت ۳: public/ خودش document root است (مثل cPanel — فایل‌ها در public_html/ قرار دارند)
+        // SCRIPT_NAME = /index.php و فایل‌ها کنار index.php هستند
+        return $app_url . '/assets';
     }
 
     /**

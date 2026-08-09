@@ -13,7 +13,7 @@ const STATIC_ASSETS = [
   '/assets/js/utils.js',
   '/assets/js/pwa-install.js',
   '/assets/images/logo.webp',
-  '/assets/images/hero_rocket.webp',
+  '/assets/images/logo-full.webp',
   '/assets/icons/icon-192x192.png',
   '/assets/icons/icon-512x512.png',
   '/assets/icons/apple-touch-icon.png',

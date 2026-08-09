@@ -142,6 +142,11 @@
                         </div>
                     <?php endif; ?>
 
+                    <!-- لوگوی کامل پُست‌یار در هیرو -->
+                    <div class="reveal mb-6">
+                        <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-full.webp" alt="پُست‌یار" class="h-14 sm:h-16 md:h-20 lg:h-24 w-auto object-contain mx-auto lg:mx-0" style="filter: brightness(1.05);">
+                    </div>
+
                     <div class="reveal inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-8">
                         <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
                         <span class="text-xs sm:text-sm font-semibold text-neutral-200">نسخه ۲.۰ منتشر شد — مجهز به ربات نرخ لحظه‌ای طلا و سکه 🚀</span>
@@ -614,6 +619,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="reveal relative card-glow glass-light rounded-3xl p-10 md:p-16 text-center border-gradient overflow-hidden">
                 <div class="relative z-10 max-w-2xl mx-auto">
+                    <!-- لوگوی کامل پُست‌یار در CTA -->
+                    <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-full.webp" alt="پُست‌یار" class="h-12 sm:h-14 md:h-16 w-auto object-contain mx-auto mb-8" style="filter: brightness(1.05);">
                     <h2 class="text-3xl sm:text-4xl md:text-5xl font-black !leading-[1.65] tracking-tight mb-8 text-white" style="line-height: 1.65 !important;">
                         <span class="block mb-2">آماده‌اید مدیریت کانال‌های خود را</span>
                         <span class="bg-gradient-to-l from-indigo-400 to-pink-400 bg-clip-text text-transparent block">هوشمند کنید؟</span>
@@ -635,8 +642,8 @@
             <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-10 border-b border-neutral-800/60">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-0.5">
-                        <div class="w-full h-full bg-[#0a0a0a] rounded-[10px] flex items-center justify-center">
-                            <span class="text-indigo-400 font-bold text-sm">P</span>
+                        <div class="w-full h-full bg-[#0a0a0a] rounded-[10px] flex items-center justify-center overflow-hidden">
+                            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo.webp" alt="پُست‌یار" class="w-full h-full object-contain">
                         </div>
                     </div>
                     <span class="text-xl font-black text-white">پُست‌یار</span>

@@ -32,12 +32,14 @@
 </FilesMatch>
 
 # جلوگیری از لیست دایرکتوری
-Options -Indexes
+<IfModule mod_authz_core>
+    Options -Indexes
+</IfModule>
 
 # امنیت: غیرفعال‌سازی سرقت Server Signature
 ServerSignature Off
 
-# امنیت: جلوگیری از کلیک‌جکینگ در سطح سرور (لایه اضافی)
+# امنیت: هدرهای امنیتی
 <IfModule mod_headers.c>
     Header set X-Frame-Options "SAMEORIGIN"
     Header set X-Content-Type-Options "nosniff"

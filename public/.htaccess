@@ -6,14 +6,27 @@
 </IfModule>
 
 # امنیت: جلوگیری از لیست دایرکتوری
-Options -Indexes
+<IfModule mod_authz_core>
+    Options -Indexes
+</IfModule>
 
-# امنیت: جلوگیری از دسترسی به فایل‌های حساس
-<FilesMatch "^\.">
-    Require all denied
+# امنیت: جلوگیری از دسترسی به فایل‌های حساس (سازگار Apache 2.2 و 2.4)
+<FilesMatch "^\\.">
+    <IfModule !mod_authz_core>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core>
+        Require all denied
+    </IfModule>
 </FilesMatch>
 
-# امنیت: جلوگیری از دسترسی به فایل‌های حساس از طریق وب
-<FilesMatch "(config|cron|debug|error_log|composer\.(json|lock)|package\.json|\.env)">
-    Require all denied
+<FilesMatch "(config|cron|debug|error_log|composer\\.(json|lock)|package\\.json|\\.env)">
+    <IfModule !mod_authz_core>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core>
+        Require all denied
+    </IfModule>
 </FilesMatch>

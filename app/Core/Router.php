@@ -59,6 +59,16 @@ class Router {
                 }
             }
 
+            // جستجوی مسیرهای پویا با پارامتر الفبایی-عددی (مثلا /go/ABC123)
+            foreach (self::$routes[$method] ?? [] as $route_path => $route_handler) {
+                $pattern = preg_replace('/\{[a-zA-Z0-9_]+\}/', '([a-zA-Z0-9]+)', $route_path);
+                $pattern = '#^' . $pattern . '$#';
+                if (preg_match($pattern, $uri, $matches)) {
+                    array_shift($matches);
+                    return self::execute($route_handler, $matches);
+                }
+            }
+
             // ۴۰۴ - پیدا نشد
             self::abort(404, 'صفحه مورد نظر یافت نشد.');
         }

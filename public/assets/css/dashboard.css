@@ -906,3 +906,29 @@
         .hidden {
             display: none !important;
         }
+
+/* ===== Bell Popup & Header Overrides (extracted from inline <style>) ===== */
+header {
+    overflow: visible !important;
+}
+#user-bell-popup {
+    max-height: 75vh;
+    overflow: auto;
+}
+@media (max-width: 768px) {
+    #user-bell-popup {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90vw !important;
+        max-width: 340px !important;
+        max-height: 80vh;
+        overflow: auto;
+    }
+}
+@media (min-width: 769px) {
+    #user-bell-popup {
+        top: 60px !important;
+    }
+}

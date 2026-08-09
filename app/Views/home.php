@@ -27,25 +27,6 @@
             }
         }
     </script>
-    <style>
-        .plans-container {
-            display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
-            gap: 1.75rem !important;
-            align-items: stretch !important;
-            width: 100% !important;
-        }
-        @media (max-width: 1100px) and (min-width: 768px) {
-            .plans-container {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-        }
-        @media (max-width: 767px) {
-            .plans-container {
-                grid-template-columns: 1fr !important;
-            }
-        }
-    </style>
 </head>
 <body class="bg-[#0a0a0a] text-neutral-100 antialiased selection:bg-indigo-500 selection:text-white">
 
@@ -724,64 +705,7 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT LOGIC ===== -->
-    <script>
-        function openModal(id) {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
-            const target = document.getElementById('modal-' + id);
-            if (target) target.classList.add('show');
-        }
-        function closeModal(id) {
-            const target = document.getElementById('modal-' + id);
-            if (target) target.classList.remove('show');
-        }
-        window.addEventListener('click', function(e) {
-            document.querySelectorAll('.modal').forEach(m => {
-                if (e.target === m) m.classList.remove('show');
-            });
-        });
-
-        const mobileToggle = document.getElementById('mobileToggle');
-        const mobileClose = document.getElementById('mobileClose');
-        const mobileMenu = document.getElementById('mobileMenu');
-
-        if (mobileToggle && mobileMenu) {
-            mobileToggle.addEventListener('click', () => {
-                mobileMenu.classList.remove('hidden');
-                mobileMenu.classList.add('flex');
-            });
-        }
-        if (mobileClose && mobileMenu) {
-            mobileClose.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('flex');
-            });
-        }
-        function closeMobileMenu() {
-            if (mobileMenu) {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('flex');
-            }
-        }
-
-        document.querySelectorAll('.faq-toggle').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const item = btn.parentElement;
-                const isOpen = item.classList.contains('open');
-                document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
-                if (!isOpen) item.classList.add('open');
-            });
-        });
-
-        const revealElements = document.querySelectorAll('.reveal');
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                }
-            });
-        }, { threshold: 0.1 });
-        revealElements.forEach(el => revealObserver.observe(el));
-    </script>
+    <!-- ===== JAVASCRIPT ===== -->
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/home.js"></script>
 </body>
 </html>

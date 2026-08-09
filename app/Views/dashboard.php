@@ -5,79 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title); ?> | پُست‌یار</title>
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.css" onerror="this.remove()">
-    <style id="modern-jdp-style">
-        /* ظاهر شیک و مدرن هماهنگ با تم تاریک پُست‌یار برای تقویم شمسی */
-        .jdp-container {
-            background: #0f172a !important;
-            border: 1px solid #6366f1 !important;
-            border-radius: 16px !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(99, 102, 241, 0.25) !important;
-            color: #e2e8f0 !important;
-            font-family: 'Vazirmatn', sans-serif !important;
-            z-index: 9999999 !important;
-            padding: 0.85rem !important;
-        }
-        .jdp-container .jdp-icon-plus, .jdp-container .jdp-icon-minus {
-            fill: #818cf8 !important;
-        }
-        .jdp-container .jdp-months, .jdp-container .jdp-years {
-            background: #1e293b !important;
-            border-radius: 10px !important;
-        }
-        .jdp-container .jdp-day, .jdp-container .jdp-month, .jdp-container .jdp-year {
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-        }
-        .jdp-container .jdp-day:hover, .jdp-container .jdp-month:hover, .jdp-container .jdp-year:hover {
-            background: rgba(99, 102, 241, 0.25) !important;
-            color: #ffffff !important;
-            transform: scale(1.05) !important;
-        }
-        .jdp-container .jdp-day.selected, .jdp-container .jdp-month.selected, .jdp-container .jdp-year.selected {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5) !important;
-        }
-        .jdp-container .jdp-day.today {
-            border: 2px solid #34d399 !important;
-            color: #34d399 !important;
-        }
-        .jdp-container .jdp-footer {
-            background: #1e293b !important;
-            border-top: 1px dashed #334155 !important;
-            border-radius: 0 0 12px 12px !important;
-        }
-        .jdp-container .jdp-btn-today {
-            background: #10b981 !important;
-            color: white !important;
-            border-radius: 8px !important;
-            font-weight: bold !important;
-            padding: 0.35rem 1rem !important;
-        }
-    
-        @media (max-width: 768px){
-            #user-bell-popup{
-                position:fixed !important;
-                left:50% !important;
-                top:50% !important;
-                transform:translate(-50%,-50%) !important;
-                width:90vw !important;
-                max-width:340px !important;
-                max-height:80vh;
-                overflow:auto;
-            }
-        }
-
-    
-        header{overflow:visible !important;}
-        #user-bell-popup{max-height:75vh; overflow:auto;}
-        @media (min-width: 769px){
-            #user-bell-popup{top:60px !important;}
-        }
-
-    </style>
 </head>
 <body>
 
@@ -148,6 +77,8 @@
             <div class="menu-item" data-target="settings" onclick="switchSection('settings')">👤 تنظیمات حساب</div>
             <div class="menu-item" data-target="advanced-settings" onclick="switchSection('advanced-settings')">⚙ تنظیمات پیشرفته</div>
             <div class="menu-item" data-target="upgrade" onclick="switchSection('upgrade')">💎 خرید اشتراک</div>
+            <div class="menu-item" data-target="referral" onclick="switchSection('referral')">🎯 زیرمجموعه‌گیری</div>
+            <div class="menu-item" data-target="wallet" onclick="switchSection('wallet')">💰 کیف پول</div>
             <?php if (\WHCM\Core\Auth::isSuperAdmin()): ?>
                 <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh'); ?>" class="menu-item" style="color: var(--warning); border: 1px dashed var(--warning); margin-top: 1rem;">👑 پنل مدیریت کل</a>
             <?php endif; ?>
@@ -185,16 +116,7 @@
                     <span><?php echo htmlspecialchars($message); ?></span>
                     <button type="button" onclick="document.getElementById('system-alert-toast').style.display='none'" style="background:none; border:none; color:white; font-size:1.1rem; cursor:pointer; margin-right:1rem;">✖</button>
                 </div>
-                <script>
-                    setTimeout(function() {
-                        var toast = document.getElementById('system-alert-toast');
-                        if (toast) {
-                            toast.style.opacity = '0';
-                            toast.style.transition = 'opacity 0.6s ease';
-                            setTimeout(function() { toast.style.display = 'none'; }, 600);
-                        }
-                    }, 5000);
-                </script>
+                <script>autoDismissAlert('system-alert-toast', 5000);</script>
             <?php endif; ?>
 
             <!-- نمایش اعلان همگانی مدیر کل پلتفرم در صورت وجود -->
@@ -1167,6 +1089,34 @@
             <!-- ========================================== -->
             <!-- ۸. بخش خرید اشتراک -->
             <!-- ========================================== -->
+            <div id="section-referral" class="tab-content">
+                <?php
+                    $ref_settings = \WHCM\Domain\Referral::getAdminSettings();
+                    $enabled = ($ref_settings['enabled'] ?? '0') === '1';
+                    $referralCode = \WHCM\Domain\Referral::getUserReferralCode($user['id']);
+                    $referralLink = \WHCM\Domain\Referral::getReferralLink($user['id']);
+                    $stats = \WHCM\Domain\Referral::getReferralStats($user['id']);
+                    $history = \WHCM\Domain\Referral::getReferralHistory($user['id']);
+                    $db = \WHCM\Core\Bootstrap::getDB();
+                    $stmt_p = $db->prepare("SELECT referral_points FROM users WHERE id = ? LIMIT 1");
+                    $stmt_p->execute([$user['id']]);
+                    $points = (float)($stmt_p->fetch()['referral_points'] ?? 0);
+                ?>
+                <?php include __DIR__ . '/partials/referral-section.php'; ?>
+            </div>
+
+            <div id="section-wallet" class="tab-content">
+                <?php
+                    $db = \WHCM\Core\Bootstrap::getDB();
+                    $stmt_p = $db->prepare("SELECT referral_points FROM users WHERE id = ? LIMIT 1");
+                    $stmt_p->execute([$user['id']]);
+                    $points = (float)($stmt_p->fetch()['referral_points'] ?? 0);
+                    $balance = \WHCM\Domain\Wallet::getBalance($user['id']);
+                    $transactions = \WHCM\Domain\Wallet::getTransactions($user['id'], 50, 0);
+                ?>
+                <?php include __DIR__ . '/partials/wallet-section.php'; ?>
+            </div>
+
             <div id="section-upgrade" class="tab-content">
                 <div class="card">
                     <h2>💎 ارتقا و تمدید اشتراک پنل کاربری</h2>
@@ -1335,249 +1285,11 @@
 </main>
     </div>
 
-    <script>
-        function copyCardNumber() {
-            var cardNumber = "<?php echo htmlspecialchars($saved_card); ?>"; // شماره کارت دریافتی پویا از مدیر ارشد
-            navigator.clipboard.writeText(cardNumber).then(function() {
-                var toast = document.getElementById('copy-toast');
-                toast.classList.add('show');
-                setTimeout(function() {
-                    toast.classList.remove('show');
-                }, 3000);
-            });
-        }
-
-        function toggleEmojiPicker() {
-            var picker = document.getElementById('emoji-popup');
-            picker.style.display = (picker.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        function switchEmojiTab(tabName) {
-            // غیرفعال کردن تمامی تب‌ها و گریدها به صورت ES5 ایمن
-            var tabs = document.querySelectorAll('.emoji-tab');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            var grids = document.querySelectorAll('.emoji-grid');
-            for (var j = 0; j < grids.length; j++) {
-                grids[j].classList.add('hidden');
-            }
-
-            // فعال‌سازی تب و گرید مربوطه
-            event.target.classList.add('active');
-            document.getElementById('emoji-grid-' + tabName).classList.remove('hidden');
-        }
-
-        function insertEmoji(emoji) {
-            var textarea = document.getElementById('p-content');
-            var start = textarea.selectionStart;
-            var end = textarea.selectionEnd;
-            var text = textarea.value;
-            textarea.value = text.substring(0, start) + emoji + text.substring(end);
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-            document.getElementById('emoji-popup').style.display = 'none';
-        }
-
-        function toggleScheduleInput(val) {
-            var group = document.getElementById('schedule-datetime-group');
-            if (val === 'scheduled') {
-                group.classList.remove('hidden');
-            } else {
-                group.classList.add('hidden');
-            }
-        }
-
-        function closeBroadcastBanner() {
-            document.getElementById('broadcast-alert-banner').style.display = 'none';
-        }
-
-        // کنترلر ذخیره‌سازی ایمن جهت ممانعت از کرش شدن اسکریپت در مرورگرهای قدیمی و پرایوت
-        var SafeStorage = {
-            getItem: function(key, defaultValue) {
-                try {
-                    return sessionStorage.getItem(key) || defaultValue;
-                } catch (e) {
-                    return defaultValue;
-                }
-            },
-            setItem: function(key, value) {
-                try {
-                    sessionStorage.setItem(key, value);
-                } catch (e) {
-                    // نادیده گرفتن خطای پرایوت مرورگر
-                }
-            }
-        };
-
-        function switchSection(sectionId) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            // ۱. پنهان کردن تمام بخش‌ها
-            var sections = document.querySelectorAll('.tab-content');
-            for (var i = 0; i < sections.length; i++) {
-                sections[i].classList.remove('active');
-            }
-
-            // ۲. نمایش بخش هدف
-            var targetSec = document.getElementById('section-' + sectionId);
-            if (targetSec) {
-                targetSec.classList.add('active');
-            }
-
-            // ۳. غیرفعال کردن کلاس‌های فعال منوها
-            var menuItems = document.querySelectorAll('.menu-item, .mobile-nav-item');
-            for (var j = 0; j < menuItems.length; j++) {
-                menuItems[j].classList.remove('active');
-            }
-
-            // ۴. فعال کردن خودکار منوهای متناظر (هم موبایل و هم دسکتاپ)
-            var targets = document.querySelectorAll('.menu-item[data-target="' + sectionId + '"], .mobile-nav-item[data-target="' + sectionId + '"]');
-            for (var k = 0; k < targets.length; k++) {
-                targets[k].classList.add('active');
-            }
-
-            // ۵. ذخیره‌سازی وضعیت تب جاری به روش ایمن
-            SafeStorage.setItem('last_tab', sectionId);
-        }
-
-        var AI_PROVIDERS = {
-            'openai': {
-                'url': 'https://api.openai.com/v1/chat/completions',
-                'models': ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']
-            },
-            'gemini': {
-                'url': 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-                'models': ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
-            },
-            'groq': {
-                'url': 'https://api.groq.com/openai/v1/chat/completions',
-                'models': ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192']
-            },
-            'deepseek': {
-                'url': 'https://api.deepseek.com/chat/completions',
-                'models': ['deepseek-chat', 'deepseek-reasoner']
-            },
-            'mistral': {
-                'url': 'https://api.mistral.ai/v1/chat/completions',
-                'models': ['mistral-large-latest', 'open-mistral-nemo']
-            },
-            'together': {
-                'url': 'https://api.together.xyz/v1/chat/completions',
-                'models': ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo']
-            },
-            'ollama': {
-                'url': 'http://localhost:11434/v1/chat/completions',
-                'models': ['llama3.2', 'qwen2.5', 'mistral']
-            }
-        };
-
-        function onAiProviderChange(providerKey) {
-            var provider = AI_PROVIDERS[providerKey];
-            var urlInput = document.getElementById('ai-url-input');
-            var modelSelect = document.getElementById('ai-model-select');
-            
-            if (provider) {
-                if (urlInput) urlInput.value = provider.url;
-                
-                if (modelSelect) {
-                    modelSelect.innerHTML = '';
-                    for (var i = 0; i < provider.models.length; i++) {
-                        var opt = document.createElement('option');
-                        opt.value = provider.models[i];
-                        opt.textContent = provider.models[i];
-                        modelSelect.appendChild(opt);
-                    }
-                    var customOpt = document.createElement('option');
-                    customOpt.value = 'custom';
-                    customOpt.textContent = '-- مدل دلخواه --';
-                    modelSelect.appendChild(customOpt);
-                    
-                    onAiModelChange(modelSelect.value);
-                }
-            }
-        }
-
-        function onAiModelChange(modelVal) {
-            var customGroup = document.getElementById('ai-custom-model-group');
-            var customInput = document.getElementById('ai-model-custom-input');
-            var hiddenInput = document.getElementById('ai-model-hidden');
-            
-            if (modelVal === 'custom') {
-                if (customGroup) customGroup.classList.remove('hidden');
-                if (hiddenInput && customInput) hiddenInput.value = customInput.value;
-            } else {
-                if (customGroup) customGroup.classList.add('hidden');
-                if (hiddenInput) hiddenInput.value = modelVal;
-            }
-        }
-
-        function initDashboard() {
-            // ۱. اتصال کلیک به تک‌تک منوهای پنل کاربری (دسکتاپ و موبایل)
-            var clickableItems = document.querySelectorAll('.menu-item, .mobile-nav-item');
-            for (var i = 0; i < clickableItems.length; i++) {
-                var item = clickableItems[i];
-                var target = item.getAttribute('data-target');
-                if (target) {
-                    item.addEventListener('click', function(e) {
-                        var clickedItem = e.currentTarget;
-                        var sectionId = clickedItem.getAttribute('data-target');
-                        switchSection(sectionId);
-                    });
-                }
-            }
-
-            // ۲. لود تب پیش‌فرض یا آخرین تب ذخیره شده
-            var query = window.location.search || '';
-            if (query.indexOf('edit_channel') !== -1) {
-                switchSection('channels');
-                return;
-            }
-
-            var lastTab = SafeStorage.getItem('last_tab', 'dashboard');
-            switchSection(lastTab);
-        }
-
-        // بررسی لود بودن سند جهت اجرای آنی یا تعویقی اسکریپت (تضمین کارکرد تحت هر شرایطی!)
-        if (document.readyState !== 'loading') {
-            initDashboard();
-        } else {
-            window.addEventListener('DOMContentLoaded', initDashboard);
-        }
-
-        // بستن پاپ‌آپ اموجی با کلیک در خارج از کادر به صورت ES5 ایمن
-        window.addEventListener('click', function(event) {
-            var popup = document.getElementById('emoji-popup');
-            var btn = document.querySelector('.emoji-picker-btn');
-            if (popup && event.target !== popup && !popup.contains(event.target) && event.target !== btn) {
-                popup.style.display = 'none';
-            }
-        });
-
-        function selectPlan(id, title, price, paymentUrl) {
-            document.getElementById('payment-box').classList.remove('hidden');
-            document.getElementById('sel-title').textContent = title;
-            document.getElementById('sel-price').textContent = price.toLocaleString('fa-IR');
-            
-            document.getElementById('form-plan-id').value = id;
-            document.getElementById('form-amount').value = price;
-
-            var onlinePayDiv = document.getElementById('online-pay-div');
-            var onlinePayLink = document.getElementById('online-pay-link');
-            
-            if (paymentUrl && paymentUrl.trim() !== '') {
-                onlinePayDiv.classList.remove('hidden');
-                onlinePayLink.href = paymentUrl;
-            } else {
-                onlinePayDiv.classList.add('hidden');
-                onlinePayLink.href = "#";
-            }
-            
-            document.getElementById('payment-box').scrollIntoView({ behavior: 'smooth' });
-        }
-    </script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
     <script>
-        // راه‌اندازی تقویم شمسی تصویری لوکس
+        window.__dashboardSavedCard = "<?php echo htmlspecialchars($saved_card); ?>";
         if (typeof jalaliDatepicker !== 'undefined') {
             try {
                 jalaliDatepicker.startWatch({
@@ -1626,60 +1338,5 @@
             </form>
         </div>
     </div>
-    <script>
-        function openTicketModal(t) {
-            document.getElementById('t-modal-subject').textContent = t.subject || "تیکت پشتیبانی";
-            document.getElementById('t-reply-id').value = t.id;
-            document.getElementById('t-close-id').value = t.id;
-            
-            var statusSpan = document.getElementById('t-modal-status');
-            if (t.status === 'open') {
-                statusSpan.className = "badge badge-pending";
-                statusSpan.textContent = "در انتظار پاسخ ⏳";
-            } else if (t.status === 'replied') {
-                statusSpan.className = "badge badge-success";
-                statusSpan.textContent = "پاسخ داده شده ✔";
-            } else {
-                statusSpan.className = "badge badge-telegram";
-                statusSpan.textContent = "بسته شده";
-            }
-
-            var bodyDiv = document.getElementById('t-modal-body');
-            bodyDiv.innerHTML = "";
-
-            var rawText = t.message || "";
-            var parts = rawText.split("➖➖➖➖➖➖➖➖➖➖");
-
-            for (var i = 0; i < parts.length; i++) {
-                var text = parts[i].trim();
-                if (!text) continue;
-
-                var bubble = document.createElement('div');
-                bubble.style.padding = "1rem";
-                bubble.style.borderRadius = "12px";
-                bubble.style.lineHeight = "1.8";
-                bubble.style.fontSize = "0.9rem";
-                
-                if (i === 0) {
-                    bubble.style.background = "#1e293b";
-                    bubble.style.border = "1px solid #334155";
-                    bubble.style.color = "#e2e8f0";
-                    bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام شما:</div>' + text.replace(/\n/g, "<br>");
-                } else {
-                    bubble.style.background = "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)";
-                    bubble.style.border = "1px solid #6366f1";
-                    bubble.style.color = "#ffffff";
-                    bubble.innerHTML = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div>' + text.replace(/\n/g, "<br>");
-                }
-                bodyDiv.appendChild(bubble);
-            }
-
-            document.getElementById('ticketModal').style.display = 'flex';
-        }
-
-        function closeTicketModal() {
-            document.getElementById('ticketModal').style.display = 'none';
-        }
-    </script>
 </body>
 </html>

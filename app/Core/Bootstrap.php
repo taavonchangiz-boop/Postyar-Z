@@ -297,6 +297,490 @@ class Bootstrap {
                     }
                 } catch (\Exception $e) {}
             },
+            'v3_referral_wallet' => function($db) {
+                $driver = self::getConfig('database.driver', 'sqlite');
+
+                // اضافه کردن ستون‌های جدید به جدول users
+                $user_cols = [
+                    'phone VARCHAR(15) NULL',
+                    'referral_code VARCHAR(20) NULL UNIQUE',
+                    'referred_by INTEGER NULL',
+                    'referral_points DECIMAL(15,2) DEFAULT 0',
+                    'wallet_balance DECIMAL(15,2) DEFAULT 0',
+                ];
+                foreach ($user_cols as $col) {
+                    try { $db->exec("ALTER TABLE users ADD COLUMN $col"); } catch (\Exception $e) {}
+                }
+
+                // ایجاد جدول referrals
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS referrals (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            referrer_id INT NOT NULL,
+                            referred_id INT NOT NULL UNIQUE,
+                            referral_code VARCHAR(20) NOT NULL,
+                            reward_type VARCHAR(20) DEFAULT 'points',
+                            reward_value DECIMAL(10,2) DEFAULT 0,
+                            status VARCHAR(20) DEFAULT 'pending',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            rewarded_at DATETIME NULL,
+                            FOREIGN KEY (referrer_id) REFERENCES users(id),
+                            FOREIGN KEY (referred_id) REFERENCES users(id)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS referrals (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            referrer_id INTEGER NOT NULL,
+                            referred_id INTEGER NOT NULL UNIQUE,
+                            referral_code VARCHAR(20) NOT NULL,
+                            reward_type VARCHAR(20) DEFAULT 'points',
+                            reward_value DECIMAL(10,2) DEFAULT 0,
+                            status VARCHAR(20) DEFAULT 'pending',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            rewarded_at DATETIME NULL,
+                            FOREIGN KEY (referrer_id) REFERENCES users(id),
+                            FOREIGN KEY (referred_id) REFERENCES users(id)
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // ایجاد جدول wallet_transactions
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS wallet_transactions (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            user_id INT NOT NULL,
+                            type VARCHAR(30) NOT NULL,
+                            amount DECIMAL(15,2) NOT NULL,
+                            balance_after DECIMAL(15,2) NOT NULL,
+                            description TEXT,
+                            reference_type VARCHAR(50),
+                            reference_id INT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS wallet_transactions (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            type VARCHAR(30) NOT NULL,
+                            amount DECIMAL(15,2) NOT NULL,
+                            balance_after DECIMAL(15,2) NOT NULL,
+                            description TEXT,
+                            reference_type VARCHAR(50),
+                            reference_id INTEGER,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id)
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // ایجاد جدول referral_settings
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS referral_settings (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            setting_key VARCHAR(50) NOT NULL UNIQUE,
+                            setting_value TEXT NOT NULL
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS referral_settings (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            setting_key VARCHAR(50) NOT NULL UNIQUE,
+                            setting_value TEXT NOT NULL
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // درج تنظیمات پیش‌فرض سیستم زیرمجموعه‌گیری
+                $defaults = [
+                    ['enabled', '1'],
+                    ['register_reward_type', 'points'],
+                    ['register_reward_value', '100'],
+                    ['first_purchase_reward_type', 'percent'],
+                    ['first_purchase_reward_value', '10'],
+                    ['max_referrals_per_user', '100'],
+                    ['monthly_reward_cap', '500000'],
+                ];
+                foreach ($defaults as [$key, $value]) {
+                    try {
+                        $stmt = $db->prepare("INSERT OR IGNORE INTO referral_settings (setting_key, setting_value) VALUES (?, ?)");
+                        $stmt->execute([$key, $value]);
+                    } catch (\Exception $e) {
+                        try {
+                            $stmt = $db->prepare("INSERT IGNORE INTO referral_settings (setting_key, setting_value) VALUES (?, ?)");
+                            $stmt->execute([$key, $value]);
+                        } catch (\Exception $e2) {}
+                    }
+                }
+            },
+            'v4_sms_system' => function($db) {
+                $driver = self::getConfig('database.driver', 'sqlite');
+
+                // ایجاد جدول sms_templates
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS sms_templates (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            event_key VARCHAR(50) NOT NULL UNIQUE,
+                            template_name VARCHAR(100) NOT NULL,
+                            template_id INT NOT NULL,
+                            parameters TEXT DEFAULT '[]',
+                            is_active INT DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS sms_templates (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_key VARCHAR(50) NOT NULL UNIQUE,
+                            template_name VARCHAR(100) NOT NULL,
+                            template_id INTEGER NOT NULL,
+                            parameters TEXT DEFAULT '[]',
+                            is_active INTEGER DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // ایجاد جدول sms_log
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS sms_log (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            template_id INT,
+                            phone VARCHAR(15) NOT NULL,
+                            user_id INT NULL,
+                            status VARCHAR(20) DEFAULT 'pending',
+                            response_code VARCHAR(20),
+                            error_message TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS sms_log (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            template_id INTEGER,
+                            phone VARCHAR(15) NOT NULL,
+                            user_id INTEGER NULL,
+                            status VARCHAR(20) DEFAULT 'pending',
+                            response_code VARCHAR(20),
+                            error_message TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // درج قالب‌های پیش‌فرض
+                $defaults = [
+                    ['registration',        'ثبت‌نام کاربر جدید',          0, '[]',  1],
+                    ['payment_confirm',     'تایید تراکنش پرداخت',         0, '[]',  1],
+                    ['subscription_expiry', 'یادآوری انقضای اشتراک',       0, '[]',  1],
+                    ['password_reset',      'بازنشانی رمز عبور',           0, '[]',  1],
+                    ['bulk_notification',   'اطلاع‌رسانی عمومی',            0, '[]',  1],
+                ];
+                foreach ($defaults as $row) {
+                    try {
+                        $stmt = $db->prepare("INSERT OR IGNORE INTO sms_templates (event_key, template_name, template_id, parameters, is_active) VALUES (?, ?, ?, ?, ?)");
+                        $stmt->execute($row);
+                    } catch (\Exception $e) {
+                        try {
+                            $stmt = $db->prepare("INSERT IGNORE INTO sms_templates (event_key, template_name, template_id, parameters, is_active) VALUES (?, ?, ?, ?, ?)");
+                            $stmt->execute($row);
+                        } catch (\Exception $e2) {}
+                    }
+                }
+            },
+            'v5_email_templates' => function($db) {
+                $driver = self::getConfig('database.driver', 'sqlite');
+
+                // ایجاد جدول email_templates
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS email_templates (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            event_key VARCHAR(50) NOT NULL UNIQUE,
+                            template_name VARCHAR(100) NOT NULL,
+                            subject VARCHAR(255) NOT NULL,
+                            body_html TEXT NOT NULL,
+                            variables TEXT DEFAULT '[]',
+                            is_active INT DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS email_templates (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_key VARCHAR(50) NOT NULL UNIQUE,
+                            template_name VARCHAR(100) NOT NULL,
+                            subject VARCHAR(255) NOT NULL,
+                            body_html TEXT NOT NULL,
+                            variables TEXT DEFAULT '[]',
+                            is_active INTEGER DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // ایجاد جدول email_log
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS email_log (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            template_id INT NULL,
+                            to_address VARCHAR(255) NOT NULL,
+                            user_id INT NULL,
+                            subject VARCHAR(255),
+                            status VARCHAR(20) DEFAULT 'pending',
+                            error_message TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS email_log (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            template_id INTEGER NULL,
+                            to_address VARCHAR(255) NOT NULL,
+                            user_id INTEGER NULL,
+                            subject VARCHAR(255),
+                            status VARCHAR(20) DEFAULT 'pending',
+                            error_message TEXT,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );");
+                    }
+                } catch (\Exception $e) {}
+
+                // تابع کمکی برای ساخت هدر ایمیل
+                $emailHeader = function($title, $preheader = '') {
+                    return "<!DOCTYPE html><html dir='rtl' lang='fa'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>" .
+                        "<title>$title</title>" .
+                        "<!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->" .
+                        "</head><body style='margin:0; padding:0; background:#f1f5f9;'>";
+
+                $emailFooter = function($app_name) {
+                    return "<tr><td style='background:#f1f5f9; padding:20px 30px; text-align:center;'>" .
+                        "<p style='margin:0; color:#94a3b8; font-size:12px; font-family:Tahoma,Arial,sans-serif;'>" .
+                        "این ایمیل توسط <strong style='color:#4f46e5;'>" . htmlspecialchars($app_name) . "</strong> ارسال شده است.<br>" .
+                        "اگر شما این درخواست را نداده‌اید، لطفاً این ایمیل را نادیده بگیرید.</p>" .
+                        "</td></tr></table></body></html>";
+                };
+
+                $emailBodyOpen = function($preheader = '') {
+                    return ($preheader ? "<div style='display:none; font-size:1px; color:#f1f5f9; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;'>$preheader</div>" : '') .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background:#f1f5f9; font-family:Tahoma,Arial,sans-serif; padding:20px 0;'>" .
+                        "<tr><td align='center' style='padding:20px 10px;'>" .
+                        "<table role='presentation' width='600' cellpadding='0' cellspacing='0' style='max-width:600px; width:100%; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);'>";
+                };
+
+                $emailBodyClose = function() {
+                    return "</table></td></tr>";
+                };
+
+                $ctaButton = function($url, $text) {
+                    return "<tr><td style='padding:10px 0 30px; text-align:center;'>" .
+                        "<a href='" . htmlspecialchars($url) . "' target='_blank' style='display:inline-block; background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#ffffff!important; padding:14px 40px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:15px; font-family:Tahoma,Arial,sans-serif; box-shadow:0 4px 14px rgba(16,185,129,0.35);'>" . htmlspecialchars($text) . "</a></td></tr>";
+                };
+
+                // درج ۷ قالب ایمیل پیش‌فرض با طراحی حرفه‌ای
+                $defaults = [
+                    [
+                        'welcome',
+                        'خوش‌آمدگویی ثبت‌نام',
+                        'خوش آمدید به {{app_name}} {{name}} عزیز! 🎉',
+                        $emailHeader('خوش‌آمدید') .
+                        $emailBodyOpen('به پلتفرم مدیریت هوشمند کانال‌ها خوش آمدید') .
+                        "<tr><td style='background:linear-gradient(135deg,#312e81 0%,#4f46e5 50%,#6366f1 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>🎉 خوش آمدید!</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>" . "{{app_name}}" . " — سامانه مستقل مدیریت هوشمند کانال‌ها</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>ثبت‌نام شما با موفقیت انجام شد! از اینکه <strong style='color:#4f46e5;'>{{app_name}}</strong> را انتخاب کردید سپاسگزاریم.</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:15px 30px;'>" .
+                        "<p style='margin:0 0 12px; color:#475569; font-size:14px; font-family:Tahoma,Arial,sans-serif;'>با <strong style='color:#1e293b;'>{{app_name}}</strong> می‌توانید از امکانات زیر بهره‌مند شوید:</p>" .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='margin-top:8px;'>" .
+                        "<tr><td style='padding:8px 0;'><span style='display:inline-block; width:28px; height:28px; background:linear-gradient(135deg,#4f46e5,#6366f1); color:white; text-align:center; line-height:28px; border-radius:8px; font-size:13px; margin-left:10px;'>📱</span><span style='color:#334155; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>مدیریت چندگانه کانال‌های تلگرام و اینستاگرام</span></td></tr>" .
+                        "<tr><td style='padding:8px 0;'><span style='display:inline-block; width:28px; height:28px; background:linear-gradient(135deg,#10b981,#059669); color:white; text-align:center; line-height:28px; border-radius:8px; font-size:13px; margin-left:10px;'>🤖</span><span style='color:#334155; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>ارسال هوشمند پست با هوش مصنوعی</span></td></tr>" .
+                        "<tr><td style='padding:8px 0;'><span style='display:inline-block; width:28px; height:28px; background:linear-gradient(135deg,#f59e0b,#d97706); color:white; text-align:center; line-height:28px; border-radius:8px; font-size:13px; margin-left:10px;'>📊</span><span style='color:#334155; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>آمار دقیق کلیک و بازدید پست‌ها</span></td></tr>" .
+                        "<tr><td style='padding:8px 0;'><span style='display:inline-block; width:28px; height:28px; background:linear-gradient(135deg,#ec4899,#db2777); color:white; text-align:center; line-height:28px; border-radius:8px; font-size:13px; margin-left:10px;'>🎫</span><span style='color:#334155; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>پشتیبانی آنلاین و سیستم تیکت</span></td></tr>" .
+                        "</table></td></tr>" .
+                        "<tr><td style='padding:20px 30px 10px; text-align:center;'><p style='margin:0; color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>برای شروع کار، روی دکمه زیر کلیک کنید:</p></td></tr>" .
+                        $ctaButton('{{app_url}}', 'ورود به پنل کاربری') .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'app_url', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'payment_confirm',
+                        'تاییدیه پرداخت',
+                        'تاییدیه پرداخت اشتراک {{plan_name}} — {{app_name}}',
+                        $emailHeader('تاییدیه پرداخت') .
+                        $emailBodyOpen('پرداخت شما با موفقیت تایید شد') .
+                        "<tr><td style='background:linear-gradient(135deg,#064e3b 0%,#047857 50%,#10b981 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>✅ تاییدیه پرداخت</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>تراکنش مالی شما با موفقیت انجام شد</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>پرداخت شما با موفقیت تایید و ثبت شد. جزئیات تراکنش:</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:15px 30px;'>" .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;'>" .
+                        "<tr><td style='padding:14px 20px; border-bottom:1px solid #e2e8f0;'><span style='color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>پلن اشتراک:</span><br><strong style='color:#1e293b; font-size:15px; font-family:Tahoma,Arial,sans-serif;'>{{plan_name}}</strong></td></tr>" .
+                        "<tr><td style='padding:14px 20px; border-bottom:1px solid #e2e8f0;'><span style='color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>مبلغ پرداختی:</span><br><strong style='color:#059669; font-size:18px; font-family:Tahoma,Arial,sans-serif;'>{{amount}} تومان</strong></td></tr>" .
+                        "<tr><td style='padding:14px 20px;'><span style='color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>تاریخ تراکنش:</span><br><strong style='color:#1e293b; font-size:15px; font-family:Tahoma,Arial,sans-serif;'>{{date}}</strong></td></tr>" .
+                        "</table></td></tr>" .
+                        "<tr><td style='padding:20px 30px; text-align:center;'><p style='margin:0; color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>از اعتماد شما سپاسگزاریم. 🙏</p></td></tr>" .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'plan_name', 'amount', 'date', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'subscription_expiry',
+                        'یادآوری انقضای اشتراک',
+                        'یادآوری: اشتراک {{plan_name}} شما تا {{days_left}} روز دیگر منقضی می‌شود',
+                        $emailHeader('یادآوری انقضای اشتراک') .
+                        $emailBodyOpen('اشتراک شما در حال انقضا است') .
+                        "<tr><td style='background:linear-gradient(135deg,#78350f 0%,#b45309 50%,#f59e0b 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>⏰ یادآوری انقضای اشتراک</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>اشتراک شما به زودی به پایان می‌رسد</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>اشتراک <strong style='color:#d97706;'>{{plan_name}}</strong> شما تنها <strong style='color:#dc2626; font-size:18px;'>{{days_left}} روز</strong> دیگر اعتبار دارد.</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:10px 30px; text-align:center;'>" .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0'><tr><td style='padding:15px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; text-align:center;'>" .
+                        "<p style='margin:0; color:#92400e; font-size:14px; font-family:Tahoma,Arial,sans-serif;'>⚠️ برای جلوگیری از قطع سرویس، لطفاً اشتراک خود را تمدید کنید.</p>" .
+                        "</td></tr></table></td></tr>" .
+                        $ctaButton('{{app_url}}', 'تمدید اشتراک') .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'days_left', 'plan_name', 'app_url', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'subscription_expired',
+                        'انقضای اشتراک',
+                        'اشتراک شما در {{app_name}} منقضی شده است',
+                        $emailHeader('انقضای اشتراک') .
+                        $emailBodyOpen('اشتراک شما به پایان رسیده است') .
+                        "<tr><td style='background:linear-gradient(135deg,#7f1d1d 0%,#b91c1c 50%,#ef4444 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>🔴 انقضای اشتراک</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>اشتراک شما به پایان رسیده است</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>متأسفانه اشتراک شما در <strong style='color:#4f46e5;'>{{app_name}}</strong> به پایان رسیده است. برای ادامه استفاده از امکانات پلتفرم، لطفاً اشتراک خود را تمدید کنید.</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:10px 30px; text-align:center;'>" .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0'><tr><td style='padding:15px; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; text-align:center;'>" .
+                        "<p style='margin:0; color:#991b1b; font-size:14px; font-family:Tahoma,Arial,sans-serif;'>🔒 در حال حاضر دسترسی شما به امکانات پلتفرم محدود شده است.</p>" .
+                        "</td></tr></table></td></tr>" .
+                        $ctaButton('{{app_url}}', 'تمدید فوری اشتراک') .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'app_url', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'password_reset',
+                        'بازنشانی رمز عبور',
+                        'بازنشانی رمز عبور — {{app_name}}',
+                        $emailHeader('بازنشانی رمز عبور') .
+                        $emailBodyOpen('درخواست بازنشانی رمز عبور') .
+                        "<tr><td style='background:linear-gradient(135deg,#312e81 0%,#4f46e5 50%,#6366f1 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>🔑 بازنشانی رمز عبور</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>درخواست تغییر کلمه عبور شما دریافت شد</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>برای تنظیم رمز عبور جدید، روی دکمه زیر کلیک کنید:</p>" .
+                        "</td></tr>" .
+                        $ctaButton('{{reset_link}}', 'بازنشانی کلمه عبور') .
+                        "<tr><td style='padding:10px 30px 20px; text-align:center;'>" .
+                        "<table role='presentation' width='100%' cellpadding='0' cellspacing='0'><tr><td style='padding:15px; background:#fefce8; border:1px solid #fde68a; border-radius:10px; text-align:center;'>" .
+                        "<p style='margin:0; color:#854d0e; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>⚠️ این لینک فقط ۱ ساعت اعتبار دارد. اگر شما درخواست نکرده‌اید، این پیام را نادیده بگیرید.</p>" .
+                        "</td></tr></table></td></tr>" .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'reset_link', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'ticket_reply',
+                        'پاسخ جدید به تیکت',
+                        'پاسخ جدید به تیکت شما: {{ticket_subject}}',
+                        $emailHeader('پاسخ به تیکت') .
+                        $emailBodyOpen('پاسخ جدید به تیکت پشتیبانی شما') .
+                        "<tr><td style='background:linear-gradient(135deg,#312e81 0%,#4f46e5 50%,#6366f1 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>🎫 پاسخ جدید به تیکت</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>تیکت پشتیبانی شما پاسخ داده شده است</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>تیکت شما با موضوع <strong style='color:#4f46e5;'>{{ticket_subject}}</strong> پاسخ داده شده است.</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:10px 30px; text-align:center;'><p style='margin:0; color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>برای مشاهده پاسخ و ادامه گفتگو، روی دکمه زیر کلیک کنید:</p></td></tr>" .
+                        $ctaButton('{{app_url}}', 'مشاهده تیکت') .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'ticket_subject', 'app_url', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                    [
+                        'custom_notification',
+                        'اعلان عمومی',
+                        'اعلان جدید از {{app_name}}',
+                        $emailHeader('اعلان جدید') .
+                        $emailBodyOpen('اعلان جدید از سوی مدیریت پلتفرم') .
+                        "<tr><td style='background:linear-gradient(135deg,#312e81 0%,#4f46e5 50%,#6366f1 100%); padding:40px 30px; text-align:center;'>" .
+                        "<h1 style='margin:0; color:#ffffff; font-size:26px; font-family:Tahoma,Arial,sans-serif;'>📢 اعلان جدید</h1>" .
+                        "<p style='margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px; font-family:Tahoma,Arial,sans-serif;'>اعلان جدیدی از {{app_name}} دریافت کرده‌اید</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:35px 30px 10px;'>" .
+                        "<h2 style='margin:0 0 8px; color:#1e293b; font-size:20px; font-family:Tahoma,Arial,sans-serif;'>سلام {{name}} عزیز،</h2>" .
+                        "<p style='margin:0; color:#475569; font-size:14px; line-height:2; font-family:Tahoma,Arial,sans-serif;'>{{message}}</p>" .
+                        "</td></tr>" .
+                        "<tr><td style='padding:10px 30px; text-align:center;'><p style='margin:0; color:#64748b; font-size:13px; font-family:Tahoma,Arial,sans-serif;'>برای اطلاعات بیشتر، وارد پنل کاربری خود شوید:</p></td></tr>" .
+                        $ctaButton('{{app_url}}', 'ورود به پنل کاربری') .
+                        $emailBodyClose() .
+                        $emailFooter('{{app_name}}'),
+                        json_encode(['name', 'message', 'app_url', 'app_name'], JSON_UNESCAPED_UNICODE),
+                        1,
+                    ],
+                ];
+
+                foreach ($defaults as $row) {
+                    try {
+                        $stmt = $db->prepare("INSERT OR IGNORE INTO email_templates (event_key, template_name, subject, body_html, variables, is_active) VALUES (?, ?, ?, ?, ?, ?)");
+                        $stmt->execute($row);
+                    } catch (\Exception $e) {
+                        try {
+                            $stmt = $db->prepare("INSERT IGNORE INTO email_templates (event_key, template_name, subject, body_html, variables, is_active) VALUES (?, ?, ?, ?, ?, ?)");
+                            $stmt->execute($row);
+                        } catch (\Exception $e2) {}
+                    }
+                }
+            },
+
+            'v6_link_tracking' => function($db) {
+                $driver = self::getConfig('database.driver', 'sqlite');
+
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS link_tracking (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(20) NOT NULL UNIQUE, original_url TEXT NOT NULL, post_id INT NOT NULL, channel_id INT NOT NULL, tenant_id INT NOT NULL, total_clicks INT DEFAULT 0, unique_clicks INT DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (post_id) REFERENCES posts(id), FOREIGN KEY (channel_id) REFERENCES channels(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                        $db->exec("CREATE TABLE IF NOT EXISTS link_clicks (id INT AUTO_INCREMENT PRIMARY KEY, link_id INT NOT NULL, ip_address VARCHAR(45), user_agent TEXT, referer TEXT, is_unique INT DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (link_id) REFERENCES link_tracking(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                        $db->exec("CREATE TABLE IF NOT EXISTS verification_codes (id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL, type VARCHAR(20) NOT NULL, code VARCHAR(10) NOT NULL, expires_at DATETIME NOT NULL, used INT DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS link_tracking (id INTEGER PRIMARY KEY AUTOINCREMENT, code VARCHAR(20) NOT NULL UNIQUE, original_url TEXT NOT NULL, post_id INTEGER NOT NULL, channel_id INTEGER NOT NULL, tenant_id INTEGER NOT NULL, total_clicks INTEGER DEFAULT 0, unique_clicks INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (post_id) REFERENCES posts(id), FOREIGN KEY (channel_id) REFERENCES channels(id));");
+                        $db->exec("CREATE TABLE IF NOT EXISTS link_clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, link_id INTEGER NOT NULL, ip_address VARCHAR(45), user_agent TEXT, referer TEXT, is_unique INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (link_id) REFERENCES link_tracking(id));");
+                        $db->exec("CREATE TABLE IF NOT EXISTS verification_codes (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, type VARCHAR(20) NOT NULL, code VARCHAR(10) NOT NULL, expires_at DATETIME NOT NULL, used INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id));");
+                    }
+                } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

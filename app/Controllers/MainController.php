@@ -5,12 +5,18 @@ use WHCM\Core\Bootstrap;
 use WHCM\Core\Auth;
 use WHCM\Core\Csrf;
 use WHCM\Core\RateLimit;
+use WHCM\Core\Sms;
 use WHCM\Domain\TextFormat;
 use WHCM\Domain\Quota;
 use WHCM\Domain\ChannelManager;
 use WHCM\Domain\GoldTicker;
 use WHCM\Domain\Inbox;
 use WHCM\Domain\Sender;
+use WHCM\Domain\LinkTracker;
+use WHCM\Domain\VerificationCode;
+use WHCM\Domain\Referral;
+use WHCM\Domain\Wallet;
+use WHCM\Core\EmailTemplate;
 
 /**
  * کنترلر اصلی هدایت‌کننده و پردازشگر درخواست‌های وب
@@ -134,6 +140,21 @@ class MainController extends BaseController {
 
         $res = Auth::register($name, $email, $password, $business_name, $business_type);
         if ($res['success']) {
+            // ---- پردازش سیستم زیرمجموعه‌گیری ----
+            $referralCode = trim($_GET['ref'] ?? '');
+            if (!empty($res['user_id'])) {
+                Referral::processRegistration((int)$res['user_id'], !empty($referralCode) ? $referralCode : null);
+                // تولید کد معرف برای کاربر جدید
+                Referral::getUserReferralCode((int)$res['user_id']);
+
+                // ---- ارسال ایمیل خوش‌آمدگویی ----
+                try {
+                    EmailTemplate::sendByEvent('welcome', (int)$res['user_id']);
+                } catch (\Exception $e) {
+                    error_log('[Postyar] Welcome email failed for user #' . $res['user_id'] . ': ' . $e->getMessage());
+                }
+            }
+
             // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق (اگر قبلاً لاگین نشده باشد)
             if (!Auth::check()) {
                 Auth::login($email, $password);
@@ -895,12 +916,24 @@ class MainController extends BaseController {
         $status = ($send_type === 'scheduled') ? 'scheduled' : 'draft';
         $sched_date = !empty($scheduled_at) ? $scheduled_at : null;
 
+        // ثبت رکورد اولیه پست — محتوا با لینک‌های ردیابی ذخیره می‌شود
+        $firstChannelId = (int)($channel_ids[0] ?? 0);
+        $trackedContent = $content;
+        if ($firstChannelId > 0) {
+            $trackedContent = LinkTracker::processContent($content, 0, $firstChannelId, $tenant_id);
+        }
+
         $stmt = $db->prepare("INSERT INTO posts (tenant_id, title, content, media_url, status, scheduled_at) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$tenant_id, $title, $content, $media_url, $status, $sched_date]);
+        $stmt->execute([$tenant_id, $title, $trackedContent, $media_url, $status, $sched_date]);
         $post_id = (int)$db->lastInsertId();
 
+        // آپدیت post_id در لینک‌های ردیابی
+        if ($firstChannelId > 0 && $trackedContent !== $content) {
+            try { $db->prepare("UPDATE link_tracking SET post_id = ? WHERE post_id = 0 AND channel_id = ? AND tenant_id = ?")->execute([$post_id, $firstChannelId, $tenant_id]); } catch (\Exception $e) {}
+        }
+
         if ($send_type === 'instant') {
-            // ارسال همگام و آنی به تمامی کانال‌های منتخب
+            // ارسال با URL اصلی (بدون لینک کوتاه) به کانال‌ها
             $res = Sender::sendPostToChannels($tenant_id, $channel_ids, $title, $content, $media_url, $post_id);
             
             if ($res['success']) {
@@ -1173,9 +1206,728 @@ class MainController extends BaseController {
         $this->redirect('/dashboard');
     }
 
+    // =============================================================
+    // بخش سیستم زیرمجموعه‌گیری (Referral System)
+    // =============================================================
+
+    /**
+     * بخش زیرمجموعه‌گیری در داشبورد (بخش جزئی — AJAX)
+     */
+    public function referralSection() {
+        $this->checkAuth();
+        $userId = Auth::tenantId();
+
+        $referralCode = Referral::getUserReferralCode($userId);
+        $referralLink = Referral::getReferralLink($userId);
+        $stats = Referral::getReferralStats($userId);
+        $history = Referral::getReferralHistory($userId);
+        $points = $this->getUserPoints($userId);
+        $settings = Referral::getAdminSettings();
+        $enabled = ($settings['enabled'] ?? '0') === '1';
+
+        include __DIR__ . '/../Views/partials/referral-section.php';
+        exit;
+    }
+
+    // =============================================================
+    // بخش کیف پول (Wallet System)
+    // =============================================================
+
+    /**
+     * بخش کیف پول در داشبورد (بخش جزئی — AJAX)
+     */
+    public function walletSection() {
+        $this->checkAuth();
+        $userId = Auth::tenantId();
+
+        $balance = Wallet::getBalance($userId);
+        $transactions = Wallet::getTransactions($userId, 50, 0);
+        $points = $this->getUserPoints($userId);
+
+        include __DIR__ . '/../Views/partials/wallet-section.php';
+        exit;
+    }
+
+    /**
+     * تبدیل امتیاز به موجودی کیف پول
+     */
+    public function handleConvertPoints() {
+        $this->checkAuth();
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/dashboard');
+        }
+
+        $userId = Auth::tenantId();
+        $points = (float)TextFormat::en_num($_POST['points'] ?? '0');
+        $rate = 10; // نرخ تبدیل: هر امتیاز = ۱۰ تومان
+
+        if ($points <= 0) {
+            $this->setFlashMessage('مقدار امتیاز وارد شده نامعتبر است.');
+            $this->redirect('/dashboard');
+        }
+
+        if (Wallet::convertPointsToWallet($userId, $points, $rate)) {
+            $this->setFlashMessage(TextFormat::fa_num($points) . ' امتیاز با موفقیت به ' . TextFormat::fa_num($points * $rate) . ' تومان در کیف پول شما تبدیل شد! 💰');
+        } else {
+            $this->setFlashMessage('خطا در تبدیل امتیاز. لطفاً موجودی امتیاز خود را بررسی کنید.');
+        }
+
+        $this->redirect('/dashboard');
+    }
+
+    // =============================================================
+    // بخش مدیریت ادمین — تنظیمات زیرمجموعه‌گیری
+    // =============================================================
+
+    /**
+     * صفحه تنظیمات زیرمجموعه‌گیری ادمین (بخش جزئی — AJAX)
+     */
+    public function adminReferralSettings() {
+        $this->checkSuperAdmin();
+        $settings = Referral::getAdminSettings();
+        include __DIR__ . '/../Views/partials/admin-referral-settings.php';
+        exit;
+    }
+
+    /**
+     * ذخیره تنظیمات زیرمجموعه‌گیری (POST)
+     */
+    public function handleSaveReferralSettings() {
+        $this->checkSuperAdmin();
+
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $settings = [
+            'enabled'                  => isset($_POST['enabled']) ? '1' : '0',
+            'register_reward_type'     => trim($_POST['register_reward_type'] ?? 'points'),
+            'register_reward_value'    => trim($_POST['register_reward_value'] ?? '100'),
+            'first_purchase_reward_type'  => trim($_POST['first_purchase_reward_type'] ?? 'percent'),
+            'first_purchase_reward_value' => trim($_POST['first_purchase_reward_value'] ?? '10'),
+            'max_referrals_per_user'   => trim($_POST['max_referrals_per_user'] ?? '100'),
+            'monthly_reward_cap'       => trim($_POST['monthly_reward_cap'] ?? '500000'),
+        ];
+
+        Referral::saveAdminSettings($settings);
+        $this->setFlashMessage('تنظیمات سیستم زیرمجموعه‌گیری با موفقیت ذخیره شد! 🎯');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * آمار کیف پول‌ها برای ادمین (JSON)
+     */
+    public function adminWalletStats() {
+        $this->checkSuperAdmin();
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(Wallet::getAdminWalletStats(), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // =============================================================
+    // بخش مدیریت پیامک (SMS.ir)
+    // =============================================================
+
+    /**
+     * نمایش صفحه تنظیمات پیامک ادمین
+     */
+    public function adminSmsSettings() {
+        $this->checkSuperAdmin();
+        $db = Bootstrap::getDB();
+
+        // دریافت تنظیمات ذخیره شده
+        $sms_settings = [];
+        $keys = ['sms_enabled', 'sms_api_key', 'sms_line_number'];
+        foreach ($keys as $key) {
+            $stmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = ? LIMIT 1");
+            $stmt->execute([$key]);
+            $row = $stmt->fetch();
+            $sms_settings[$key] = $row !== false ? $row['key_value'] : '';
+        }
+
+        // دریافت قالب‌ها
+        $templates = $db->query("SELECT * FROM sms_templates ORDER BY id ASC")->fetchAll();
+
+        // دریافت لاگ‌ها (۵۰ مورد آخر)
+        $filter_status = $_GET['filter_status'] ?? '';
+        $filter_phone = trim($_GET['filter_phone'] ?? '');
+
+        $sql = "SELECT sl.*, st.template_name, st.event_key FROM sms_log sl LEFT JOIN sms_templates st ON sl.template_id = st.template_id WHERE 1=1";
+        $params = [];
+
+        if (!empty($filter_status) && in_array($filter_status, ['success', 'failed', 'rate_limited', 'pending'], true)) {
+            $sql .= " AND sl.status = ?";
+            $params[] = $filter_status;
+        }
+        if (!empty($filter_phone)) {
+            $sql .= " AND sl.phone LIKE ?";
+            $params[] = '%' . $filter_phone . '%';
+        }
+
+        $sql .= " ORDER BY sl.id DESC LIMIT 50";
+
+        if (!empty($params)) {
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $logs = $stmt->fetchAll();
+        } else {
+            $logs = $db->query($sql)->fetchAll();
+        }
+
+        // دریافت کاربران برای ارسال انبوه
+        $active_users = $db->query("SELECT id, name, phone FROM users WHERE status = 'active' AND role != 'superadmin' ORDER BY id DESC")->fetchAll();
+
+        include __DIR__ . '/../Views/partials/admin-sms-settings.php';
+        exit;
+    }
+
+    /**
+     * ذخیره تنظیمات پیامک (API Key و شماره خط)
+     */
+    public function handleSaveSmsConfig() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $enabled = isset($_POST['sms_enabled']) ? '1' : '0';
+        $apiKey = trim($_POST['sms_api_key'] ?? '');
+        $lineNumber = trim($_POST['sms_line_number'] ?? '');
+
+        $this->saveSettingsBatch(0, [
+            'sms_enabled'    => $enabled,
+            'sms_api_key'    => $apiKey,
+            'sms_line_number' => $lineNumber,
+        ]);
+
+        $this->setFlashMessage('تنظیمات پیامک با موفقیت ذخیره شد! 📱✔');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ذخیره قالب پیامک (ایجاد یا به‌روزرسانی)
+     */
+    public function handleSaveSmsTemplate() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $id = (int)($_POST['template_db_id'] ?? 0);
+        $eventKey = trim($_POST['event_key'] ?? '');
+        $templateName = trim($_POST['template_name'] ?? '');
+        $templateId = (int)($_POST['template_id'] ?? 0);
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+        $parameters = trim($_POST['parameters'] ?? '[]');
+
+        // اعتبارسنجی JSON پارامترها
+        json_decode($parameters);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->setFlashMessage('فرمت پارامترها نامعتبر است. لطفاً JSON معتبر وارد کنید.');
+            $this->redirect('/hnnh');
+        }
+
+        if (empty($eventKey) || empty($templateName) || $templateId <= 0) {
+            $this->setFlashMessage('فیلدهای کلید رویداد، نام قالب و شناسه قالب الزامی هستند.');
+            $this->redirect('/hnnh');
+        }
+
+        $db = Bootstrap::getDB();
+
+        if ($id > 0) {
+            // به‌روزرسانی
+            $stmt = $db->prepare("UPDATE sms_templates SET event_key = ?, template_name = ?, template_id = ?, parameters = ?, is_active = ? WHERE id = ?");
+            $stmt->execute([$eventKey, $templateName, $templateId, $parameters, $isActive, $id]);
+            $this->setFlashMessage('قالب پیامک با موفقیت بروزرسانی شد! ✏️✔');
+        } else {
+            // ایجاد جدید
+            try {
+                $stmt = $db->prepare("INSERT INTO sms_templates (event_key, template_name, template_id, parameters, is_active) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$eventKey, $templateName, $templateId, $parameters, $isActive]);
+                $this->setFlashMessage('قالب پیامک جدید با موفقیت ایجاد شد! 📱✔');
+            } catch (\Exception $e) {
+                $this->setFlashMessage('خطا در ایجاد قالب. ممکن است کلید رویداد تکراری باشد.');
+            }
+        }
+
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * حذف قالب پیامک
+     */
+    public function handleDeleteSmsTemplate() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $id = (int)($_POST['template_db_id'] ?? 0);
+        if ($id <= 0) {
+            $this->setFlashMessage('شناسه قالب نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("DELETE FROM sms_templates WHERE id = ?");
+        $stmt->execute([$id]);
+
+        $this->setFlashMessage('قالب پیامک حذف شد! 🗑️');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ارسال پیامک تستی
+     */
+    public function handleTestSms() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $phone = trim($_POST['test_phone'] ?? '');
+        if (empty($phone)) {
+            $this->setFlashMessage('شماره موبایل برای تست را وارد کنید.');
+            $this->redirect('/hnnh');
+        }
+
+        $result = Sms::testConnection($phone);
+        if ($result['success']) {
+            $this->setFlashMessage($result['message']);
+        } else {
+            $this->setFlashMessage('❌ ' . $result['message']);
+        }
+
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ارسال پیامک انبوه
+     */
+    public function handleSendBulkSms() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $recipientType = trim($_POST['recipient_type'] ?? '');
+        $templateId = (int)($_POST['bulk_template_id'] ?? 0);
+        $manualPhones = trim($_POST['manual_phones'] ?? '');
+        $param1Name = trim($_POST['param1_name'] ?? '');
+        $param1Value = trim($_POST['param1_value'] ?? '');
+        $param2Name = trim($_POST['param2_name'] ?? '');
+        $param2Value = trim($_POST['param2_value'] ?? '');
+
+        if ($templateId <= 0) {
+            $this->setFlashMessage('لطفاً یک قالب پیامک انتخاب کنید.');
+            $this->redirect('/hnnh');
+        }
+
+        // آماده‌سازی پارامترها
+        $params = [];
+        if (!empty($param1Name)) {
+            $params[$param1Name] = $param1Value;
+        }
+        if (!empty($param2Name)) {
+            $params[$param2Name] = $param2Value;
+        }
+
+        // جمع‌آوری شماره‌ها
+        $phones = [];
+        $db = Bootstrap::getDB();
+
+        if ($recipientType === 'all') {
+            $rows = $db->query("SELECT phone FROM users WHERE phone IS NOT NULL AND phone != '' AND role != 'superadmin'")->fetchAll();
+            foreach ($rows as $row) {
+                $phones[] = $row['phone'];
+            }
+        } elseif ($recipientType === 'active') {
+            $rows = $db->query("SELECT phone FROM users WHERE phone IS NOT NULL AND phone != '' AND status = 'active' AND role != 'superadmin'")->fetchAll();
+            foreach ($rows as $row) {
+                $phones[] = $row['phone'];
+            }
+        } elseif ($recipientType === 'manual') {
+            // شکستن شماره‌ها از خطوط جدید
+            $lines = preg_split('/[\r\n,;]+/', $manualPhones);
+            foreach ($lines as $line) {
+                $p = trim($line);
+                if (!empty($p)) {
+                    $phones[] = $p;
+                }
+            }
+        } else {
+            $this->setFlashMessage('نوع گیرندگان نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        if (empty($phones)) {
+            $this->setFlashMessage('هیچ شماره موبایلی یافت نشد.');
+            $this->redirect('/hnnh');
+        }
+
+        $result = Sms::sendBulk($phones, $templateId, $params);
+
+        if ($result['success']) {
+            $msg = '✅ پیامک انبوه ارسال شد! ارسال موفق: ' . TextFormat::fa_digits($result['sent_count']) . ' | ناموفق: ' . TextFormat::fa_digits($result['failed_count']);
+            if (!empty($result['errors'])) {
+                $msg .= ' | خطاها: ' . implode('، ', array_slice($result['errors'], 0, 3));
+            }
+            $this->setFlashMessage($msg);
+        } else {
+            $msg = '❌ خطا در ارسال پیامک انبوه. ';
+            if (!empty($result['errors'])) {
+                $msg .= implode('، ', array_slice($result['errors'], 0, 3));
+            }
+            $this->setFlashMessage($msg);
+        }
+
+        $this->redirect('/hnnh');
+    }
+
+    // =============================================================
+    // متدهای کمکی داخلی
+    // =============================================================
+
+    /**
+     * دریافت امتیازهای کاربر
+     *
+     * @param int $userId
+     * @return float
+     */
+    private function getUserPoints(int $userId): float {
+        $db = Bootstrap::getDB();
+        try {
+            $stmt = $db->prepare("SELECT referral_points FROM users WHERE id = ? LIMIT 1");
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch();
+            return (float)($row['referral_points'] ?? 0);
+        } catch (\Exception $e) {
+            return 0.0;
+        }
+    }
+
     /* =============================================================
      * متدهای مشترک (checkAuth، checkSuperAdmin، redirect، setFlashMessage،
      * getFlashMessage، render، uploadAndConvertToWebp، jalaliToGregorian، saveSetting)
      * در BaseController قرار دارند.
      * ============================================================= */
+
+    // =============================================================
+    // سیستم ایمیل — تنظیمات، قالب‌ها، ارسال انبوه، لاگ
+    // =============================================================
+
+    /**
+     * بخش تنظیمات ایمیل در پنل مدیریت (بازگردانی پارشیال)
+     */
+    public function adminEmailSettings() {
+        $this->checkSuperAdmin();
+        $db = Bootstrap::getDB();
+
+        // دریافت تنظیمات SMTP ذخیره شده
+        $smtp_keys = ['smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption', 'smtp_from_address', 'smtp_from_name'];
+        $email_settings = [];
+        foreach ($smtp_keys as $ek) {
+            $stmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = ? LIMIT 1");
+            $stmt->execute([$ek]);
+            $erow = $stmt->fetch();
+            $email_settings[$ek] = $erow !== false ? $erow['key_value'] : '';
+        }
+
+        // دریافت قالب‌ها
+        $templates = EmailTemplate::getAllTemplates();
+
+        // دریافت لاگ‌ها
+        $filter_status = $_GET['filter_status'] ?? '';
+        $logs = EmailTemplate::getLog(50, 0, !empty($filter_status) ? $filter_status : null);
+
+        // آمار
+        $email_stats = EmailTemplate::getAdminEmailStats();
+
+        // دریافت کاربران برای ارسال انبوه
+        $active_users = $db->query("SELECT id, name, email FROM users WHERE status = 'active' AND role != 'superadmin' ORDER BY id DESC")->fetchAll();
+        $all_users = $db->query("SELECT id, name, email FROM users WHERE role != 'superadmin' ORDER BY id DESC")->fetchAll();
+
+        include __DIR__ . '/../Views/partials/admin-email-settings.php';
+        exit;
+    }
+
+    /**
+     * ذخیره تنظیمات SMTP
+     */
+    public function handleSaveEmailConfig() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $enabled = isset($_POST['smtp_enabled']) ? '1' : '0';
+        $host = trim($_POST['smtp_host'] ?? '');
+        $port = trim($_POST['smtp_port'] ?? '587');
+        $username = trim($_POST['smtp_username'] ?? '');
+        $password = trim($_POST['smtp_password'] ?? '');
+        $encryption = trim($_POST['smtp_encryption'] ?? 'tls');
+        $fromAddress = trim($_POST['smtp_from_address'] ?? '');
+        $fromName = trim($_POST['smtp_from_name'] ?? '');
+
+        // اگر رمز عبور خالی بود و قبلاً ذخیره شده، نگه‌داشتن رمز قبلی
+        if (empty($password)) {
+            $stmt = Bootstrap::getDB()->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = 'smtp_password' LIMIT 1");
+            $stmt->execute();
+            $existing = $stmt->fetch();
+            if ($existing) {
+                $password = $existing['key_value'];
+            }
+        }
+
+        $this->saveSettingsBatch(0, [
+            'smtp_enabled'      => $enabled,
+            'smtp_host'         => $host,
+            'smtp_port'         => $port,
+            'smtp_username'     => $username,
+            'smtp_password'     => $password,
+            'smtp_encryption'   => $encryption,
+            'smtp_from_address' => $fromAddress,
+            'smtp_from_name'    => $fromName,
+        ]);
+
+        $this->setFlashMessage('تنظیمات SMTP با موفقیت ذخیره شد! 📧✔');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ذخیره قالب ایمیل (ایجاد یا به‌روزرسانی)
+     */
+    public function handleSaveEmailTemplate() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $eventKey = trim($_POST['event_key'] ?? '');
+        $name = trim($_POST['template_name'] ?? '');
+        $subject = trim($_POST['subject'] ?? '');
+        $bodyHtml = trim($_POST['body_html'] ?? '');
+        $variablesStr = trim($_POST['variables'] ?? '[]');
+        $isActive = isset($_POST['is_active']) ? true : false;
+
+        if (empty($eventKey) || empty($name) || empty($subject)) {
+            $this->setFlashMessage('فیلدهای کلید رویداد، نام قالب و موضوع الزامی هستند.');
+            $this->redirect('/hnnh');
+        }
+
+        $variables = json_decode($variablesStr, true);
+        if (!is_array($variables)) {
+            $variables = [];
+        }
+
+        EmailTemplate::saveTemplate($eventKey, $name, $subject, $bodyHtml, $variables, $isActive);
+        $this->setFlashMessage('قالب ایمیل با موفقیت ذخیره شد! ✏️📧✔');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * حذف قالب ایمیل
+     */
+    public function handleDeleteEmailTemplate() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $id = (int)($_POST['template_db_id'] ?? 0);
+        if ($id <= 0) {
+            $this->setFlashMessage('شناسه قالب نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        EmailTemplate::deleteTemplate($id);
+        $this->setFlashMessage('قالب ایمیل حذف شد! 🗑️📧');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ارسال ایمیل تستی
+     */
+    public function handleTestEmail() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $adminId = Auth::tenantId();
+        $ok = EmailTemplate::sendByEvent('welcome', $adminId, [
+            'name' => Auth::user()['name'] ?? 'مدیر سیستم',
+        ]);
+
+        if ($ok) {
+            $this->setFlashMessage('ایمیل تستی با موفقیت ارسال شد! 📧✔');
+        } else {
+            $this->setFlashMessage('❌ خطا در ارسال ایمیل تستی. تنظیمات SMTP را بررسی کنید.');
+        }
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * ارسال ایمیل انبوه
+     */
+    public function handleSendBulkEmail() {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        $recipientType = trim($_POST['recipient_type'] ?? '');
+        $templateId = (int)($_POST['bulk_template_id'] ?? 0);
+
+        if ($templateId <= 0) {
+            $this->setFlashMessage('لطفاً یک قالب ایمیل انتخاب کنید.');
+            $this->redirect('/hnnh');
+        }
+
+        $db = Bootstrap::getDB();
+
+        // دریافت قالب
+        $stmt = $db->prepare("SELECT event_key FROM email_templates WHERE id = ? LIMIT 1");
+        $stmt->execute([$templateId]);
+        $tpl = $stmt->fetch();
+        if (!$tpl) {
+            $this->setFlashMessage('قالب انتخاب‌شده یافت نشد.');
+            $this->redirect('/hnnh');
+        }
+
+        $eventKey = $tpl['event_key'];
+        $userIds = [];
+
+        if ($recipientType === 'all') {
+            $rows = $db->query("SELECT id FROM users WHERE role != 'superadmin'")->fetchAll();
+            foreach ($rows as $r) $userIds[] = (int)$r['id'];
+        } elseif ($recipientType === 'active') {
+            $rows = $db->query("SELECT id FROM users WHERE status = 'active' AND role != 'superadmin'")->fetchAll();
+            foreach ($rows as $r) $userIds[] = (int)$r['id'];
+        } elseif ($recipientType === 'subscription') {
+            $rows = $db->query("SELECT DISTINCT user_id as id FROM subscriptions WHERE status = 'active'")->fetchAll();
+            foreach ($rows as $r) $userIds[] = (int)$r['id'];
+        } else {
+            $this->setFlashMessage('نوع گیرندگان نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+
+        if (empty($userIds)) {
+            $this->setFlashMessage('هیچ کاربری یافت نشد.');
+            $this->redirect('/hnnh');
+        }
+
+        $result = EmailTemplate::sendBulk($eventKey, $userIds);
+
+        $msg = '✅ ایمیل انبوه ارسال شد! موفق: ' . TextFormat::fa_digits($result['sent']) . ' | ناموفق: ' . TextFormat::fa_digits($result['failed']);
+        if (!empty($result['errors'])) {
+            $msg .= ' | خطاها: ' . implode('، ', array_slice($result['errors'], 0, 3));
+        }
+        $this->setFlashMessage($msg);
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * پیش‌نمایش قالب ایمیل (برگرداندن HTML رندر شده)
+     */
+    public function handlePreviewEmailTemplate() {
+        $this->checkSuperAdmin();
+        header('Content-Type: text/html; charset=utf-8');
+
+        $bodyHtml = trim($_POST['body_html'] ?? '');
+        $variablesStr = trim($_POST['variables'] ?? '[]');
+        $variables = json_decode($variablesStr, true) ?: [];
+
+        // مقداردهی نمونه برای پیش‌نمایش
+        $variables['app_name'] = Bootstrap::getConfig('app.name', 'پُست‌یار');
+        $variables['app_url'] = Bootstrap::getConfig('app.url', '#');
+        $variables['name'] = 'نام نمونه';
+        $variables['plan_name'] = 'پلن حرفه‌ای';
+        $variables['amount'] = TextFormat::fa_digits('500000');
+        $variables['days_left'] = TextFormat::fa_digits('3');
+        $variables['ticket_subject'] = 'موضوع تیکت نمونه';
+        $variables['message'] = 'این یک پیام نمونه برای پیش‌نمایش اعلان است.';
+        $variables['date'] = '۱۴۰۴/۰۴/۲۶';
+        $variables['reset_link'] = '#';
+
+        echo EmailTemplate::renderTemplate($bodyHtml, $variables);
+        exit;
+    }
+
+    public function handleLinkRedirect(string $code) {
+        $result = LinkTracker::handleClick($code);
+        if ($result) {
+            header('Location: ' . $result['original_url'], true, 302);
+            exit;
+        }
+        http_response_code(404);
+        exit('لینک یافت نشد.');
+    }
+
+    public function linkStatsSection() {
+        $this->checkAuth();
+        $tenantId = Auth::tenantId();
+        $stats = LinkTracker::getUserLinkStats($tenantId);
+        $dailyClicks = LinkTracker::getDailyClicks($tenantId, 30);
+        echo json_encode(['stats' => $stats, 'daily' => $dailyClicks], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function handleResetPasswordSms() {
+        header('Content-Type: application/json; charset=utf-8');
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { echo json_encode(['success' => false, 'message' => 'خطای امنیتی!'], JSON_UNESCAPED_UNICODE); exit; }
+        $phone = trim($_POST['phone'] ?? '');
+        if (empty($phone)) { echo json_encode(['success' => false, 'message' => 'شماره موبایل را وارد کنید.'], JSON_UNESCAPED_UNICODE); exit; }
+        if (!class_exists('WHCM\\Core\\Sms') || !Sms::isEnabled()) { echo json_encode(['success' => false, 'message' => 'سرویس پیامک فعال نیست.'], JSON_UNESCAPED_UNICODE); exit; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare('SELECT id FROM users WHERE phone = ? LIMIT 1');
+        $stmt->execute([$phone]);
+        $user = $stmt->fetch();
+        if (!$user) { echo json_encode(['success' => true, 'message' => 'در صورت وجود حساب، کد تأیید ارسال شد.'], JSON_UNESCAPED_UNICODE); exit; }
+        $userId = (int)$user['id'];
+        $stmt = $db->prepare('SELECT template_id FROM sms_templates WHERE event_key = ? AND is_active = 1 LIMIT 1');
+        $stmt->execute(['password_reset']);
+        $template = $stmt->fetch();
+        if (!$template) { echo json_encode(['success' => false, 'message' => 'قالب پیامک بازنشانی تنظیم نشده است.'], JSON_UNESCAPED_UNICODE); exit; }
+        $code = VerificationCode::generate($userId, 'sms_reset', 5);
+        $result = Sms::send($phone, (int)$template['template_id'], [['Parameter' => 'code', 'ParameterValue' => $code]], $userId);
+        if (!$result['success']) { echo json_encode(['success' => false, 'message' => 'خطا در ارسال پیامک: ' . ($result['error'] ?? '')], JSON_UNESCAPED_UNICODE); exit; }
+        $_SESSION['sms_reset_user_id'] = $userId;
+        echo json_encode(['success' => true, 'message' => 'کد تأیید ارسال شد.'], JSON_UNESCAPED_UNICODE); exit;
+    }
+
+    public function showSmsVerifyForm() {
+        $this->render('home', ['title' => 'تأیید کد پیامکی | پُست‌یار', 'csrf_field' => Csrf::field(), 'message' => $this->getFlashMessage(), 'show_sms_verify' => true]);
+    }
+
+    public function handleVerifySmsCode() {
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/sms-verify'); return; }
+        $code = trim($_POST['code'] ?? '');
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+        $userId = (int)($_SESSION['sms_reset_user_id'] ?? 0);
+        if ($userId <= 0) { $this->setFlashMessage('نشست منقضی.'); $this->redirect('/'); return; }
+        if (empty($code) || !VerificationCode::verify($userId, 'sms_reset', $code)) { $this->setFlashMessage('کد نامعتبر یا منقضی.'); $this->redirect('/sms-verify'); return; }
+        if (empty($newPassword) || strlen($newPassword) < 6) { $this->setFlashMessage('رمز حداقل ۶ کاراکتر.'); $this->redirect('/sms-verify'); return; }
+        if ($newPassword !== $confirmPassword) { $this->setFlashMessage('رمز با تکرار مطابقت ندارد.'); $this->redirect('/sms-verify'); return; }
+        $db = Bootstrap::getDB();
+        $db->prepare('UPDATE users SET password = ? WHERE id = ?')->execute([password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]), $userId]);
+        unset($_SESSION['sms_reset_user_id']);
+        $this->setFlashMessage('رمز عبور با موفقیت تغییر یافت.');
+        $this->redirect('/');
+    }
 }

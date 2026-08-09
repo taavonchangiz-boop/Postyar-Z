@@ -5,105 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title); ?> | پنل مدیریت ارشد پُست‌یار</title>
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/admin.css">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.css" onerror="this.remove()">
-    <style id="modern-jdp-style">
-        /* ظاهر شیک و مدرن هماهنگ با تم تاریک پُست‌یار برای تقویم شمسی */
-        .jdp-container {
-            background: #0f172a !important;
-            border: 1px solid #6366f1 !important;
-            border-radius: 16px !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(99, 102, 241, 0.25) !important;
-            color: #e2e8f0 !important;
-            font-family: 'Vazirmatn', sans-serif !important;
-            z-index: 9999999 !important;
-            padding: 0.85rem !important;
-        }
-        .jdp-container .jdp-icon-plus, .jdp-container .jdp-icon-minus {
-            fill: #818cf8 !important;
-        }
-        .jdp-container .jdp-months, .jdp-container .jdp-years {
-            background: #1e293b !important;
-            border-radius: 10px !important;
-        }
-        .jdp-container .jdp-day, .jdp-container .jdp-month, .jdp-container .jdp-year {
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-        }
-        .jdp-container .jdp-day:hover, .jdp-container .jdp-month:hover, .jdp-container .jdp-year:hover {
-            background: rgba(99, 102, 241, 0.25) !important;
-            color: #ffffff !important;
-            transform: scale(1.05) !important;
-        }
-        .jdp-container .jdp-day.selected, .jdp-container .jdp-month.selected, .jdp-container .jdp-year.selected {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            color: #ffffff !important;
-            font-weight: 900 !important;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5) !important;
-        }
-        .jdp-container .jdp-day.today {
-            border: 2px solid #34d399 !important;
-            color: #34d399 !important;
-        }
-        .jdp-container .jdp-footer {
-            background: #1e293b !important;
-            border-top: 1px dashed #334155 !important;
-            border-radius: 0 0 12px 12px !important;
-        }
-        .jdp-container .jdp-btn-today {
-            background: #10b981 !important;
-            color: white !important;
-            border-radius: 8px !important;
-            font-weight: bold !important;
-            padding: 0.35rem 1rem !important;
-        }
-    
-        @media (max-width: 768px){
-            .admin-bell-popup{
-                position:fixed !important;
-                left:50% !important;
-                top:50% !important;
-                transform:translate(-50%,-50%) !important;
-                width:90vw !important;
-                max-width:340px !important;
-                max-height:80vh;
-                overflow:auto;
-            }
-            #user-bell-popup{
-                position:fixed !important;
-                left:50% !important;
-                top:50% !important;
-                transform:translate(-50%,-50%) !important;
-                width:90vw !important;
-                max-width:340px !important;
-            }
-        }
-
-    
-        header{overflow:visible !important;}
-        /* replaced top 65 */ !important; max-height:75vh; overflow:auto;}
-        @media (min-width: 769px){
-            .admin-bell-popup{position:absolute !important; left:0 !important; top:60px !important; transform:none !important;}
-        }
-
-    
-        #admin-bell-popup{max-height:75vh; overflow:auto;}
-        @media (max-width: 768px){
-            #admin-bell-popup{
-                position:fixed !important;
-                left:50% !important;
-                top:50% !important;
-                transform:translate(-50%,-50%) !important;
-                width:90vw !important;
-                max-width:340px !important;
-                max-height:80vh;
-                overflow:auto;
-            }
-        }
-        @media (min-width: 769px){
-            #admin-bell-popup{top:60px !important;}
-        }
-
-    </style>
 </head>
 <body>
 
@@ -127,6 +30,9 @@
         <div class="menu-item" data-target="broadcast" data-toggle-drawer="true" onclick="switchSection('broadcast')">📢 ارسال اعلان همگانی</div>
         <div class="menu-item" data-target="bank" data-toggle-drawer="true" onclick="switchSection('bank')">💳 تنظیمات کارت بانکی</div>
         <div class="menu-item" data-target="tickets" data-toggle-drawer="true" onclick="switchSection('tickets')">🎫 تیکت‌های پشتیبانی</div>
+        <div class="menu-item" data-target="referral-settings" data-toggle-drawer="true" onclick="switchSection('referral-settings')">🎯 تنظیمات زیرمجموعه‌گیری</div>
+        <div class="menu-item" data-target="sms-settings" data-toggle-drawer="true" onclick="switchSection('sms-settings')">📱 تنظیمات پیامک</div>
+        <div class="menu-item" data-target="email-settings" data-toggle-drawer="true" onclick="switchSection('email-settings')">📧 تنظیمات ایمیل</div>
         <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard'); ?>" class="menu-item" style="color:var(--primary); border-top:1px solid var(--border); padding-top:1rem; border-radius:0; margin-top:1rem;">🏠 رفتن به پیشخوان کاربری</a>
         <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/logout'); ?>" class="menu-item logout-btn" style="margin-top:0.5rem; padding-top:0;">🚪 خروج از حساب</a>
     </div>
@@ -197,6 +103,7 @@
             <div class="menu-item" data-target="broadcast">📢 ارسال اعلان همگانی</div>
             <div class="menu-item" data-target="bank">💳 تنظیمات کارت بانکی</div>
             <div class="menu-item" data-target="tickets">🎫 تیکت‌های پشتیبانی</div>
+            <div class="menu-item" data-target="email-settings">📧 تنظیمات ایمیل</div>
             <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard'); ?>" class="menu-item" style="color:var(--primary); border-top:1px solid var(--border); padding-top:1rem; border-radius:0; margin-top:1.5rem;">🏠 رفتن به پیشخوان کاربری</a>
             <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/logout'); ?>" class="menu-item logout-btn" style="margin-top:0.5rem; padding-top:0;">🚪 خروج از حساب</a>
         </aside>
@@ -221,16 +128,7 @@
                     <span><?php echo htmlspecialchars($message); ?></span>
                     <button type="button" onclick="document.getElementById('system-alert-toast').style.display='none'" style="background:none; border:none; color:white; font-size:1.1rem; cursor:pointer; margin-right:1rem;">✖</button>
                 </div>
-                <script>
-                    setTimeout(function() {
-                        var toast = document.getElementById('system-alert-toast');
-                        if (toast) {
-                            toast.style.opacity = '0';
-                            toast.style.transition = 'opacity 0.6s ease';
-                            setTimeout(function() { toast.style.display = 'none'; }, 600);
-                        }
-                    }, 5000);
-                </script>
+                <script>autoDismissAlert('system-alert-toast', 5000);</script>
             <?php endif; ?>
 
             <!-- ========================================== -->
@@ -1089,6 +987,64 @@
             </div>
 
             <!-- ========================================== -->
+            <!-- ۹. بخش تنظیمات زیرمجموعه‌گیری -->
+            <!-- ========================================== -->
+            <div id="section-referral-settings" class="tab-content">
+                <?php
+                    $admin_ref_settings = \WHCM\Domain\Referral::getAdminSettings();
+                    $settings = $admin_ref_settings;
+                ?>
+                <?php include __DIR__ . '/partials/admin-referral-settings.php'; ?>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- ۱۰. بخش تنظیمات پیامک -->
+            <!-- ========================================== -->
+            <div id="section-sms-settings" class="tab-content">
+                <?php
+                    $sms_settings = [];
+                    $db = \WHCM\Core\Bootstrap::getDB();
+                    $sms_keys = ['sms_enabled', 'sms_api_key', 'sms_line_number'];
+                    foreach ($sms_keys as $sk) {
+                        $sstmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = ? LIMIT 1");
+                        $sstmt->execute([$sk]);
+                        $srow = $sstmt->fetch();
+                        $sms_settings[$sk] = $srow !== false ? $srow['key_value'] : '';
+                    }
+                    $templates = $db->query("SELECT * FROM sms_templates ORDER BY id ASC")->fetchAll();
+                    $logs = $db->query("SELECT sl.*, st.template_name, st.event_key FROM sms_log sl LEFT JOIN sms_templates st ON sl.template_id = st.template_id ORDER BY sl.id DESC LIMIT 50")->fetchAll();
+                    $active_users = $db->query("SELECT id, name, phone FROM users WHERE status = 'active' AND role != 'superadmin' ORDER BY id DESC")->fetchAll();
+                    $filter_status = $_GET['filter_status'] ?? '';
+                    $filter_phone = trim($_GET['filter_phone'] ?? '');
+                ?>
+                <?php include __DIR__ . '/partials/admin-sms-settings.php'; ?>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- ۱۱. بخش تنظیمات ایمیل -->
+            <!-- ========================================== -->
+            <div id="section-email-settings" class="tab-content">
+                <?php
+                    $email_settings = [];
+                    $edb = \WHCM\Core\Bootstrap::getDB();
+                    $smtp_keys = ['smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption', 'smtp_from_address', 'smtp_from_name'];
+                    foreach ($smtp_keys as $ek) {
+                        $estmt = $edb->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = ? LIMIT 1");
+                        $estmt->execute([$ek]);
+                        $erow = $estmt->fetch();
+                        $email_settings[$ek] = $erow !== false ? $erow['key_value'] : '';
+                    }
+                    $email_templates = \WHCM\Core\EmailTemplate::getAllTemplates();
+                    $email_logs = \WHCM\Core\EmailTemplate::getLog(50, 0, !empty($_GET['filter_status']) ? $_GET['filter_status'] : null);
+                    $email_stats = \WHCM\Core\EmailTemplate::getAdminEmailStats();
+                    $active_users = $edb->query("SELECT id, name, email FROM users WHERE status = 'active' AND role != 'superadmin' ORDER BY id DESC")->fetchAll();
+                    $all_users = $edb->query("SELECT id, name, email FROM users WHERE role != 'superadmin' ORDER BY id DESC")->fetchAll();
+                    $filter_status = $_GET['filter_status'] ?? '';
+                ?>
+                <?php include __DIR__ . '/partials/admin-email-settings.php'; ?>
+            </div>
+
+            <!-- ========================================== -->
             <!-- ۸. بخش تیکت‌های پشتیبانی -->
             <!-- ========================================== -->
             <div id="section-tickets" class="tab-content">
@@ -1143,131 +1099,20 @@
         </main>
     </div>
 
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/admin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
     <script>
-        // کنترلر ذخیره‌سازی ایمن جهت ممانعت از کرش شدن اسکریپت در مرورگرهای قدیمی و پرایوت
-        var SafeStorage = {
-            getItem: function(key, defaultValue) {
-                try {
-                    return sessionStorage.getItem(key) || defaultValue;
-                } catch (e) {
-                    return defaultValue;
-                }
-            },
-            setItem: function(key, value) {
-                try {
-                    sessionStorage.setItem(key, value);
-                } catch (e) {
-                    // نادیده گرفتن خطای پرایوت مرورگر
-                }
-            }
-        };
-
-        // بستن و باز کردن منوی موبایل
-        function toggleDrawer() {
-            var drawer = document.getElementById('drawer-menu');
-            var overlay = document.getElementById('drawer-overlay');
-            if (drawer && overlay) {
-                drawer.classList.toggle('show');
-                overlay.classList.toggle('show');
-            }
-        }
-
-        // تابع تعویض بخش‌ها
-        function switchSection(sectionId) {
-            // ۱. پنهان کردن تمام تب‌ها
-            var sections = document.querySelectorAll('.tab-content');
-            for (var i = 0; i < sections.length; i++) {
-                sections[i].classList.remove('active');
-            }
-
-            // ۲. پیدا کردن و فعال کردن سکشن مقصد
-            var targetSec = document.getElementById('section-' + sectionId);
-            if (targetSec) {
-                targetSec.classList.add('active');
-            }
-
-            // ۳. غیرفعال کردن تمامی آیتم‌های منو در کل صفحه
-            var menuItems = document.querySelectorAll('.menu-item');
-            for (var j = 0; j < menuItems.length; j++) {
-                menuItems[j].classList.remove('active');
-            }
-
-            // ۴. فعال کردن تمامی آیتم‌های منوی مربوط به این سکشن (هم موبایل و هم دسکتاپ!)
-            var targets = document.querySelectorAll('.menu-item[data-target="' + sectionId + '"]');
-            for (var k = 0; k < targets.length; k++) {
-                targets[k].classList.add('active');
-            }
-
-            // ۵. ذخیره‌سازی وضعیت تب در سشن کاربر به روش ایمن
-            SafeStorage.setItem('last_admin_tab', sectionId);
-        }
-
-        function initAdminPanel() {
-            // ۱. اتصال کلیک به دکمه همبرگری موبایل
-            var hamburger = document.querySelector('.hamburger-btn');
-            if (hamburger) {
-                hamburger.addEventListener('click', toggleDrawer);
-            }
-
-            // ۲. اتصال کلیک به پس‌زمینه دراور موبایل برای بستن آن
-            var overlay = document.getElementById('drawer-overlay');
-            if (overlay) {
-                overlay.addEventListener('click', toggleDrawer);
-            }
-
-            // ۳. اتصال کلیک به دکمه بستن دراور موبایل
-            var closeBtn = document.querySelector('.drawer-menu .close-btn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', toggleDrawer);
-            }
-
-            // ۴. اتصال کلیک به تک‌تک منوهای پنل
-            var menuItems = document.querySelectorAll('.menu-item');
-            for (var i = 0; i < menuItems.length; i++) {
-                var item = menuItems[i];
-                var target = item.getAttribute('data-target');
-                if (target) {
-                    item.addEventListener('click', function(e) {
-                        var clickedItem = e.currentTarget;
-                        var sectionId = clickedItem.getAttribute('data-target');
-                        switchSection(sectionId);
-                        
-                        // اگر دکمه دارای مشخصه بستن دراور موبایل بود
-                        if (clickedItem.getAttribute('data-toggle-drawer') === 'true') {
-                            toggleDrawer();
-                        }
-                    });
-                }
-            }
-
-            // ۵. لود تب پیش‌فرض یا آخرین تب ذخیره شده
-            var query = window.location.search || '';
-            if (query.indexOf('edit_plan') !== -1) {
-                switchSection('plans');
-                return;
-            }
-
-            var lastTab = SafeStorage.getItem('last_admin_tab', 'dashboard');
-            switchSection(lastTab);
-        }
-
-        // بررسی لود بودن سند جهت اجرای آنی یا تعویقی اسکریپت (تضمین کارکرد تحت هر شرایطی!)
-        if (document.readyState !== 'loading') {
-            initAdminPanel();
-        } else {
-            window.addEventListener('DOMContentLoaded', initAdminPanel);
-        }
-
-        function openGiftModal(userId, userName) {
-            document.getElementById('giftUserId').value = userId;
-            document.getElementById('giftUserName').textContent = userName;
-            document.getElementById('giftModal').style.display = 'flex';
-        }
-        function closeGiftModal() {
-            document.getElementById('giftModal').style.display = 'none';
+        if (typeof jalaliDatepicker !== 'undefined') {
+            try {
+                jalaliDatepicker.startWatch({
+                    minDate: "today",
+                    showTodayBtn: true,
+                    showEmptyBtn: false
+                });
+            } catch (e) {}
         }
     </script>
-    
     <!-- مدال هدیه دادن اشتراک به کاربر -->
     <div id="giftModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
         <div class="card" style="width:100%; max-width:480px; margin:0; position:relative; background:#1e293b; border:1px solid #334155;">
@@ -1359,68 +1204,6 @@
             </div>
         </div>
     </div>
-    <script>
-        var currentProfileUserId = 0;
-        var currentProfileUserName = "";
-
-        function openUserProfileModal(u) {
-            currentProfileUserId = u.id;
-            currentProfileUserName = u.name;
-
-            document.getElementById('up-name').textContent = u.name || "کاربر پُست‌یار";
-            document.getElementById('up-email').textContent = u.email || "";
-            document.getElementById('up-plan').textContent = u.plan_title ? ("💎 " + u.plan_title) : "رایگان / بدون اشتراک";
-            
-            document.getElementById('up-created').textContent = toFaDigits(u.created_at_fa || u.created_at || "نامشخص");
-            document.getElementById('up-end').textContent = toFaDigits(u.end_date_fa || u.end_date || "بدون انقضا");
-            
-            document.getElementById('up-biz-name').textContent = u.business_name || "ثبت نشده";
-            document.getElementById('up-biz-type').textContent = u.business_type || "ثبت نشده";
-
-            document.getElementById('up-channels').textContent = toFaDigits(u.channel_count || 0) + " کانال";
-            document.getElementById('up-posts').textContent = toFaDigits(u.posts_count || 0) + " پست";
-            document.getElementById('up-tickets').textContent = toFaDigits(u.tickets_count || 0) + " تیکت";
-            
-            var spent = parseInt(u.total_spent || 0);
-            document.getElementById('up-payments').textContent = spent.toLocaleString('fa-IR') + " تومان";
-
-            document.getElementById('userProfileModal').style.display = 'flex';
-        }
-
-        function closeUserProfileModal() {
-            document.getElementById('userProfileModal').style.display = 'none';
-        }
-
-        function triggerGiftFromProfile() {
-            closeUserProfileModal();
-            openGiftModal(currentProfileUserId, currentProfileUserName);
-        }
-
-        function toFaDigits(num) {
-            var str = num.toString();
-            var fa = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-            return str.replace(/[0-9]/g, function(w){ return fa[+w]; });
-        }
-
-        function toPersianDateStr(dtStr) {
-            if (!dtStr || dtStr.indexOf('2099') !== -1) return "بدون انقضا / دائمی";
-            return dtStr.split(' ')[0];
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
-    <script>
-        // راه‌اندازی تقویم شمسی جلالی
-        if (typeof jalaliDatepicker !== 'undefined') {
-            try {
-                jalaliDatepicker.startWatch({
-                    minDate: "today",
-                    showTodayBtn: true,
-                    showEmptyBtn: false
-                });
-            } catch (e) {}
-        }
-    </script>
-
     <!-- مدال گفتگو و مدیریت حرفه‌ای تیکت توسط ادمین ارشد -->
     <div id="adminTicketModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1200; align-items:center; justify-content:center; padding:1rem; overflow-y:auto;">
         <div class="card" style="width:100%; max-width:620px; margin:auto; position:relative; background:#0f172a; border:1px solid #6366f1; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.8);">
@@ -1469,270 +1252,6 @@
         </div>
     </div>
 
-    <script>
-        function openAdminTicketModal(t) {
-            document.getElementById('at-modal-subject').textContent = t.subject || "تیکت پشتیبانی";
-            document.getElementById('at-modal-user').textContent = "کاربر: " + (t.user_name || "") + " (" + (t.user_email || "") + ")";
-            document.getElementById('at-reply-id').value = t.id;
-            document.getElementById('at-close-id').value = t.id;
-            
-            var statusSpan = document.getElementById('at-modal-status');
-            if (t.status === 'open') {
-                statusSpan.className = "badge badge-pending";
-                statusSpan.textContent = "در انتظار پاسخ ⏳";
-            } else if (t.status === 'replied') {
-                statusSpan.className = "badge badge-success";
-                statusSpan.textContent = "پاسخ داده شده ✔";
-            } else {
-                statusSpan.className = "badge badge-telegram";
-                statusSpan.textContent = "بسته شده";
-            }
-
-            var bodyDiv = document.getElementById('at-modal-body');
-            bodyDiv.innerHTML = "";
-
-            var rawText = t.message || "";
-            var parts = rawText.split("➖➖➖➖➖➖➖➖➖➖");
-
-            for (var i = 0; i < parts.length; i++) {
-                var text = parts[i].trim();
-                if (!text) continue;
-
-                var bubble = document.createElement('div');
-                bubble.style.padding = "1rem";
-                bubble.style.borderRadius = "12px";
-                bubble.style.lineHeight = "1.8";
-                bubble.style.fontSize = "0.9rem";
-                
-                if (i === 0) {
-                    bubble.style.background = "#1e293b";
-                    bubble.style.border = "1px solid #334155";
-                    bubble.style.color = "#e2e8f0";
-                    bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام کاربر (' + (t.user_name || "کاربر") + '):</div>' + text.replace(/\n/g, "<br>");
-                } else {
-                    bubble.style.background = "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)";
-                    bubble.style.border = "1px solid #6366f1";
-                    bubble.style.color = "#ffffff";
-                    bubble.innerHTML = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div>' + text.replace(/\n/g, "<br>");
-                }
-                bodyDiv.appendChild(bubble);
-            }
-
-            document.getElementById('adminTicketModal').style.display = 'flex';
-        }
-
-        function closeAdminTicketModal() {
-            document.getElementById('adminTicketModal').style.display = 'none';
-        }
-    </script>
-
-<script>
-// اصلاح چیدمان بدون تغییر ساختار HTML: انتقال تب‌هایی که به اشتباه بیرون wrapper افتاده‌اند به داخل main
-(function(){
-  try{
-    var wrapper = document.querySelector('.wrapper');
-    var main = document.querySelector('.wrapper > main');
-    if(!wrapper || !main) return;
-    // تمام تب‌هایی که مستقیماً فرزند body یا wrapper هستند و باید داخل main باشند
-    var ids = ['section-broadcast','section-bank','section-tickets','section-admin-ai','section-admin-responder','section-admin-woo','section-admin-gold','section-discounts'];
-    ids.forEach(function(id){
-      var el = document.getElementById(id);
-      if(el && el.parentElement !== main){
-        main.appendChild(el);
-      }
-    });
-    // اطمینان از نمایش درست کارت بانکی (گاهی display:none می‌ماند)
-    var bank = document.getElementById('section-bank');
-    if(bank){ bank.style.minHeight = '200px'; }
-  }catch(e){ console.log('layout fix',e); }
-})();
-</script>
-
-
-<script>
-// وسط‌چین کردن پاپ‌آپ زنگوله در موبایل بدون تغییر استایل اصلی
-(function(){
-  function centerBell(){
-    if(window.innerWidth > 768) return;
-    var b = document.getElementById('admin-bell-popup');
-    if(b && b.style.display !== 'none'){
-      b.style.setProperty('position','fixed','important');
-      b.style.setProperty('left','50%','important');
-      b.style.setProperty('top','50%','important');
-      b.style.setProperty('transform','translate(-50%,-50%)','important');
-      b.style.setProperty('width','90vw','important');
-      b.style.setProperty('max-width','340px','important');
-    }
-  }
-  var btn = document.querySelector('[onclick*="admin-bell-popup"]');
-  if(btn) btn.addEventListener('click', function(){ setTimeout(centerBell,10); });
-  window.addEventListener('resize', centerBell);
-})();
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  var grid = document.querySelector('#section-dashboard .grid-stats');
-  if(grid && !document.getElementById('admin-detailed-stats')){
-    var card = document.createElement('div');
-    card.id = 'admin-detailed-stats';
-    card.className = 'card';
-    card.style.marginTop = '1.25rem';
-    card.innerHTML = `
-                    <h2>📊 آمار تفکیکی انتشارها و بازخوردها</h2>
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">نمایش دقیق بازخورد هر پست به تفکیک کانال — کلیک کل، یکتا و نرخ تعامل (داده‌ها از همین دیتابیس پُست‌یار)</p>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
-                        <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:1rem;text-align:center;"><div style="font-size:0.8rem;color:#94a3b8;">کل پست‌های ارسالی</div><strong style="color:#38bdf8;font-size:1.4rem;">` + (document.querySelectorAll('#section-users tbody tr').length || 0) + ` پست</strong></div>
-                        <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:1rem;text-align:center;"><div style="font-size:0.8rem;color:#94a3b8;">کل کانال‌های فعال</div><strong style="color:#10b981;font-size:1.4rem;">` + (document.querySelectorAll('#section-plans tbody tr').length || 0) + ` کانال</strong></div>
-                        <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:1rem;text-align:center;"><div style="font-size:0.8rem;color:#94a3b8;">تیکت‌های باز</div><strong style="color:#f59e0b;font-size:1.4rem;">` + (document.querySelectorAll('#section-tickets tbody tr').length || 0) + ` تیکت</strong></div>
-                    </div>
-                    <div style="font-size:0.8rem;color:#64748b;text-align:center;">آمار به صورت زنده از همین جداول محاسبه می‌شود — برای جزئیات هر کانال، تب «مدیریت کاربران» → پروفایل ۳۶۰ درجه را ببینید</div>
-    `;
-    grid.parentNode.insertBefore(card, grid.nextSibling);
-  }
-});
-</script>
-
-
-<script>
-(function(){
-  var modelsMap = {
-    'openai': [
-      {v:'gpt-4o', t:'GPT-4o (پرچمدار)'},
-      {v:'gpt-4o-mini', t:'GPT-4o-mini (سریع و اقتصادی)'},
-      {v:'gpt-4-turbo', t:'GPT-4 Turbo'},
-      {v:'gpt-3.5-turbo', t:'GPT-3.5 Turbo'}
-    ],
-    'openrouter': [
-      {v:'anthropic/claude-3.5-sonnet', t:'Claude 3.5 Sonnet'},
-      {v:'meta-llama/llama-3.1-70b-instruct', t:'Llama 3.1 70B'},
-      {v:'openai/gpt-4o', t:'GPT-4o via OpenRouter'},
-      {v:'google/gemini-pro', t:'Gemini Pro via OpenRouter'}
-    ],
-    'groq': [
-      {v:'llama-3.3-70b-versatile', t:'Llama 3.3 70B Versatile'},
-      {v:'llama-3.1-8b-instant', t:'Llama 3.1 8B Instant'},
-      {v:'mixtral-8x7b-32768', t:'Mixtral 8x7B'},
-      {v:'gemma2-9b-it', t:'Gemma2 9B'}
-    ],
-    'gemini': [
-      {v:'gemini-2.0-flash', t:'Gemini 2.0 Flash (پیشنهادی)'},
-      {v:'gemini-1.5-pro', t:'Gemini 1.5 Pro'},
-      {v:'gemini-1.5-flash', t:'Gemini 1.5 Flash'},
-      {v:'gemini-pro', t:'Gemini Pro'}
-    ],
-    'custom': []
-  };
-  var urlsMap = {
-    'openai': 'https://api.openai.com/v1/chat/completions',
-    'openrouter': 'https://openrouter.ai/api/v1/chat/completions',
-    'groq': 'https://api.groq.com/openai/v1/chat/completions',
-    'gemini': 'https://generativelanguage.googleapis.com/v1beta/openAI/chat/completions',
-    'custom': ''
-  };
-  function fillModels(provider, saved){
-    var sel = document.getElementById('ai-g-model');
-    var custom = document.getElementById('ai-g-model-custom');
-    var urlInput = document.getElementById('ai-g-url');
-    if(!sel) return;
-    sel.innerHTML = '';
-    if(provider === 'custom'){
-      sel.style.display='none';
-      if(custom){ custom.style.display='block'; custom.value = saved || ''; custom.focus(); sel.value = custom.value; custom.oninput = function(){ sel.value = this.value; }; }
-      if(urlInput){ urlInput.placeholder = 'https://example.com/v1/chat/completions'; }
-      return;
-    }
-    sel.style.display='block';
-    if(custom) custom.style.display='none';
-    var list = modelsMap[provider] || [];
-    list.forEach(function(m){
-      var opt=document.createElement('option');
-      opt.value=m.v; opt.textContent=m.t;
-      sel.appendChild(opt);
-    });
-    if(saved && list.some(function(m){return m.v===saved;})){
-      sel.value = saved;
-    } else if(list.length){
-      sel.value = list[0].v;
-    }
-    if(urlInput && urlsMap[provider]) urlInput.value = urlsMap[provider];
-  }
-  document.addEventListener('DOMContentLoaded', function(){
-    var prov = document.getElementById('ai-g-provider');
-    var sel = document.getElementById('ai-g-model');
-    if(!prov || !sel) return;
-    // مقدار ذخیره شده از PHP (اگر ادمین قبلاً ذخیره کرده باشد)
-    var savedModel = 'gpt-4o';
-    // سعی کن از مقدار قبلی input اگر وجود داشت استفاده کنی
-    prov.addEventListener('change', function(){ fillModels(this.value, null); });
-    // مقدار اولیه
-    fillModels(prov.value, savedModel);
-    // اگر کاربر مدل سفارشی تایپ کرد، مقدار سلکت را به‌روز کن
-    var custom = document.getElementById('ai-g-model-custom');
-    if(custom){ custom.addEventListener('input', function(){ sel.value = this.value; }); }
-    // قبل از ارسال فرم، اگر حالت custom بود مقدار را پر کن
-    var form = prov.closest('form');
-    if(form){ form.addEventListener('submit', function(){ if(prov.value==='custom' && custom){ sel.value = custom.value; } }); }
-  });
-})();
-</script>
-
-
-<script>
-// رفع برون‌رفت پاپ‌آپ زنگوله در موبایل: انتقال به body و وسط‌چین واقعی
-(function(){
-  var btn = document.querySelector('[onclick*="admin-bell-popup"]');
-  var popup = document.getElementById('admin-bell-popup');
-  if(!btn || !popup) return;
-  function showPopup(){
-    if(window.innerWidth <= 768){
-      // انتقال به body تا fixed نسبت به viewport باشد نه والد transformدار
-      if(popup.parentElement !== document.body){
-        document.body.appendChild(popup);
-        popup.style.setProperty('position','fixed','important');
-        popup.style.setProperty('left','50%','important');
-        popup.style.setProperty('top','50%','important');
-        popup.style.setProperty('transform','translate(-50%,-50%)','important');
-        popup.style.setProperty('width','90vw','important');
-        popup.style.setProperty('max-width','340px','important');
-        popup.style.setProperty('z-index','99999','important');
-        // افزودن بک‌دراپ برای بستن با کلیک بیرون
-        var backdrop = document.getElementById('admin-bell-backdrop');
-        if(!backdrop){
-          backdrop = document.createElement('div');
-          backdrop.id = 'admin-bell-backdrop';
-          backdrop.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:99998; display:none;';
-          backdrop.onclick = function(){ popup.style.display='none'; backdrop.style.display='none'; };
-          document.body.appendChild(backdrop);
-        }
-        backdrop.style.display = 'block';
-      }
-      popup.style.display = 'flex';
-    }
-  }
-  // بازنویسی onclick
-  btn.setAttribute('onclick','');
-  btn.addEventListener('click', function(e){
-    e.stopPropagation();
-    if(popup.style.display==='flex' && popup.parentElement===document.body){
-      popup.style.display='none';
-      var bd=document.getElementById('admin-bell-backdrop');
-      if(bd) bd.style.display='none';
-      // برگرداندن به محل اصلی برای دسکتاپ
-      if(window.innerWidth > 768){
-        var orig = document.querySelector('header div[style*="position:relative"]');
-        if(orig) orig.appendChild(popup);
-      }
-    } else {
-      if(window.innerWidth <= 768) showPopup();
-      else {
-        popup.style.display = (popup.style.display==='flex'?'none':'flex');
-      }
-    }
-  });
-})();
-</script>
 
 </body>
 </html>

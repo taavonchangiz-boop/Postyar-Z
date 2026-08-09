@@ -62,7 +62,39 @@ Router::post('/hnnh/save-bank-settings', 'MainController@handleSaveBankSettings'
 Router::post('/hnnh/add-user-manual', 'MainController@handleAddUserManual');
 Router::post('/hnnh/grant-subscription-manual', 'MainController@handleGrantSubscriptionManual');
 
-// ثبت مسیرهای ردیابی کلیک و وب‌هوک پیام‌رسان‌ها
+// ثبت مسیرهای سیستم زیرمجموعه‌گیری و کیف پول
+Router::get('/dashboard/referral', 'MainController@referralSection');
+Router::get('/dashboard/wallet', 'MainController@walletSection');
+Router::post('/dashboard/convert-points', 'MainController@handleConvertPoints');
+
+// ثبت مسیرهای ادمین — سیستم زیرمجموعه‌گیری
+Router::get('/hnnh/referral-settings', 'MainController@adminReferralSettings');
+Router::post('/hnnh/save-referral-settings', 'MainController@handleSaveReferralSettings');
+Router::get('/hnnh/wallet-stats', 'MainController@adminWalletStats');
+
+// ثبت مسیرهای ادمین — سیستم پیامک (SMS.ir)
+Router::get('/hnnh/sms-settings', 'MainController@adminSmsSettings');
+Router::post('/hnnh/save-sms-config', 'MainController@handleSaveSmsConfig');
+Router::post('/hnnh/save-sms-template', 'MainController@handleSaveSmsTemplate');
+Router::post('/hnnh/delete-sms-template', 'MainController@handleDeleteSmsTemplate');
+Router::post('/hnnh/test-sms', 'MainController@handleTestSms');
+Router::post('/hnnh/send-bulk-sms', 'MainController@handleSendBulkSms');
+
+// ثبت مسیرهای ادمین — سیستم ایمیل (قالب‌ها و SMTP)
+Router::get('/hnnh/email-settings', 'MainController@adminEmailSettings');
+Router::post('/hnnh/save-email-config', 'MainController@handleSaveEmailConfig');
+Router::post('/hnnh/save-email-template', 'MainController@handleSaveEmailTemplate');
+Router::post('/hnnh/delete-email-template', 'MainController@handleDeleteEmailTemplate');
+Router::post('/hnnh/test-email', 'MainController@handleTestEmail');
+Router::post('/hnnh/send-bulk-email', 'MainController@handleSendBulkEmail');
+Router::post('/hnnh/preview-email-template', 'MainController@handlePreviewEmailTemplate');
+
+// ثبت مسیرهای ردیابی لینک و وب‌هوک
+Router::get('/go/{code}', 'MainController@handleLinkRedirect');
+Router::get('/dashboard/link-stats', 'MainController@linkStatsSection');
+Router::post('/reset-password-sms', 'MainController@handleResetPasswordSms');
+Router::get('/sms-verify', 'MainController@showSmsVerifyForm');
+Router::post('/verify-sms-code', 'MainController@handleVerifySmsCode');
 Router::get('/click', 'MainController@handleClick');
 Router::post('/api/webhook', 'MainController@handleApiWebhook');
 

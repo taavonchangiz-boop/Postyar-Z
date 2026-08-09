@@ -66,4 +66,12 @@ return [
         'from_address' => 'noreply@your-domain.ir',
         'from_name' => 'پُست‌یار',
     ],
+
+    // تنظیمات پیامک (SMS.ir)
+    'sms' => [
+        'enabled' => false,
+        'provider' => 'smsir',
+        'api_key' => '',
+        'line_number' => '',
+    ],
 ];

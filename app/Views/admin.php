@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title); ?> | پنل مدیریت ارشد پُست‌یار</title>
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/admin.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@latest/dist/jalalidatepicker.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.css" onerror="this.remove()">
     <style id="modern-jdp-style">
         /* ظاهر شیک و مدرن هماهنگ با تم تاریک پُست‌یار برای تقویم شمسی */
         .jdp-container {
@@ -1407,8 +1407,7 @@
             return dtStr.split(' ')[0];
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@latest/dist/jalalidatepicker.min.js">
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
     <script>
         // راه‌اندازی تقویم شمسی جلالی
         if (typeof jalaliDatepicker !== 'undefined') {

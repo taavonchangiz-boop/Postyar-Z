@@ -1,0 +1,46 @@
+# پُست‌یار — Root .htaccess
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # هدایت تمام ترافیک به public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{REQUEST_URI} !^/index\.php$
+    RewriteRule ^(.*)$ /public/$1 [L,QSA]
+</IfModule>
+
+# محافظت از cron.php — فقط از طریق CLI قابل اجرا
+<Files "cron.php">
+    <IfModule !mod_authz_core>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core>
+        Require all denied
+    </IfModule>
+</Files>
+
+# محافظت از فایل‌های حساس
+<FilesMatch "(config\.php|error_log|\.env|composer\.(json|lock)|package\.json)">
+    <IfModule !mod_authz_core>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# جلوگیری از لیست دایرکتوری
+Options -Indexes
+
+# امنیت: غیرفعال‌سازی سرقت Server Signature
+ServerSignature Off
+
+# امنیت: جلوگیری از کلیک‌جکینگ در سطح سرور (لایه اضافی)
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

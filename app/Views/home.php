@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title ?? 'پُست‌یار | سامانه هوشمند مدیریت و انتشار کانال‌ها'); ?></title>
     <meta name="description" content="پُست‌یار - ابزار هوشمند مدیریت، زمان‌بندی شمسی، انتشار چندکاناله در تلگرام و بله، ربات خودکار نرخ طلا و سکه، پاسخگوی کلمات کلیدی و اتصال به ووکامرس.">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>')</script>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/home.css">
     <script>

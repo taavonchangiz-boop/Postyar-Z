@@ -1,19 +1,20 @@
-const CACHE_NAME = 'whcm-saas-v1';
-const ASSETS_TO_CACHE = [
-  '/',
+const CACHE_NAME = 'whcm-saas-v2';
+
+// فقط فایل‌های استاتیک کش می‌شوند — صفحات دینامیک هرگز کش نمی‌شوند
+const STATIC_ASSETS = [
   '/manifest.json',
   '/assets/css/admin.css',
   '/assets/css/dashboard.css',
-  '/assets/css/home.css'
+  '/assets/css/home.css',
+  '/assets/images/logo.webp',
+  '/assets/images/hero_rocket.webp'
 ];
 
-// نصب سرویس ورکر و کش کردن فایل‌های اولیه
+// نصب سرویس ورکر و کش فایل‌های استاتیک
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+      .then(cache => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
@@ -23,23 +24,53 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        cacheNames
+          .filter(cache => cache !== CACHE_NAME)
+          .map(cache => caches.delete(cache))
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// استراتژی کش: اول شبکه، در صورت نبود شبکه بازیابی از کش (Network First)
+// استراتژی کش: Cache First برای فایل‌های استاتیک، Network Only برای صفحات دینامیک
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
+  const url = new URL(event.request.url);
+  const isStaticAsset = event.request.method === 'GET' && (
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.webp') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.woff2') ||
+    url.pathname === '/manifest.json'
+  );
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(response => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          }
+          return response;
+        });
       })
+    );
+    return;
+  }
+
+  // صفحات HTML و API — همیشه Network
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      // فقط در صورت قطع اینترنت کامل، صفحه آفلاین نمایش داده شود
+      if (event.request.mode === 'navigate') {
+        return caches.match('/index.php?route=/');
+      }
+      return new Response('آفلاین هستید', { status: 503, statusText: 'Service Unavailable' });
+    })
   );
 });
 
@@ -57,12 +88,10 @@ self.addEventListener('push', event => {
 
   const options = {
     body: data.body,
-    icon: '/assets/icons/icon-192x192.png',
-    badge: '/assets/icons/icon-192x192.png',
+    icon: '/assets/images/logo.webp',
+    badge: '/assets/images/logo.webp',
     vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/'
-    }
+    data: { url: data.url || '/' }
   };
 
   event.waitUntil(
@@ -75,8 +104,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then(windowClients => {
-      for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i];
+      for (const client of windowClients) {
         if (client.url === event.notification.data.url && 'focus' in client) {
           return client.focus();
         }

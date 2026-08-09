@@ -10,11 +10,13 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.net.http.SslCertificate;
+import android.net.http.SslError;
+import android.webkit.SslErrorHandler;
 import androidx.appcompat.app.AppCompatActivity;
 import ir.belitia.whcm.BuildConfig;
 
@@ -22,7 +24,7 @@ import ir.belitia.whcm.BuildConfig;
  * رپر اندرویدی نیتیو (WebView Client) جهت اجرای وب‌اپلیکیشن SaaS پُست‌یار
  *
  * شامل: هندل دکمه بازگشت فیزیکی، شتاب‌دهنده سخت‌افزاری، آپلود فایل،
- * مدیریت خطای شبکه و نمایش صفحه آفلاین سفارشی
+ * مدیریت خطای شبکه، صفحه آفلاین سفارشی و اعتبارسنجی SSL
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -58,21 +60,35 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
+        // امنیت: غیرفعال‌سازی دسترسی فایل برای جلوگیری از XSS
+        webSettings.setAllowFileAccess(false);
+        webSettings.setAllowContentAccess(false);
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        // فعال‌سازی Mixed Content Mode — فقط HTTPS
+        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return true;
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                // فقط URLهای HTTPS مجاز هستند
+                String url = request.getUrl().toString();
+                if (url.startsWith("https://") || url.startsWith(BuildConfig.APP_URL)) {
+                    view.loadUrl(url);
+                    return true;
+                }
+                return true; // مسدود کردن URLهای غیرمجاز
             }
 
             @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                // امنیت: هرگز SSL errors را نادیده نگیر
+                handler.cancel();
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, int errorCode, String description, android.webkit.WebResourceResponse failingUrl) {
                 // فقط برای درخواست اصلی (نه منابع فرعی مثل CSS/JS)
                 if (request.isForMainFrame()) {
                     isErrorPageShown = true;
@@ -104,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
         if (isNetworkAvailable()) {
             mWebView.loadUrl(APP_URL);
         } else {
+            isErrorPageShown = true;
             mWebView.loadDataWithBaseURL("about:blank", OFFLINE_HTML, "text/html", "UTF-8", null);
         }
     }
@@ -111,11 +128,17 @@ public class MainActivity extends AppCompatActivity {
     /**
      * بررسی در دسترس بودن اتصال اینترنت
      */
+    @SuppressWarnings("deprecation")
     private boolean isNetworkAvailable() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        android.net.Network network = cm.getActiveNetwork();
+        if (network == null) {
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        }
+        android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+        return caps != null && (caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
     @Override
@@ -139,7 +162,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // اگر صفحه خطا نمایش داده شده، دکمه برگشت برنامه را ببند
         if (keyCode == KeyEvent.KEYCODE_BACK && isErrorPageShown) {
             finish();
             return true;

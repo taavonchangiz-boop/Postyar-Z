@@ -13,6 +13,17 @@ use WHCM\Core\Csrf;
 abstract class BaseController {
 
     /**
+     * نگاشت MIME type معتبر به فرمت‌های مجاز
+     */
+    private static array $allowedMimeTypes = [
+        'jpg'  => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'png'  => ['image/png'],
+        'gif'  => ['image/gif'],
+        'webp' => ['image/webp'],
+    ];
+
+    /**
      * بررسی احراز هویت کاربر
      */
     protected function checkAuth() {
@@ -23,13 +34,48 @@ abstract class BaseController {
     }
 
     /**
-     * بررسی دسترسی سوپرادمین
+     * بررسی دسترسی سوپرادمین (با پشتیبانی از IP Whitelist)
      */
     protected function checkSuperAdmin() {
+        // ---- اعتبارسنجی IP Whitelist ----
+        $whitelist = Bootstrap::getConfig('security.admin_ip_whitelist', []);
+        if (!empty($whitelist) && is_array($whitelist)) {
+            $clientIp = $this->getClientIp();
+            if (!in_array($clientIp, $whitelist, true)) {
+                http_response_code(403);
+                exit('دسترسی غیرمجاز: IP شما در لیست مجاز نیست.');
+            }
+        }
+
         if (!Auth::check() || !Auth::isSuperAdmin()) {
             $this->setFlashMessage('دسترسی شما غیرمجاز است.');
             $this->redirect('/');
         }
+    }
+
+    /**
+     * دریافت IP واقعی کاربر (با پشتیبانی از Trusted Proxies)
+     *
+     * @return string
+     */
+    private function getClientIp(): string {
+        $trustedProxies = Bootstrap::getConfig('security.trusted_proxies', []);
+
+        // اگر آیپی فعلی یکی از پروکسی‌های معتبر نبود، از REMOTE_ADDR استفاده کن
+        if (!empty($trustedProxies) && in_array($_SERVER['REMOTE_ADDR'] ?? '', $trustedProxies, true)) {
+            // ترتیب اولویت: X-Forwarded-For → X-Real-IP
+            $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+            if (!empty($forwarded)) {
+                $ips = explode(',', $forwarded);
+                return trim($ips[0]);
+            }
+            $realIp = $_SERVER['HTTP_X_REAL_IP'] ?? '';
+            if (!empty($realIp)) {
+                return trim($realIp);
+            }
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     }
 
     /**
@@ -71,45 +117,92 @@ abstract class BaseController {
     }
 
     /**
-     * آپلود فایل تصویر و تبدیل به WebP
+     * آپلود امن فایل تصویر با اعتبارسنجی MIME type و محدودیت حجم
+     *
+     * @param string $file_input_name نام فیلد فرم
+     * @param string $subfolder زیرپوشه ذخیره‌سازی
+     * @return string آدرس نسبی فایل ذخیره‌شده یا رشته خالی در صورت خطا
      */
-    protected function uploadAndConvertToWebp($file_input_name, $subfolder = 'uploads') {
+    protected function uploadAndConvertToWebp($file_input_name, $subfolder = 'uploads'): string {
         if (empty($_FILES[$file_input_name]['tmp_name']) || $_FILES[$file_input_name]['error'] !== UPLOAD_ERR_OK) {
             return '';
         }
-        
-        $tmp = $_FILES[$file_input_name]['tmp_name'];
+
+        // ---- ۱. بررسی محدودیت حجم ----
+        $max_size_bytes = (int)(Bootstrap::getConfig('upload.max_size_mb', 5)) * 1024 * 1024;
+        if ($_FILES[$file_input_name]['size'] > $max_size_bytes) {
+            $this->setFlashMessage('حجم فایل آپلودی بیش از حد مجاز (' . Bootstrap::getConfig('upload.max_size_mb', 5) . ' مگابایت) است.');
+            return '';
+        }
+
+        // ---- ۲. بررسی فرمت مجاز از تنظیمات ----
+        $allowed_extensions = Bootstrap::getConfig('upload.allowed_types', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         $name = $_FILES[$file_input_name]['name'];
         $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        
+
+        if (!in_array($ext, $allowed_extensions, true)) {
+            $this->setFlashMessage('فرمت فایل آپلودی مجاز نیست. فرمت‌های مجاز: ' . implode('، ', $allowed_extensions));
+            return '';
+        }
+
+        // ---- ۳. اعتبارسنجی MIME type واقعی (جلوگیری از Polyglot Attack) ----
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $detected_mime = $finfo->file($_FILES[$file_input_name]['tmp_name']);
+        $expected_mimes = self::$allowedMimeTypes[$ext] ?? [];
+
+        if (empty($expected_mimes) || !in_array($detected_mime, $expected_mimes, true)) {
+            $this->setFlashMessage('نوع فایل آپلودی با فرمت ادعایی مطابقت ندارد. لطفاً یک تصویر واقعی ارسال کنید.');
+            return '';
+        }
+
+        // ---- ۴. بررسی عدم وجود کد PHP در فایل ----
+        $file_content = file_get_contents($_FILES[$file_input_name]['tmp_name'], false, null, 0, 1024);
+        if (preg_match('/<\?php|<\?=/i', $file_content)) {
+            $this->setFlashMessage('فایل آپلودی حاوی کد اجرایی است و رد شد.');
+            return '';
+        }
+
+        // ---- ۵. ساخت پوشه و نام تصادفی ----
         $target_dir = __DIR__ . '/../../public/assets/' . $subfolder . '/';
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0755, true);
         }
-        
-        $filename = uniqid('img_') . '.webp';
+
+        $filename = bin2hex(random_bytes(8)) . '.webp';
         $target_file = $target_dir . $filename;
-        
+
+        // ---- ۶. تبدیل به WebP ----
         $image = null;
-        if ($ext === 'jpg' || $ext === 'jpeg') {
+        $tmp = $_FILES[$file_input_name]['tmp_name'];
+
+        if ($detected_mime === 'image/jpeg') {
             $image = @imagecreatefromjpeg($tmp);
-        } elseif ($ext === 'png') {
+        } elseif ($detected_mime === 'image/png') {
             $image = @imagecreatefrompng($tmp);
-        } elseif ($ext === 'gif') {
+        } elseif ($detected_mime === 'image/gif') {
             $image = @imagecreatefromgif($tmp);
-        } elseif ($ext === 'webp') {
+        } elseif ($detected_mime === 'image/webp') {
             $image = @imagecreatefromwebp($tmp);
         }
-        
-        if ($image) {
-            imagewebp($image, $target_file, 80);
-            imagedestroy($image);
-            
-            $assets_url = Bootstrap::getAssetsUrl();
-            return rtrim($assets_url, '/') . '/' . $subfolder . '/' . $filename;
+
+        if (!$image) {
+            $this->setFlashMessage('خطا در پردازش تصویر آپلودی.');
+            return '';
         }
-        
-        return '';
+
+        imagewebp($image, $target_file, 80);
+        imagedestroy($image);
+
+        // ---- ۷. مجدداً MIME نهایی را بررسی کن ----
+        $final_mime = $finfo->file($target_file);
+        if ($final_mime !== 'image/webp') {
+            @unlink($target_file);
+            $this->setFlashMessage('خطا در تبدیل تصویر.');
+            return '';
+        }
+
+        $assets_url = Bootstrap::getAssetsUrl();
+        return rtrim($assets_url, '/') . '/' . $subfolder . '/' . $filename;
     }
 
     /**
@@ -178,6 +271,48 @@ abstract class BaseController {
         } else {
             $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, ?, ?)");
             $stmt->execute([$tenant_id, $key, $value]);
+        }
+    }
+
+    /**
+     * ذخیره انبوه تنظیمات (بهینه‌سازی: کاهش تعداد کوئری‌ها)
+     *
+     * @param int $tenant_id
+     * @param array<string, string> $settings آرایه کلید => مقدار
+     */
+    protected function saveSettingsBatch(int $tenant_id, array $settings): void {
+        $db = Bootstrap::getDB();
+
+        // دریافت کلیدهای موجود یکجا
+        $stmt = $db->prepare("SELECT key_name FROM settings WHERE tenant_id = ?");
+        $stmt->execute([$tenant_id]);
+        $existing = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        $inserts = [];
+        $updates = [];
+
+        foreach ($settings as $key => $val) {
+            if (in_array($key, $existing, true)) {
+                $updates[] = [$val, $tenant_id, $key];
+            } else {
+                $inserts[] = [$tenant_id, $key, $val];
+            }
+        }
+
+        // اجرای بهینه INSERT‌ها
+        if (!empty($inserts)) {
+            $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, ?, ?)");
+            foreach ($inserts as $row) {
+                $stmt->execute($row);
+            }
+        }
+
+        // اجرای بهینه UPDATE‌ها
+        if (!empty($updates)) {
+            $stmt = $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = ? AND key_name = ?");
+            foreach ($updates as $row) {
+                $stmt->execute($row);
+            }
         }
     }
 }

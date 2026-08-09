@@ -43,6 +43,8 @@ Router::post('/dashboard/add-auto-reply', 'MainController@handleAddAutoReply');
 Router::post('/dashboard/delete-auto-reply', 'MainController@handleDeleteAutoReply');
 Router::post('/dashboard/add-ticket', 'MainController@handleCreateTicket');
 Router::post('/reset-password', 'MainController@handleResetPassword');
+Router::get('/reset-password', 'MainController@showResetPasswordForm');
+Router::post('/reset-password/confirm', 'MainController@handleResetPasswordConfirm');
 
 // ثبت مسیرهای مدیریت کل پلتفرم (سوپر ادمین)
 Router::get('/hnnh', 'MainController@admin');

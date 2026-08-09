@@ -1,0 +1,54 @@
+# ==============================
+# پُست‌یار — Git Ignore
+# ==============================
+
+# ---- محیط و پیکربندی ----
+.env
+config/config.php
+
+# ---- دیتابیس ----
+storage/db/*.sqlite
+storage/db/*.sqlite3
+storage/db/*.db
+
+# ---- لاگ‌ها ----
+*.log
+error_log
+storage/logs/*
+!storage/logs/.gitkeep
+
+# ---- آپلود‌ها ----
+public/assets/uploads/*
+!public/assets/uploads/.gitkeep
+public/assets/plans/*
+!public/assets/plans/.gitkeep
+public/assets/receipts/*
+!public/assets/receipts/.gitkeep
+
+# ---- سیستم عامل ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.code-workspace
+
+# ---- اندروید ----
+android-webview-app/.gradle/
+android-webview-app/build/
+android-webview-app/app/build/
+android-webview-app/local.properties
+android-webview-app/*.apk
+android-webview-app/*.aab
+android-webview-app/*.keystore
+android-webview-app/*.jks
+
+# ---- متفرقه ----
+deprecated.php
+node_modules/
+vendor/
+composer.lock

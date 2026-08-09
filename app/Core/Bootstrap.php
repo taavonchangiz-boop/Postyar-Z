@@ -4,7 +4,7 @@ namespace WHCM\Core;
 /**
  * کلاس راه‌اندازی سامانه (Bootstrap)
  *
- * @package WHCM\Core
+ * @package WHCM.Core
  */
 class Bootstrap {
     /** @var array */
@@ -14,21 +14,11 @@ class Bootstrap {
     private static $db = null;
 
     /**
-     * اجرای اولیه سیستم
+     * اجرای اولیه سیستم — فقط بارگذاری و اتصال دیتابیس
      */
     public static function run() {
-        // ۱. مدیریت خطاها بر اساس محیط (production vs development)
-        $app_env = self::$config['app']['env'] ?? 'production';
-        if ($app_env === 'development') {
-            ini_set('display_errors', 1);
-            ini_set('display_startup_errors', 1);
-            error_reporting(E_ALL);
-        } else {
-            ini_set('display_errors', 0);
-            ini_set('display_startup_errors', 0);
-            error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
-            ini_set('log_errors', 1);
-        }
+        // ۱. مدیریت خطاها
+        self::setupErrorReporting();
 
         // ۲. ریجستر کردن Autoloader سفارشی
         spl_autoload_register([self::class, 'autoload']);
@@ -36,9 +26,28 @@ class Bootstrap {
         // ۳. بارگذاری پیکربندی
         self::$config = require __DIR__ . '/../../config/config.php';
 
-        // ۳.۵. مدیریت خطاها بر اساس محیط
-        $app_env = self::$config['app']['env'] ?? 'production';
-        if ($app_env === 'development') {
+        // ۴. تنظیم منطقه زمانی
+        date_default_timezone_set(self::$config['app']['timezone'] ?? 'Asia/Tehran');
+
+        // ۵. شروع سشن امن
+        Session::start();
+
+        // ۶. ایجاد دایرکتوری‌های مورد نیاز
+        self::ensureDirectories();
+
+        // ۷. راه‌اندازی دیتابیس و اجرای مایگریشن‌ها (فقط اولین بار)
+        self::initDatabase();
+
+        // ۸. اعمال Security Headers
+        self::sendSecurityHeaders();
+    }
+
+    /**
+     * تنظیمات گزارش خطا بر اساس محیط
+     */
+    private static function setupErrorReporting(): void {
+        $env = self::$config['app']['env'] ?? 'production';
+        if ($env === 'development') {
             ini_set('display_errors', 1);
             ini_set('display_startup_errors', 1);
             error_reporting(E_ALL);
@@ -48,161 +57,35 @@ class Bootstrap {
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
             ini_set('log_errors', 1);
         }
+    }
 
-        // ۴. تنظیم منطقه زمانی
-        date_default_timezone_set(self::$config['app']['timezone'] ?? 'Asia/Tehran');
+    /**
+     * اعمال هدرهای امنیتی HTTP
+     */
+    public static function sendSecurityHeaders(): void {
+        // جلوگیری از Clickjacking
+        if (!headers_sent()) {
+            header('X-Frame-Options: SAMEORIGIN');
+            header('X-Content-Type-Options: nosniff');
+            header('X-XSS-Protection: 1; mode=block');
+            header('Referrer-Policy: strict-origin-when-cross-origin');
+            header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 
-        // ۵. شروع سشن امن
-        Session::start();
-
-        // ۶. ایجاد دایرکتوری‌های مورد نیاز در صورت عدم وجود
-        self::ensureDirectories();
-
-        // ۷. راه‌اندازی دیتابیس و اجرای مایگریشن‌ها در صورت اولین اجرا
-        self::initDatabase();
-
-        // ۸. اجرای اتوماتیک ارتقای جداول دیتابیس (بررسی و افزودن ستون‌های جدید)
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN payment_url TEXT NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN image_url TEXT NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN description TEXT NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE users ADD COLUMN business_name VARCHAR(150) NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE users ADD COLUMN business_type VARCHAR(150) NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN early_renewal_discount INTEGER DEFAULT 0;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN general_discount INTEGER DEFAULT 0;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN discount_badge_text VARCHAR(150) NULL;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        try {
-            self::$db->exec("ALTER TABLE plans ADD COLUMN is_featured INTEGER DEFAULT 0;");
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-
-        try {
-            self::$db->exec("ALTER TABLE tickets ADD COLUMN attachment TEXT NULL;");
-        } catch (\Exception $e) {}
-        try {
-            self::$db->exec("ALTER TABLE tickets ADD COLUMN assigned_to INTEGER NULL;");
-        } catch (\Exception $e) {}
-
-        // ۹. ایجاد خودکار جدول تیکت‌های پشتیبانی داخلی (مایگریشن پویا)
-        try {
-            $driver = self::getConfig('database.driver', 'sqlite');
-            if ($driver === 'mysql') {
-                self::$db->exec("
-                    CREATE TABLE IF NOT EXISTS tickets (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        user_id INT NOT NULL,
-                        subject VARCHAR(255) NOT NULL,
-                        category VARCHAR(100) NOT NULL,
-                        message TEXT NOT NULL,
-                        status VARCHAR(50) DEFAULT 'open',
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                ");
-            } else {
-                self::$db->exec("
-                    CREATE TABLE IF NOT EXISTS tickets (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
-                        subject VARCHAR(255) NOT NULL,
-                        category VARCHAR(100) NOT NULL,
-                        message TEXT NOT NULL,
-                        status VARCHAR(50) DEFAULT 'open',
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                    );
-                ");
+            // HSTS — فقط اگر HTTPS باشد
+            $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
+            if ($is_secure) {
+                header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
             }
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        // ۱۰. سیستم خوددرمانی دیسک هاست: پاکسازی اتوماتیک تصاویر آپلود شده‌ی قدیمی‌تر از ۳۰ روز (اجرای بهینه فقط یک‌بار در روز برای سرعت ماورایی!)
-        try {
-            if (empty($_SESSION['last_disk_cleanup_time']) || (time() - $_SESSION['last_disk_cleanup_time'] > 86400)) {
-                $_SESSION['last_disk_cleanup_time'] = time();
-                $uploads_dir = __DIR__ . '/../../public/assets/uploads/';
-                if (file_exists($uploads_dir)) {
-                    $files = glob($uploads_dir . '*.webp');
-                    $now = time();
-                    foreach ($files as $file) {
-                        if (is_file($file)) {
-                            // اگر سن فایل بیش از ۳۰ روز باشد، آن را خودکار حذف کن
-                            if ($now - filemtime($file) > 30 * 86400) {
-                                unlink($file);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
-        }
-
-        // ۱۱. خوددرمانی رسانه‌ای پُست‌یار: تبدیل خودکار تصاویر سنگین به فرمت بهینه و سئو شده‌ی WebP (تحت استانداردهای ۲۰۲۶ روز دنیا)
-        try {
-            $jpg_path = __DIR__ . '/../../public/assets/images/hero_rocket.jpg';
-            $webp_path = __DIR__ . '/../../public/assets/images/hero_rocket.webp';
-            if (file_exists($jpg_path) && !file_exists($webp_path) && function_exists('imagecreatefromjpeg')) {
-                $img = @imagecreatefromjpeg($jpg_path);
-                if ($img) {
-                    imagewebp($img, $webp_path, 80);
-                    imagedestroy($img);
-                }
-            }
-        } catch (\Exception $e) {
-            // نادیده گرفتن خطا
         }
     }
 
     /**
-     * دریافت تنظیمات سیستم (همراه با مکانیزم فوق‌العاده هوشمند تشخیص خودکار URL در هاست اشتراکی)
+     * دریافت تنظیمات سیستم
      */
     public static function getConfig(?string $key = null, $default = null) {
         if ($key === 'app.url') {
             $configured = self::$config['app']['url'] ?? 'http://localhost:8000';
-            // اگر آدرس به صورت پیش‌فرض localhost باشد، به طور هوشمند آدرس دامنه‌ی واقعی هاست را شناسایی می‌کنیم
             if (($configured === 'http://localhost:8000' || empty($configured)) && isset($_SERVER['HTTP_HOST'])) {
                 $is_secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
                 $scheme = $is_secure ? 'https' : 'http';
@@ -212,7 +95,6 @@ class Bootstrap {
                 if ($dir === '/' || $dir === '\\') {
                     $dir = '';
                 }
-                // حذف بخش پابلیک در صورتی که فایل از درون آن اجرا شده باشد
                 if (substr($dir, -7) === '/public') {
                     $dir = substr($dir, 0, -7);
                 }
@@ -251,7 +133,6 @@ class Bootstrap {
      * مکانیزم بارگذاری خودکار کلاس‌ها (PSR-4)
      */
     private static function autoload(string $class) {
-        // فضای نام پیش‌فرض پلتفرم: WHCM
         $prefix = 'WHCM\\';
         $base_dir = __DIR__ . '/../';
 
@@ -271,12 +152,15 @@ class Bootstrap {
     /**
      * بررسی و ساخت پوشه‌های مورد نیاز
      */
-    private static function ensureDirectories() {
+    private static function ensureDirectories(): void {
         $dirs = [
             __DIR__ . '/../../storage',
             __DIR__ . '/../../storage/db',
             __DIR__ . '/../../storage/uploads',
             __DIR__ . '/../../storage/logs',
+            __DIR__ . '/../../public/assets/uploads',
+            __DIR__ . '/../../public/assets/plans',
+            __DIR__ . '/../../public/assets/receipts',
         ];
 
         foreach ($dirs as $dir) {
@@ -289,7 +173,7 @@ class Bootstrap {
     /**
      * راه‌اندازی دیتابیس
      */
-    private static function initDatabase() {
+    private static function initDatabase(): void {
         if (self::$db !== null) {
             return;
         }
@@ -302,7 +186,6 @@ class Bootstrap {
                 self::$db = new \PDO("sqlite:" . $path);
                 self::$db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                 self::$db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-                // فعال‌سازی کلیدهای خارجی در SQLite
                 self::$db->exec("PRAGMA foreign_keys = ON;");
             } else {
                 $host = self::getConfig('database.mysql.host');
@@ -317,18 +200,26 @@ class Bootstrap {
                 self::$db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
             }
 
-            // اجرای فایل نصب/مایگریشن در صورتی که دیتابیس خالی باشد
+            // اجرای مایگریشن‌ها فقط در اولین اجرا
             self::checkAndRunMigrations();
 
+            // اجرای مایگریشن‌های نسخه‌دار (ارتقای تدریجی)
+            self::runVersionedMigrations();
+
         } catch (\PDOException $e) {
-            die("خطا در اتصال به دیتابیس: " . $e->getMessage());
+            // در production فقط لاگ کن، اطلاعات حساس را نمایش نده
+            if ((self::$config['app']['env'] ?? 'production') === 'development') {
+                die("خطا در اتصال به دیتابیس: " . $e->getMessage());
+            } else {
+                die("خطای سیستمی. لطفاً بعداً تلاش کنید.");
+            }
         }
     }
 
     /**
-     * ایجاد جدول‌ها در صورت خالی بودن دیتابیس
+     * ایجاد جدول‌ها در صورت خالی بودن دیتابیس (فقط اولین بار)
      */
-    private static function checkAndRunMigrations() {
+    private static function checkAndRunMigrations(): void {
         $db = self::$db;
         $hasTable = false;
 
@@ -343,14 +234,12 @@ class Bootstrap {
         }
 
         if (!$hasTable) {
-            // بارگذاری و اجرای فایل مایگریشن اصلی بر اساس نوع درایور دیتابیس
             $driver = self::getConfig('database.driver', 'sqlite');
             $filename = ($driver === 'mysql') ? 'install_mysql.sql' : 'install.sql';
             $migration_file = __DIR__ . '/../../migrations/' . $filename;
-            
+
             if (file_exists($migration_file)) {
                 $sql = file_get_contents($migration_file);
-                // پارسر هوشمند SQL: تقسیم بر اساس سمی‌کالن با در نظر گرفتن commentها و stringها
                 $queries = self::splitSqlQueries($sql);
                 foreach ($queries as $query) {
                     $query = trim($query);
@@ -359,6 +248,106 @@ class Bootstrap {
                     }
                 }
             }
+
+            // پس از نصب اولیه، نسخه فعلی مایگریشن ثبت شود
+            self::setMigrationVersion('schema_initial');
+        }
+    }
+
+    /**
+     * مایگریشن‌های نسخه‌دار — هر نسخه فقط یک‌بار اجرا می‌شود
+     */
+    private static function runVersionedMigrations(): void {
+        $migrations = [
+            'v2_add_plan_columns' => function($db) {
+                $cols = ['payment_url TEXT NULL', 'image_url TEXT NULL', 'description TEXT NULL',
+                         'early_renewal_discount INTEGER DEFAULT 0', 'general_discount INTEGER DEFAULT 0',
+                         'discount_badge_text VARCHAR(150) NULL', 'is_featured INTEGER DEFAULT 0'];
+                foreach ($cols as $col) {
+                    try { $db->exec("ALTER TABLE plans ADD COLUMN $col"); } catch (\Exception $e) {}
+                }
+            },
+            'v2_add_user_columns' => function($db) {
+                try { $db->exec("ALTER TABLE users ADD COLUMN business_name VARCHAR(150) NULL"); } catch (\Exception $e) {}
+                try { $db->exec("ALTER TABLE users ADD COLUMN business_type VARCHAR(150) NULL"); } catch (\Exception $e) {}
+            },
+            'v2_add_ticket_columns' => function($db) {
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN attachment TEXT NULL"); } catch (\Exception $e) {}
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN assigned_to INTEGER NULL"); } catch (\Exception $e) {}
+            },
+            'v2_create_tickets_table' => function($db) {
+                $driver = self::getConfig('database.driver', 'sqlite');
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS tickets (
+                            id INT AUTO_INCREMENT PRIMARY KEY, user_id INT NOT NULL,
+                            subject VARCHAR(255) NOT NULL, category VARCHAR(100) NOT NULL,
+                            message TEXT NOT NULL, status VARCHAR(50) DEFAULT 'open',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS tickets (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL,
+                            subject VARCHAR(255) NOT NULL, category VARCHAR(100) NOT NULL,
+                            message TEXT NOT NULL, status VARCHAR(50) DEFAULT 'open',
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                        );");
+                    }
+                } catch (\Exception $e) {}
+            },
+        ];
+
+        foreach ($migrations as $version => $callback) {
+            if (!self::hasMigrationRun($version)) {
+                $callback(self::$db);
+                self::setMigrationVersion($version);
+            }
+        }
+    }
+
+    /**
+     * بررسی اینکه آیا مایگریشن خاصی قبلاً اجرا شده یا خیر
+     */
+    private static function hasMigrationRun(string $version): bool {
+        try {
+            $db = self::$db;
+            // بررسی وجود جدول schema_migrations
+            if (self::getConfig('database.driver') === 'sqlite') {
+                $stmt = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'");
+            } else {
+                $stmt = $db->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'schema_migrations'");
+            }
+            if (!$stmt->fetch()) {
+                return false;
+            }
+
+            $stmt = $db->prepare("SELECT 1 FROM schema_migrations WHERE version = ? LIMIT 1");
+            $stmt->execute([$version]);
+            return (bool)$stmt->fetch();
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * ثبت نسخه مایگریشن به عنوان اجرا شده
+     */
+    private static function setMigrationVersion(string $version): void {
+        $db = self::$db;
+        try {
+            $db->exec("CREATE TABLE IF NOT EXISTS schema_migrations (
+                version VARCHAR(100) PRIMARY KEY, executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )");
+            $stmt = $db->prepare("INSERT OR IGNORE INTO schema_migrations (version) VALUES (?)");
+            $stmt->execute([$version]);
+        } catch (\Exception $e) {
+            // در MySQL از ON DUPLICATE KEY استفاده می‌شود
+            try {
+                $stmt = $db->prepare("INSERT IGNORE INTO schema_migrations (version) VALUES (?)");
+                $stmt->execute([$version]);
+            } catch (\Exception $e2) {}
         }
     }
 
@@ -368,27 +357,26 @@ class Bootstrap {
     public static function getAssetsUrl() {
         $app_url = rtrim(self::getConfig('app.url'), '/');
         $script = $_SERVER['SCRIPT_NAME'] ?? '';
-        
+
         if (strpos($script, '/public/') !== false) {
             return $app_url . '/public/assets';
         } else {
             $filename = $_SERVER['SCRIPT_FILENAME'] ?? '';
             $name = $_SERVER['SCRIPT_NAME'] ?? '';
-            
+
             if (strpos($filename, 'public/index.php') !== false && strpos($name, '/public/') === false) {
                 return $app_url . '/assets';
             }
-            
+
             return $app_url . '/public/assets';
         }
     }
 
     /**
-     * تولید آدرس پایدار با ساختار پارامتری جهت تضمین عدم برخورد با خطای ۴۰۴ در زمان غیرفعال بودن ری‌رایت
+     * تولید آدرس پایدار با ساختار پارامتری
      */
     public static function getRouteUrl(string $path) {
         $app_url = rtrim(self::getConfig('app.url'), '/');
-        // تفکیک مسیر و پارامترهای کوئری
         $parts = explode('?', ltrim($path, '/'), 2);
         $route = '/' . $parts[0];
         $query = isset($parts[1]) ? '&' . $parts[1] : '';
@@ -396,13 +384,12 @@ class Bootstrap {
     }
 
     /**
-     * فرمت‌دهی پویا و پایداری مطلق آدرس تصویر پلن اشتراک
+     * تولید آدرس تصویر پلن اشتراک
      */
     public static function getPlanImageUrl($url) {
         if (empty($url)) {
             return '';
         }
-        // در صورتی که آدرس کامل باشد
         if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
             $parts = explode('/assets/', $url);
             if (count($parts) > 1) {
@@ -410,13 +397,12 @@ class Bootstrap {
             }
             return $url;
         }
-        
-        // در صورتی که آدرس نسبی حاوی assets باشد، آن را فیلتر می‌کنیم تا تکرار نشود
+
         $parts = explode('/assets/', $url);
         if (count($parts) > 1) {
             return self::getAssetsUrl() . '/' . $parts[1];
         }
-        
+
         return self::getAssetsUrl() . '/' . ltrim($url, '/');
     }
 
@@ -437,7 +423,6 @@ class Bootstrap {
             $next = ($i + 1 < $len) ? $sql[$i + 1] : '';
             $prev = ($i > 0) ? $sql[$i - 1] : '';
 
-            // مدیریت stringها
             if (!$in_line_comment && !$in_block_comment) {
                 if (!$in_string && ($char === "'" || $char === '"') ) {
                     $in_string = true;
@@ -448,7 +433,6 @@ class Bootstrap {
                 }
             }
 
-            // مدیریت commentهای خطی (-- )
             if (!$in_string && !$in_block_comment && $char === '-' && $next === '-') {
                 $in_line_comment = true;
             }
@@ -456,7 +440,6 @@ class Bootstrap {
                 $in_line_comment = false;
             }
 
-            // مدیریت commentهای بلوکی (/* */)
             if (!$in_string && !$in_line_comment && $char === '/' && $next === '*') {
                 $in_block_comment = true;
             }
@@ -464,7 +447,6 @@ class Bootstrap {
                 $in_block_comment = false;
             }
 
-            // تقسیم بر اساس سمی‌کالن (فقط اگر داخل string یا comment نباشیم)
             if ($char === ';' && !$in_string && !$in_line_comment && !$in_block_comment) {
                 $queries[] = $current;
                 $current = '';
@@ -474,11 +456,35 @@ class Bootstrap {
             $current .= $char;
         }
 
-        // اضافه کردن آخرین کوئری اگر باقی مانده باشد
         if (trim($current) !== '') {
             $queries[] = $current;
         }
 
         return $queries;
+    }
+
+    /**
+     * پاکسازی دیسک — فقط از طریق Cron Job فراخوانی شود
+     * تصاویر قدیمی‌تر از N روز حذف می‌شوند.
+     */
+    public static function cleanupOldUploads(int $days = 30): int {
+        $count = 0;
+        $uploads_dir = __DIR__ . '/../../public/assets/uploads/';
+        $now = time();
+        $max_age = $days * 86400;
+
+        if (!file_exists($uploads_dir)) {
+            return 0;
+        }
+
+        $files = glob($uploads_dir . '*.{webp,jpg,jpeg,png,gif}', GLOB_BRACE);
+        foreach ($files as $file) {
+            if (is_file($file) && ($now - filemtime($file)) > $max_age) {
+                unlink($file);
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }

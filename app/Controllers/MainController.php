@@ -39,9 +39,9 @@ class MainController extends BaseController {
             }
         }
 
-        // تولید کپچای ریاضی پویا
-        $num1 = rand(1, 9);
-        $num2 = rand(1, 9);
+        // تولید کپچای ریاضی پویا (random_int — مقاوم در برابر پیش‌بینی)
+        $num1 = random_int(1, 9);
+        $num2 = random_int(1, 9);
         $_SESSION['captcha_answer'] = $num1 + $num2;
         $captcha_question = "حاصل جمع " . TextFormat::fa_digits($num1) . " + " . TextFormat::fa_digits($num2) . " چقدر می‌شود؟";
 
@@ -534,8 +534,10 @@ class MainController extends BaseController {
         $stmt_users->execute();
         $users = $stmt_users->fetchAll();
 
-        // تعداد کل کاربران برای pagination
-        $total_users = (int)$db->query("SELECT COUNT(*) FROM users WHERE id != {$admin_id}")->fetchColumn();
+        // تعداد کل کاربران برای pagination (prepared statement — جلوگیری از SQL injection)
+        $stmt_count = $db->prepare("SELECT COUNT(*) FROM users WHERE id != ?");
+        $stmt_count->execute([$admin_id]);
+        $total_users = (int)$stmt_count->fetchColumn();
         $total_user_pages = max(1, (int)ceil($total_users / $per_page));
 
         // ۲. پرداخت‌ها — فقط ۵۰ رکورد آخر (با pagination مشابه)
@@ -552,7 +554,9 @@ class MainController extends BaseController {
         $stmt_payments->execute();
         $payments = $stmt_payments->fetchAll();
 
-        $total_payments = (int)$db->query("SELECT COUNT(*) FROM payments")->fetchColumn();
+        $stmt_count_payments = $db->prepare("SELECT COUNT(*) FROM payments");
+        $stmt_count_payments->execute();
+        $total_payments = (int)$stmt_count_payments->fetchColumn();
         $total_payment_pages = max(1, (int)ceil($total_payments / $per_page));
 
         // ۳. لیست پلن‌های فعال
@@ -580,7 +584,9 @@ class MainController extends BaseController {
         $stmt_tickets->execute();
         $tickets = $stmt_tickets->fetchAll();
 
-        $total_tickets = (int)$db->query("SELECT COUNT(*) FROM tickets")->fetchColumn();
+        $stmt_count_tickets = $db->prepare("SELECT COUNT(*) FROM tickets");
+        $stmt_count_tickets->execute();
+        $total_tickets = (int)$stmt_count_tickets->fetchColumn();
         $total_ticket_pages = max(1, (int)ceil($total_tickets / $per_page));
 
         $this->render('admin', [
@@ -598,116 +604,7 @@ class MainController extends BaseController {
     }
 
     public function handleApprovePayment(){ return (new \WHCM\Modules\Billing\Controllers\PaymentController)->approve(); }
-    public function _old_handleApprovePayment() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['payment_id'] ?? 0);
-
-        $db = Bootstrap::getDB();
-
-        $stmt = $db->prepare("SELECT * FROM payments WHERE id = ? AND status = 'pending' LIMIT 1");
-        $stmt->execute([$id]);
-        $payment = $stmt->fetch();
-
-        if (!$payment) {
-            $this->setFlashMessage('تراکنش مورد نظر یافت نشد یا قبلاً پردازش شده است.');
-            $this->redirect('/hnnh');
-        }
-
-        $user_id = (int)$payment['user_id'];
-        $plan_id = (int)$payment['plan_id'];
-
-        // دریافت اطلاعات پلن انتخابی
-        $stmt = $db->prepare("SELECT * FROM plans WHERE id = ? LIMIT 1");
-        $stmt->execute([$plan_id]);
-        $plan = $stmt->fetch();
-
-        if (!$plan) {
-            $this->setFlashMessage('پلن مربوطه یافت نشد.');
-            $this->redirect('/hnnh');
-        }
-
-        $db->beginTransaction();
-        try {
-            // ۱. تایید تراکنش پرداخت
-            $now = date('Y-m-d H:i:s');
-            $stmt = $db->prepare("UPDATE payments SET status = 'approved', verified_at = ? WHERE id = ?");
-            $stmt->execute([$now, $id]);
-
-            // ۲. منقضی کردن اشتراک‌های فعال پیشین کاربر
-            $stmt = $db->prepare("UPDATE subscriptions SET status = 'expired' WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-
-            // ۳. ایجاد اشتراک جدید بر اساس مدت زمان پلن خریداری شده
-            $duration = (int)$plan['duration_days'];
-            $start_date = $now;
-            $end_date = $duration > 0 
-                ? date('Y-m-d H:i:s', strtotime("+{$duration} days"))
-                : '2099-12-30 00:00:00';
-
-            $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
-            $stmt->execute([$user_id, $plan_id, $start_date, $end_date]);
-
-            $db->commit();
-            $this->setFlashMessage('پرداخت با موفقیت تایید و اشتراک کاربر بلافاصله فعال گردید. ✔');
-
-        } catch (\Exception $e) {
-            $db->rollBack();
-            $this->setFlashMessage('بروز خطا در پردازش تایید تراکنش: ' . $e->getMessage());
-        }
-
-        $this->redirect('/hnnh');
-    }
-
     public function handleCreatePlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->create(); }
-    public function _old_handleCreatePlan() {
-        $this->checkSuperAdmin();
-
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $title = trim($_POST['title'] ?? '');
-        $price = (float)($_POST['price'] ?? 0);
-        $duration = (int)($_POST['duration_days'] ?? 30);
-        $max_channels = (int)($_POST['max_channels'] ?? 1);
-        $max_posts = (int)($_POST['max_posts'] ?? 0); // 0 = نامحدود
-        $early_renewal_discount = (int)($_POST['early_renewal_discount'] ?? 0);
-        $general_discount = (int)($_POST['general_discount'] ?? 0);
-        $discount_badge_text = trim($_POST['discount_badge_text'] ?? '');
-        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-        $description = trim($_POST['description'] ?? '');
-
-        $gold = isset($_POST['feat_gold']) ? true : false;
-        $reply = isset($_POST['feat_reply']) ? true : false;
-        $woo = isset($_POST['feat_woo']) ? true : false;
-        $ai = isset($_POST['feat_ai']) ? true : false;
-        $payment_url = trim($_POST['payment_url'] ?? '');
-        
-        // آپلود فیزیکی فایل و تبدیل همزمان به فرمت بهینه وب‌پی (WebP)
-        $image_url = $this->uploadAndConvertToWebp('plan_image', 'plans');
-
-        $features = json_encode([
-            'gold_ticker' => $gold,
-            'auto_responder' => $reply,
-            'woocommerce' => $woo,
-            'ai_caption' => $ai,
-            'stats' => true
-        ], JSON_UNESCAPED_UNICODE);
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("INSERT INTO plans (title, price, duration_days, max_channels, max_posts, features, payment_url, image_url, description, early_renewal_discount, general_discount, discount_badge_text, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $price, $duration, $max_channels, $max_posts, $features, $payment_url, $image_url, $description, $early_renewal_discount, $general_discount, $discount_badge_text, $is_featured]);
-
-        $this->setFlashMessage('پلن جدید اشتراکی با موفقیت ایجاد گردید. 🌟');
-        $this->redirect('/hnnh');
-    }
-
     /**
      * ردیابی کلیک و انتقال به لینک مقصد نهایی
      */
@@ -745,22 +642,39 @@ class MainController extends BaseController {
     }
 
     /**
-     * دریافت اطلاعات وبهوک‌های ربات‌ها
+     * دریافت اطلاعات وبهوک‌های ربات‌ها (با اعتبارسنجی امنیتی secret_token)
      */
     public function handleApiWebhook() {
         $channel_id = (int)($_GET['channel_id'] ?? 0);
-        if ($channel_id > 0) {
-            $db = Bootstrap::getDB();
-            $stmt = $db->prepare("SELECT * FROM channels WHERE id = ? LIMIT 1");
-            $stmt->execute([$channel_id]);
-            $channel = $stmt->fetch();
-            if ($channel) {
-                Inbox::handleWebhook($channel);
-                echo json_encode(['ok' => true]);
+        if ($channel_id <= 0) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'شناسه کانال نامعتبر است.']);
+            exit;
+        }
+
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("SELECT * FROM channels WHERE id = ? LIMIT 1");
+        $stmt->execute([$channel_id]);
+        $channel = $stmt->fetch();
+
+        if (!$channel) {
+            http_response_code(404);
+            echo json_encode(['ok' => false, 'error' => 'کانال یافت نشد.']);
+            exit;
+        }
+
+        // ---- اعتبارسنجی secret_token تلگرام ----
+        if ($channel['platform'] === 'telegram' && !empty($channel['webhook_secret'])) {
+            $header_secret = $_SERVER['HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN'] ?? '';
+            if (!hash_equals($channel['webhook_secret'], $header_secret)) {
+                http_response_code(403);
+                echo json_encode(['ok' => false, 'error' => 'توکن امنیتی نامعتبر است.']);
                 exit;
             }
         }
-        echo json_encode(['ok' => false, 'error' => 'کانال یافت نشد.']);
+
+        Inbox::handleWebhook($channel);
+        echo json_encode(['ok' => true]);
         exit;
     }
 
@@ -803,17 +717,7 @@ class MainController extends BaseController {
             'gold_auto_channels' => json_encode($channel_ids)
         ];
 
-        foreach ($settings_to_save as $key => $val) {
-            $stmt = $db->prepare("SELECT id FROM settings WHERE tenant_id = ? AND key_name = ? LIMIT 1");
-            $stmt->execute([$tenant_id, $key]);
-            if ($stmt->fetch()) {
-                $stmt = $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = ? AND key_name = ?");
-                $stmt->execute([$val, $tenant_id, $key]);
-            } else {
-                $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, ?, ?)");
-                $stmt->execute([$tenant_id, $key, $val]);
-            }
-        }
+        $this->saveSettingsBatch($tenant_id, $settings_to_save);
 
         $this->setFlashMessage('تنظیمات ربات نرخ طلا با موفقیت ذخیره گردید. 🪙');
         $this->redirect('/dashboard');
@@ -1014,105 +918,8 @@ class MainController extends BaseController {
     }
 
     public function handleEditPlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->edit(); }
-    public function _old_handleEditPlan() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['plan_id'] ?? 0);
-        $title = trim($_POST['title'] ?? '');
-        $price = (float)($_POST['price'] ?? 0);
-        $duration = (int)($_POST['duration_days'] ?? 30);
-        $max_channels = (int)($_POST['max_channels'] ?? 1);
-        $max_posts = (int)($_POST['max_posts'] ?? 0);
-        $early_renewal_discount = (int)($_POST['early_renewal_discount'] ?? 0);
-        $general_discount = (int)($_POST['general_discount'] ?? 0);
-        $discount_badge_text = trim($_POST['discount_badge_text'] ?? '');
-        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-        $description = trim($_POST['description'] ?? '');
-
-        $gold = isset($_POST['feat_gold']) ? true : false;
-        $reply = isset($_POST['feat_reply']) ? true : false;
-        $woo = isset($_POST['feat_woo']) ? true : false;
-        $ai = isset($_POST['feat_ai']) ? true : false;
-        $payment_url = trim($_POST['payment_url'] ?? '');
-        
-        $db = Bootstrap::getDB();
-
-        // آپلود تصویر و تبدیل به وب‌پی
-        $image_url = $this->uploadAndConvertToWebp('plan_image', 'plans');
-        if (empty($image_url)) {
-            // اگر تصویر جدید بارگذاری نشد، همان قبلی حفظ شود
-            $stmt = $db->prepare("SELECT image_url FROM plans WHERE id = ? LIMIT 1");
-            $stmt->execute([$id]);
-            $image_url = $stmt->fetchColumn() ?: '';
-        }
-
-        $features = json_encode([
-            'gold_ticker' => $gold,
-            'auto_responder' => $reply,
-            'woocommerce' => $woo,
-            'ai_caption' => $ai,
-            'stats' => true
-        ], JSON_UNESCAPED_UNICODE);
-
-        $stmt = $db->prepare("
-            UPDATE plans 
-            SET title = ?, price = ?, duration_days = ?, max_channels = ?, max_posts = ?, features = ?, payment_url = ?, image_url = ?, description = ?, early_renewal_discount = ?, general_discount = ?, discount_badge_text = ?, is_featured = ? 
-            WHERE id = ?
-        ");
-        $stmt->execute([$title, $price, $duration, $max_channels, $max_posts, $features, $payment_url, $image_url, $description, $early_renewal_discount, $general_discount, $discount_badge_text, $is_featured, $id]);
-
-        $this->setFlashMessage('پلن اشتراکی با موفقیت بروزرسانی شد. ✔');
-        $this->redirect('/hnnh');
-    }
-
     public function handleDeletePlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->delete(); }
-    public function _old_handleDeletePlan() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['plan_id'] ?? 0);
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("DELETE FROM plans WHERE id = ?");
-        $stmt->execute([$id]);
-
-        $this->setFlashMessage('پلن اشتراکی با موفقیت حذف گردید.');
-        $this->redirect('/hnnh');
-    }
-
     public function handleCreateTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->create(); }
-    public function _old_handleCreateTicket() {
-        $this->checkAuth();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/dashboard');
-        }
-
-        $tenant_id = Auth::tenantId();
-        $subject = trim($_POST['subject'] ?? '');
-        $category = trim($_POST['category'] ?? 'general');
-        $message = trim($_POST['message'] ?? '');
-
-        if (empty($subject) || empty($message)) {
-            $this->setFlashMessage('عنوان تیکت و متن پیام الزامی هستند.');
-            $this->redirect('/dashboard');
-        }
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status) VALUES (?, ?, ?, ?, 'open')");
-        $stmt->execute([$tenant_id, $subject, $category, $message]);
-
-        $this->setFlashMessage('تیکت پشتیبانی شما با موفقیت ارسال شد و در صف پاسخگویی قرار گرفت. 🎫');
-        $this->redirect('/dashboard');
-    }
-
     public function handleReplyTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->reply(); }
 
     public function handleCloseTicketUser(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->closeUser(); }
@@ -1131,42 +938,6 @@ class MainController extends BaseController {
     }
 
     public function handleCloseTicketAdmin(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->closeAdmin(); }
-
-    public function _old_handleReplyTicket() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $ticket_id = (int)($_POST['ticket_id'] ?? 0);
-        $reply = trim($_POST['reply'] ?? '');
-
-        if (empty($reply) || $ticket_id <= 0) {
-            $this->setFlashMessage('متن پاسخ نمی‌تواند خالی باشد.');
-            $this->redirect('/hnnh');
-        }
-
-        $db = Bootstrap::getDB();
-        
-        $stmt = $db->prepare("SELECT message FROM tickets WHERE id = ? LIMIT 1");
-        $stmt->execute([$ticket_id]);
-        $msg = $stmt->fetchColumn();
-
-        if (!$msg) {
-            $this->setFlashMessage('تیکت یافت نشد.');
-            $this->redirect('/hnnh');
-        }
-
-        // الحاق پاسخ ادمین با تاریخ شمسی
-        $new_msg = $msg . "\n\n➖➖➖➖➖➖➖➖➖➖\n[پاسخ ادمین در تاریخ " . TextFormat::now_jalali() . "]:\n" . $reply;
-        
-        $stmt = $db->prepare("UPDATE tickets SET message = ?, status = 'replied' WHERE id = ?");
-        $stmt->execute([$new_msg, $ticket_id]);
-
-        $this->setFlashMessage('پاسخ شما به تیکت با موفقیت ثبت شد. ✔');
-        $this->redirect('/hnnh');
-    }
 
     /**
      * بازیابی کلمه عبور با متد ایمن (توکن یکبار مصرف)
@@ -1210,124 +981,115 @@ class MainController extends BaseController {
             $stmt->execute([$user_id, $token . '|' . $expires]);
         }
 
-        // TODO: ارسال ایمیل با لینک بازنشانی
-        // $reset_link = Bootstrap::getConfig('app.url') . '/reset?token=' . $token;
-        // mail($email, 'بازنشانی رمز عبور', $reset_link);
-        
-        $this->setFlashMessage('در صورت وجود حساب، دستورالعمل بازنشانی ارسال شد.');
+        // ارسال ایمیل با لینک بازنشانی رمز عبور
+        $reset_link = Bootstrap::getConfig('app.url') . '/index.php?route=/reset-password&token=' . $token;
+
+        // دریافت نام کاربر برای قالب ایمیل
+        $stmt = $db->prepare("SELECT name FROM users WHERE id = ? LIMIT 1");
+        $stmt->execute([$user_id]);
+        $user_name = $stmt->fetchColumn() ?: 'کاربر';
+
+        // ارسال ایمیل (اگر SMTP تنظیم نشده باشد، حداقل لاگ می‌شود)
+        $html_body = \WHCM\Core\Mail::buildPasswordResetTemplate($user_name, $reset_link);
+        $sent = \WHCM\Core\Mail::send($email, 'بازنشانی رمز عبور — پُست‌یار', $html_body);
+
+        if (!$sent) {
+            error_log('[Postyar] Failed to send password reset email to: ' . $email);
+        }
+
+        $this->setFlashMessage('در صورت وجود حساب، دستورالعمل بازنشانی به ایمیل شما ارسال شد.');
+        $this->redirect('/');
+    }
+
+    /**
+     * صفحه و فرم بازنشانی رمز عبور با توکن
+     */
+    public function showResetPasswordForm() {
+        $token = trim($_GET['token'] ?? '');
+        if (empty($token)) {
+            $this->setFlashMessage('لینک بازنشانی نامعتبر است.');
+            $this->redirect('/');
+        }
+
+        $this->render('home', [
+            'title' => 'بازنشانی رمز عبور | پُست‌یار',
+            'csrf_field' => Csrf::field(),
+            'message' => $this->getFlashMessage(),
+            'reset_token' => $token,
+            'show_reset_form' => true,
+        ]);
+    }
+
+    /**
+     * اعمال بازنشانی رمز عبور
+     */
+    public function handleResetPasswordConfirm() {
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/');
+        }
+
+        $token = trim($_POST['token'] ?? '');
+        $new_pass = $_POST['new_password'] ?? '';
+        $confirm_pass = $_POST['confirm_password'] ?? '';
+
+        if (empty($token) || empty($new_pass)) {
+            $this->setFlashMessage('تمامی فیلدها الزامی هستند.');
+            $this->redirect('/');
+        }
+
+        if ($new_pass !== $confirm_pass) {
+            $this->setFlashMessage('کلمه عبور جدید با تکرار آن مطابقت ندارد.');
+            $this->redirect('/');
+        }
+
+        if (strlen($new_pass) < 6) {
+            $this->setFlashMessage('کلمه عبور باید حداقل ۶ کاراکتر باشد.');
+            $this->redirect('/');
+        }
+
+        $db = Bootstrap::getDB();
+
+        // جستجوی توکن معتبر
+        $stmt = $db->prepare("SELECT tenant_id, key_value FROM settings WHERE key_name = 'password_reset_token' LIMIT 1");
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+
+        foreach ($rows as $row) {
+            $parts = explode('|', $row['key_value'], 2);
+            if (isset($parts[0]) && hash_equals($parts[0], $token)) {
+                // بررسی انقضای توکن
+                $expires = $parts[1] ?? '';
+                if (!empty($expires) && strtotime($expires) < time()) {
+                    $this->setFlashMessage('لینک بازنشانی منقضی شده است. لطفاً دوباره درخواست دهید.');
+                    $this->redirect('/');
+                }
+
+                // تغییر رمز عبور
+                $hashed = password_hash($new_pass, PASSWORD_BCRYPT, ['cost' => 12]);
+                $user_id = (int)$row['tenant_id'];
+                $stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $stmt->execute([$hashed, $user_id]);
+
+                // حذف توکن استفاده شده
+                $stmt = $db->prepare("DELETE FROM settings WHERE tenant_id = ? AND key_name = 'password_reset_token'");
+                $stmt->execute([$user_id]);
+
+                $this->setFlashMessage('کلمه عبور شما با موفقیت تغییر یافت. اکنون وارد شوید.');
+                $this->redirect('/');
+                return;
+            }
+        }
+
+        $this->setFlashMessage('لینک بازنشانی نامعتبر یا منقضی شده است.');
         $this->redirect('/');
     }
 
     public function handleSuspendUser(){ return (new \WHCM\Modules\Users\Controllers\UserController)->suspend(); }
-    public function _old_handleSuspendUser() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['user_id'] ?? 0);
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("UPDATE users SET status = 'suspended' WHERE id = ? AND role != 'superadmin'");
-        $stmt->execute([$id]);
-
-        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت معلق و مسدود گردید. 🚫');
-        $this->redirect('/hnnh');
-    }
-
     public function handleActivateUser(){ return (new \WHCM\Modules\Users\Controllers\UserController)->activate(); }
-    public function _old_handleActivateUser() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['user_id'] ?? 0);
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("UPDATE users SET status = 'active' WHERE id = ?");
-        $stmt->execute([$id]);
-
-        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت مجدداً فعال شد. ✔');
-        $this->redirect('/hnnh');
-    }
-
     public function handleDeleteUser(){ return (new \WHCM\Modules\Users\Controllers\UserController)->delete(); }
-    public function _old_handleDeleteUser() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $id = (int)($_POST['user_id'] ?? 0);
-
-        $db = Bootstrap::getDB();
-        $stmt = $db->prepare("DELETE FROM users WHERE id = ? AND role != 'superadmin'");
-        $stmt->execute([$id]);
-
-        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت به طور کامل حذف گردید.');
-        $this->redirect('/hnnh');
-    }
-
     public function handleBroadcastAnnouncement(){ return (new \WHCM\Modules\Support\Controllers\BroadcastController)->announce(); }
-    public function _old_handleBroadcastAnnouncement() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $title = trim($_POST['title'] ?? '');
-        $message = trim($_POST['message'] ?? '');
-
-        if (empty($title) || empty($message)) {
-            $this->setFlashMessage('عنوان و متن اعلان الزامی هستند.');
-            $this->redirect('/hnnh');
-        }
-
-        $announcement_data = json_encode([
-            'title' => $title,
-            'message' => $message,
-            'date' => TextFormat::now_jalali()
-        ], JSON_UNESCAPED_UNICODE);
-
-        $db = Bootstrap::getDB();
-
-        // Check if global_announcement already exists
-        $stmt = $db->prepare("SELECT id FROM settings WHERE tenant_id = 0 AND key_name = 'global_announcement' LIMIT 1");
-        $stmt->execute();
-        if ($stmt->fetch()) {
-            $stmt = $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = 0 AND key_name = 'global_announcement'");
-            $stmt->execute([$announcement_data]);
-        } else {
-            $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, 'global_announcement', ?)");
-            $stmt->execute([$announcement_data]);
-        }
-
-        $this->setFlashMessage('اعلان درون‌برنامه‌ای با موفقیت برای تمامی کاربران ارسال گردید. 📢');
-        $this->redirect('/hnnh');
-    }
-
     public function handleWipeTestData(){ return (new \WHCM\Modules\Users\Controllers\UserController)->wipeTestData(); }
-    public function _old_handleWipeTestData() {
-        $this->checkSuperAdmin();
-        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
-            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $db = Bootstrap::getDB();
-
-        // حذف رکوردهای آزمایشی که در زمان ران شدن فایل تست ساخته شده بودند
-        $db->exec("DELETE FROM users WHERE email = 'stranger@belitia.ir' OR email = 'hooman@belitia.ir' OR name = 'هومن راد'");
-        
-        $this->setFlashMessage('تمامی اطلاعات تستی و فرضی قبلی (مانند هومن راد و کاربر غریبه) با موفقیت ۱۰۰٪ از دیتابیس پاکسازی شدند! ✔');
-        $this->redirect('/hnnh');
-    }
-
     /**
      * ذخیره تنظیمات شماره کارت بانکی عمومی توسط سوپر ادمین
      */
@@ -1351,8 +1113,6 @@ class MainController extends BaseController {
             $this->redirect('/hnnh');
         }
 
-        $db = Bootstrap::getDB();
-
         $bank_settings = [
             'admin_card_number' => $card_number,
             'admin_card_holder' => $card_holder,
@@ -1362,96 +1122,14 @@ class MainController extends BaseController {
             'support_email' => $support_email
         ];
 
-        foreach ($bank_settings as $key => $val) {
-            $stmt = $db->prepare("SELECT id FROM settings WHERE tenant_id = 0 AND key_name = ? LIMIT 1");
-            $stmt->execute([$key]);
-            if ($stmt->fetch()) {
-                $stmt = $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = 0 AND key_name = ?");
-                $stmt->execute([$val, $key]);
-            } else {
-                $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?)");
-                $stmt->execute([$key, $val]);
-            }
-        }
+        $this->saveSettingsBatch(0, $bank_settings);
 
         $this->setFlashMessage('تنظیمات کارت بانکی و راه‌های ارتباطی با موفقیت بروزرسانی شد! 💳✔');
         $this->redirect('/hnnh');
     }
 
     public function handleAddUserManual(){ return (new \WHCM\Modules\Users\Controllers\UserController)->addManual(); }
-    public function _old_handleAddUserManual() {
-        $this->checkSuperAdmin();
-        
-        $name = trim($_POST['name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $business_name = trim($_POST['business_name'] ?? '');
-        $business_type = trim($_POST['business_type'] ?? '');
-
-        if (empty($name) || empty($email) || empty($password)) {
-            $this->setFlashMessage('پر کردن فیلدهای نام، ایمیل و کلمه عبور الزامی است.');
-            $this->redirect('/hnnh');
-        }
-
-        $res = Auth::register($name, $email, $password, $business_name, $business_type);
-        if ($res['success']) {
-            $this->setFlashMessage('کاربر جدید با موفقیت به صورت دستی ثبت و ایجاد شد! ✔');
-        } else {
-            $this->setFlashMessage($res['message']);
-        }
-        $this->redirect('/hnnh');
-    }
-
     public function handleGrantSubscriptionManual(){ return (new \WHCM\Modules\Users\Controllers\UserController)->grantSubscription(); }
-    public function _old_handleGrantSubscriptionManual() {
-        $this->checkSuperAdmin();
-
-        $user_id = (int)($_POST['user_id'] ?? 0);
-        $plan_id = (int)($_POST['plan_id'] ?? 0);
-
-        if ($user_id <= 0 || $plan_id <= 0) {
-            $this->setFlashMessage('لطفاً کاربر و پلن اشتراک مورد نظر را انتخاب کنید.');
-            $this->redirect('/hnnh');
-        }
-
-        $db = Bootstrap::getDB();
-
-        // دریافت اطلاعات پلن انتخابی
-        $stmt = $db->prepare("SELECT duration_days FROM plans WHERE id = ? LIMIT 1");
-        $stmt->execute([$plan_id]);
-        $plan = $stmt->fetch();
-
-        if (!$plan) {
-            $this->setFlashMessage('پلن انتخابی نامعتبر است.');
-            $this->redirect('/hnnh');
-        }
-
-        $db->beginTransaction();
-        try {
-            // ۱. منقضی کردن اشتراک‌های قبلی کاربر
-            $stmt = $db->prepare("UPDATE subscriptions SET status = 'expired' WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-
-            // ۲. ثبت اشتراک جدید
-            $now = date('Y-m-d H:i:s');
-            $duration = (int)$plan['duration_days'];
-            $end_date = $duration > 0 
-                ? date('Y-m-d H:i:s', strtotime("+{$duration} days"))
-                : '2099-12-30 00:00:00';
-
-            $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
-            $stmt->execute([$user_id, $plan_id, $now, $end_date]);
-
-            $db->commit();
-            $this->setFlashMessage('اشتراک انتخابی با موفقیت به صورت دستی به کاربر اعطا و فعال گردید! ✔💎');
-        } catch (\Exception $e) {
-            $db->rollBack();
-            $this->setFlashMessage('خطا در اعطای اشتراک: ' . $e->getMessage());
-        }
-
-        $this->redirect('/hnnh');
-    }
-
     /**
      * ذخیره‌سازی تنظیمات اتوماسیون پیشرفته توسط کاربر (مستأجر)
      */
@@ -1463,7 +1141,6 @@ class MainController extends BaseController {
         }
 
         $tenant_id = Auth::tenantId();
-        $db = Bootstrap::getDB();
 
         // ذخیره‌سازی فیلدهای دریافتی در جدول تنظیمات اختصاصی مستأجر
         $fields = [
@@ -1490,17 +1167,7 @@ class MainController extends BaseController {
             'btn_3_url' => trim($_POST['btn_3_url'] ?? '')
         ];
 
-        foreach ($fields as $key => $val) {
-            $stmt = $db->prepare("SELECT id FROM settings WHERE tenant_id = ? AND key_name = ? LIMIT 1");
-            $stmt->execute([$tenant_id, $key]);
-            if ($stmt->fetch()) {
-                $stmt = $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = ? AND key_name = ?");
-                $stmt->execute([$val, $tenant_id, $key]);
-            } else {
-                $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, ?, ?)");
-                $stmt->execute([$tenant_id, $key, $val]);
-            }
-        }
+        $this->saveSettingsBatch($tenant_id, $fields);
 
         $this->setFlashMessage('تنظیمات اتوماسیون و پیوند‌های اختصاصی با موفقیت بروزرسانی شد! ✔🤖');
         $this->redirect('/dashboard');

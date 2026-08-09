@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# امنیت: جلوگیری از لیست دایرکتوری
+Options -Indexes
+
+# امنیت: جلوگیری از دسترسی به فایل‌های حساس
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# امنیت: جلوگیری از دسترسی به فایل‌های حساس از طریق وب
+<FilesMatch "(config|cron|debug|error_log|composer\.(json|lock)|package\.json|\.env)">
+    Require all denied
+</FilesMatch>

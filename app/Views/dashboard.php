@@ -34,7 +34,7 @@
     <!-- هدر بالای صفحه با لوگوی اختصاصی پُست‌یار -->
     <header>
         <div class="logo-container">
-            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo.webp" alt="پُست‌یار" class="logo-img">
+            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="logo-img">
             <span class="logo-text">پُست‌یار</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.75rem;">

@@ -57,7 +57,7 @@
     <!-- هدر بالای صفحه مدیریت ارشد پُست‌یار -->
     <header>
         <div class="logo-container">
-            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo.webp" alt="پُست‌یار" class="logo-img">
+            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="logo-img">
             <span class="logo-text" style="background: linear-gradient(135deg, #ffffff 0%, #fbbf24 50%, #f59e0b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">پُست‌یار ارشد</span>
         </div>
         <div style="display:flex; align-items:center; gap:1rem;">
@@ -108,18 +108,21 @@
         
         <!-- سایدبار دسکتاپی -->
         <aside class="sidebar-desktop">
-            <div class="menu-item active" data-target="dashboard">📊 وضعیت کلی سیستم</div>
-            <div class="menu-item" data-target="users">👥 مدیریت کاربران</div>
+            <div class="menu-item active" data-target="dashboard">📊 وضعیت کلی و آمارگیری حرفه‌ای</div>
+            <div class="menu-item" data-target="users">👥 مدیریت کاربران و هدیه اشتراک</div>
             <div class="menu-item" data-target="payments">💳 تایید فیش‌های واریزی</div>
             <div class="menu-item" data-target="subscriptions">🎫 لیست اشتراک‌های فعال</div>
             <div class="menu-item" data-target="plans">💎 مدیریت پلن‌های اشتراکی</div>
             <div class="menu-item" data-target="admin-gold">🪙 تنظیمات ربات طلا و سکه</div>
-            <div class="menu-item" data-target="admin-ai">🧠 تنظیمات هوش مصنوعی</div>
+            <div class="menu-item" data-target="admin-ai">🧠 تنظیمات سراسری هوش مصنوعی</div>
+            <div class="menu-item" data-target="discounts">🎁 کدهای تخفیف</div>
             <div class="menu-item" data-target="admin-responder">🤖 تنظیمات پاسخگوی هوشمند</div>
             <div class="menu-item" data-target="admin-woo">🛍 تنظیمات اتصال ووکامرس</div>
             <div class="menu-item" data-target="broadcast">📢 ارسال اعلان همگانی</div>
             <div class="menu-item" data-target="bank">💳 تنظیمات کارت بانکی</div>
             <div class="menu-item" data-target="tickets">🎫 تیکت‌های پشتیبانی</div>
+            <div class="menu-item" data-target="referral-settings">🎯 تنظیمات زیرمجموعه‌گیری</div>
+            <div class="menu-item" data-target="sms-settings">📱 تنظیمات پیامک</div>
             <div class="menu-item" data-target="email-settings">📧 تنظیمات ایمیل</div>
             <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard'); ?>" class="menu-item" style="color:var(--primary); border-top:1px solid var(--border); padding-top:1rem; border-radius:0; margin-top:1.5rem;">🏠 رفتن به پیشخوان کاربری</a>
             <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/logout'); ?>" class="menu-item logout-btn" style="margin-top:0.5rem; padding-top:0;">🚪 خروج از حساب</a>
@@ -654,7 +657,6 @@
                     </form>
                 </div>
             </div>
-            </div>
 
             <!-- ========================================== -->
             <!-- تنظیمات سراسری هوش مصنوعی (AI Admin) -->
@@ -708,7 +710,6 @@
                         </button>
                     </form>
                 </div>
-            </div>
             </div>
 
             <!-- ========================================== -->
@@ -794,7 +795,6 @@
                         <button type="submit" class="btn btn-success" style="width: 100%;">ثبت و فعال‌سازی کد تخفیف 🎁</button>
                     </form>
                 </div>
-            </div>
             </div>
 
             <!-- ========================================== -->
@@ -929,6 +929,7 @@
                             </table>
                         </div>
                     <?php endif; ?>
+                </div>
             </div>
 
             <!-- ========================================== -->
@@ -1000,7 +1001,6 @@
                         <button type="submit" class="btn btn-success" style="width:100%;">ذخیره تنظیمات بانک، پشتیبانی و تخفیف‌های پُست‌یار 💳✔</button>
                     </form>
                 </div>
-            </div>
             </div>
 
             <!-- ========================================== -->

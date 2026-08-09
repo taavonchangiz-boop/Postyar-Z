@@ -108,7 +108,29 @@
             flex-direction: column;
             gap: 0.5rem;
             height: fit-content;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom scrollbar for sidebar */
+        aside.sidebar-desktop::-webkit-scrollbar {
+            width: 6px;
+        }
+        aside.sidebar-desktop::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        aside.sidebar-desktop::-webkit-scrollbar-thumb {
+            background: rgba(245, 158, 11, 0.3);
+            border-radius: 3px;
+        }
+        aside.sidebar-desktop::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 158, 11, 0.5);
+        }
+        /* Firefox scrollbar */
+        aside.sidebar-desktop {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245, 158, 11, 0.3) transparent;
         }
 
         .menu-item {

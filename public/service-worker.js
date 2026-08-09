@@ -1,4 +1,4 @@
-const CACHE_NAME = 'whcm-saas-v2';
+const CACHE_NAME = 'postyar-pwa-v3';
 
 // فقط فایل‌های استاتیک کش می‌شوند — صفحات دینامیک هرگز کش نمی‌شوند
 const STATIC_ASSETS = [
@@ -6,8 +6,18 @@ const STATIC_ASSETS = [
   '/assets/css/admin.css',
   '/assets/css/dashboard.css',
   '/assets/css/home.css',
+  '/assets/css/components.css',
+  '/assets/js/admin.js',
+  '/assets/js/dashboard.js',
+  '/assets/js/home.js',
+  '/assets/js/utils.js',
+  '/assets/js/pwa-install.js',
   '/assets/images/logo.webp',
-  '/assets/images/hero_rocket.webp'
+  '/assets/images/hero_rocket.webp',
+  '/assets/icons/icon-192x192.png',
+  '/assets/icons/icon-512x512.png',
+  '/assets/icons/apple-touch-icon.png',
+  '/assets/icons/favicon-32x32.png'
 ];
 
 // نصب سرویس ورکر و کش فایل‌های استاتیک
@@ -43,6 +53,7 @@ self.addEventListener('fetch', event => {
     url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.woff2') ||
+    url.pathname.endsWith('.woff') ||
     url.pathname === '/manifest.json'
   );
 
@@ -65,9 +76,8 @@ self.addEventListener('fetch', event => {
   // صفحات HTML و API — همیشه Network
   event.respondWith(
     fetch(event.request).catch(() => {
-      // فقط در صورت قطع اینترنت کامل، صفحه آفلاین نمایش داده شود
       if (event.request.mode === 'navigate') {
-        return caches.match('/index.php?route=/');
+        return caches.match('/');
       }
       return new Response('آفلاین هستید', { status: 503, statusText: 'Service Unavailable' });
     })
@@ -76,7 +86,7 @@ self.addEventListener('fetch', event => {
 
 // دریافت و نمایش اعلان‌های زنده ارسالی از سمت سرور (Web Push)
 self.addEventListener('push', event => {
-  let data = { title: 'اعلان جدید', body: 'شما یک پیام جدید در پلتفرم مدیریت کانال‌ها دارید.' };
+  let data = { title: 'اعلان جدید', body: 'شما یک پیام جدید در پُست‌یار دارید.' };
   
   if (event.data) {
     try {
@@ -88,8 +98,8 @@ self.addEventListener('push', event => {
 
   const options = {
     body: data.body,
-    icon: '/assets/images/logo.webp',
-    badge: '/assets/images/logo.webp',
+    icon: '/assets/icons/icon-192x192.png',
+    badge: '/assets/icons/icon-192x192.png',
     vibrate: [100, 50, 100],
     data: { url: data.url || '/' }
   };

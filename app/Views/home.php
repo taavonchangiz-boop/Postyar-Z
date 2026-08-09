@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title ?? 'پُست‌یار | سامانه هوشمند مدیریت و انتشار کانال‌ها'); ?></title>
     <meta name="description" content="پُست‌یار - ابزار هوشمند مدیریت، زمان‌بندی شمسی، انتشار چندکاناله در تلگرام و بله، ربات خودکار نرخ طلا و سکه، پاسخگوی کلمات کلیدی و اتصال به ووکامرس.">
+
+    <?php $baseUrl = rtrim(str_replace(['/assets', '/public/assets'], '', \WHCM\Core\Bootstrap::getAssetsUrl()), '/'); ?>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="پُست‌یار">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo $baseUrl; ?>/assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo $baseUrl; ?>/assets/icons/favicon-16x16.png">
+    <!-- iOS PWA Support -->
+    <link rel="apple-touch-icon" href="<?php echo $baseUrl; ?>/assets/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="<?php echo $baseUrl; ?>/assets/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="<?php echo $baseUrl; ?>/assets/icons/apple-touch-icon-167x167.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="پُست‌یار">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="apple-touch-startup-image" href="<?php echo $baseUrl; ?>/assets/icons/icon-512x512.png">
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>')</script>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -707,5 +726,17 @@
 
     <!-- ===== JAVASCRIPT ===== -->
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/home.js"></script>
+
+    <!-- PWA: ثبت سرویس ورکر و بنر نصب (فقط موبایل/تبلت) -->
+    <script>
+    (function(){
+        var baseUrl = '<?php echo $baseUrl; ?>';
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(baseUrl + '/service-worker.js', { scope: baseUrl + '/' })
+                .catch(function() {});
+        }
+    })();
+    </script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js"></script>
 </body>
 </html>

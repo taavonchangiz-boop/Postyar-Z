@@ -24,28 +24,9 @@
     <meta name="apple-mobile-web-app-title" content="پُست‌یار">
     <meta name="format-detection" content="telephone=no">
     <link rel="apple-touch-startup-image" href="<?php echo $baseUrl; ?>/assets/icons/icon-512x512.png">
-    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-    <script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>')</script>
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/tailwind-home.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/home.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        vazir: ['Vazirmatn', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-[#0a0a0a] text-neutral-100 antialiased selection:bg-indigo-500 selection:text-white">
 

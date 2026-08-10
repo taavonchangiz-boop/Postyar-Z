@@ -788,6 +788,13 @@ class Bootstrap {
             'v7_birthday_column' => function($db) {
                 try { $db->exec("ALTER TABLE users ADD COLUMN birthday VARCHAR(10) NULL"); } catch (\Exception $e) {}
             },
+
+            'v8_scheduled_posts_target_channels' => function($db) {
+                // افزودن ستون target_channels برای ذخیره لیست کانال‌های هدف پست‌های زمان‌بندی‌شده
+                try { $db->exec("ALTER TABLE posts ADD COLUMN target_channels TEXT"); } catch (\Exception $e) {}
+                // افزودن ستون expiry_reminder_sent برای جلوگیری از ارسال تکراری یادآوری انقضا
+                try { $db->exec("ALTER TABLE subscriptions ADD COLUMN expiry_reminder_sent INTEGER DEFAULT 0"); } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

@@ -949,6 +949,7 @@ class MainController extends BaseController {
         // ثبت رکورد اولیه پست در پایگاه داده مستأجر
         $status = ($send_type === 'scheduled') ? 'scheduled' : 'draft';
         $sched_date = !empty($scheduled_at) ? $scheduled_at : null;
+        $target_channels_json = json_encode($channel_ids);
 
         // ثبت رکورد اولیه پست — محتوا با لینک‌های ردیابی ذخیره می‌شود
         $firstChannelId = (int)($channel_ids[0] ?? 0);
@@ -957,8 +958,8 @@ class MainController extends BaseController {
             $trackedContent = LinkTracker::processContent($content, 0, $firstChannelId, $tenant_id);
         }
 
-        $stmt = $db->prepare("INSERT INTO posts (tenant_id, title, content, media_url, status, scheduled_at) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$tenant_id, $title, $trackedContent, $media_url, $status, $sched_date]);
+        $stmt = $db->prepare("INSERT INTO posts (tenant_id, title, content, media_url, status, scheduled_at, target_channels) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$tenant_id, $title, $trackedContent, $media_url, $status, $sched_date, $target_channels_json]);
         $post_id = (int)$db->lastInsertId();
 
         // آپدیت post_id در لینک‌های ردیابی

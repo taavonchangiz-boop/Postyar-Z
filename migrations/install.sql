@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     status VARCHAR(20) DEFAULT 'active',
+    expiry_reminder_sent INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
@@ -91,6 +92,7 @@ CREATE TABLE IF NOT EXISTS posts (
     media_url TEXT,
     status VARCHAR(20) DEFAULT 'draft',
     scheduled_at DATETIME,
+    target_channels TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES users(id) ON DELETE CASCADE
 );

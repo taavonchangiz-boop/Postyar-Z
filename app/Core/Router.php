@@ -80,24 +80,31 @@ class Router {
      * اجرای هندلر مربوطه
      */
     private static function execute($handler, array $params = []) {
-        if (is_callable($handler)) {
-            return call_user_func_array($handler, $params);
-        }
+        try {
+            if (is_callable($handler)) {
+                return call_user_func_array($handler, $params);
+            }
 
-        if (is_string($handler)) {
-            // قالب: "ControllerName@method"
-            list($controllerName, $method) = explode('@', $handler);
-            $fullClass = "WHCM\\Controllers\\" . $controllerName;
+            if (is_string($handler)) {
+                // قالب: "ControllerName@method"
+                $parts = explode('@', $handler);
+                $controllerName = $parts[0];
+                $method = $parts[1] ?? '';
+                $fullClass = "WHCM\\Controllers\\" . $controllerName;
 
-            if (class_exists($fullClass)) {
-                $controller = new $fullClass();
-                if (method_exists($controller, $method)) {
-                    return call_user_func_array([$controller, $method], $params);
+                if (class_exists($fullClass)) {
+                    $controller = new $fullClass();
+                    if (method_exists($controller, $method)) {
+                        return call_user_func_array([$controller, $method], $params);
+                    }
                 }
             }
-        }
 
-        self::abort(500, 'سیستم مسیردهی با خطا مواجه شد.');
+            self::abort(500, 'سیستم مسیردهی با خطا مواجه شد.');
+        } catch (\Throwable $e) {
+            error_log('[Postyar Router] FATAL: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            self::abort(500, 'خطای داخلی سرور. لطفاً دوباره تلاش کنید.');
+        }
     }
 
     /**

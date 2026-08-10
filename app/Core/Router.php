@@ -102,8 +102,24 @@ class Router {
 
             self::abort(500, 'سیستم مسیردهی با خطا مواجه شد.');
         } catch (\Throwable $e) {
-            error_log('[Postyar Router] FATAL: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            self::abort(500, 'خطای داخلی سرور. لطفاً دوباره تلاش کنید.');
+            $errorDetail = get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+            error_log('[Postyar Router] FATAL: ' . $errorDetail . ' | Trace: ' . $e->getTraceAsString());
+
+            // ذخیره خطای آخر در فایل برای دیباگ
+            try {
+                $logDir = __DIR__ . '/../../storage/logs/';
+                if (!is_dir($logDir)) {
+                    @mkdir($logDir, 0755, true);
+                }
+                @file_put_contents($logDir . 'last_error.txt',
+                    date('Y-m-d H:i:s') . "\n" .
+                    $errorDetail . "\n\n" .
+                    $e->getTraceAsString()
+                );
+            } catch (\Throwable $ignored) {}
+
+            // نمایش جزئیات خطا — موقتاً برای دیباگ (بعد از رفع حذف شود)
+            self::abort(500, $errorDetail);
         }
     }
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>خطا | <?php echo htmlspecialchars($code); ?></title>
     <style>
-        @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css'); /* v33.003 — pinned */
+        /* فونت Vazirmatn از فایل محلی بارگذاری می‌شود — fallback: Tahoma */
         
         body {
             font-family: Vazirmatn, Tahoma, Arial, sans-serif;

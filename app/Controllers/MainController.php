@@ -565,6 +565,15 @@ class MainController extends BaseController {
         $stmt_users->execute();
         $users = $stmt_users->fetchAll();
 
+        // اضافه کردن تاریخ شمسی برای modal پروفایل ۳۶۰ درجه
+        foreach ($users as &$u) {
+            $u['created_at_fa'] = TextFormat::mysql_to_jalali($u['created_at']);
+            $u['end_date_fa'] = (!empty($u['end_date']) && $u['end_date'] !== '2099-12-31 23:59:59')
+                ? TextFormat::mysql_to_jalali($u['end_date'])
+                : 'بدون انقضا / دائمی';
+        }
+        unset($u);
+
         // تعداد کل کاربران برای pagination (prepared statement — جلوگیری از SQL injection)
         $stmt_count = $db->prepare("SELECT COUNT(*) FROM users WHERE id != ?");
         $stmt_count->execute([$admin_id]);

@@ -261,19 +261,17 @@ function closeTicketModal() {
         if(typeof jalaliDatepicker === 'undefined') return false;
         try{
             var inputs = document.querySelectorAll('[data-jdp]');
+            if(inputs.length === 0) return true;
+            jalaliDatepicker.startWatch({
+                separatorChar: '/',
+                openOnFocus: true
+            });
             for(var i=0;i<inputs.length;i++){
-                jalaliDatepicker.startWatch({
-                    minDate: attr(inputs[i],'data-jdp-min'),
-                    maxDate: attr(inputs[i],'data-jdp-max'),
-                    separatorChar: '/',
-                    openOnFocus: true
-                });
                 inputs[i].removeAttribute('data-jdp');
             }
             return true;
         }catch(e){ return false; }
     }
-    function attr(el,name){ return el.getAttribute(name)||null; }
     if(!initJalaliDatepicker()){
         var timer = setInterval(function(){
             if(initJalaliDatepicker()) clearInterval(timer);

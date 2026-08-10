@@ -210,7 +210,7 @@
                             </div>
                         </div>
                     </a>
-                    <a href="javascript:switchSection('sms-settings')" style="text-decoration:none;">
+                    <a href="javascript:switchSection('users')" style="text-decoration:none;">
                         <div class="card-stat" style="cursor:pointer;">
                             <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0.05) 100%); color:#38bdf8;">📱</div>
                             <div class="card-stat-info">
@@ -219,13 +219,15 @@
                             </div>
                         </div>
                     </a>
-                    <div class="card-stat">
-                        <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 100%); color:#fbbf24;">💰</div>
-                        <div class="card-stat-info">
-                            <span class="title">کل درآمد تایید شده</span>
-                            <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_num($total_revenue); ?> تومان</span>
+                    <a href="javascript:switchSection('payments')" style="text-decoration:none;">
+                        <div class="card-stat" style="cursor:pointer;">
+                            <div class="card-stat-icon" style="background:linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 100%); color:#fbbf24;">💰</div>
+                            <div class="card-stat-info">
+                                <span class="title">کل درآمد تایید شده</span>
+                                <span class="value"><?php echo \WHCM\Domain\TextFormat::fa_num($total_revenue); ?> تومان</span>
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </div>
 

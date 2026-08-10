@@ -3,7 +3,7 @@
    سامانه مدیریت کانال‌ها و انتشار خودکار پُست‌یار
    ========================================================================== */
 
-@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+/* فونت Vazirmatn از فایل محلی (components.css) بارگذاری می‌شود */
 
 * {
     font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

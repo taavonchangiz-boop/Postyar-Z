@@ -50,6 +50,7 @@ android-webview-app/*.jks
 # ---- فایل‌های دیباگ و تست ----
 public/check.php
 public/debug.php
+debug.php
 tests/
 cron.php
 README.md

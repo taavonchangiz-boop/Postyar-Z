@@ -74,6 +74,7 @@
                 <!-- Desktop Menu Links -->
                 <div class="hidden md:flex items-center gap-8">
                     <a href="#features" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors">امکانات سیستم</a>
+                    <a href="#comparison" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors">مقایسه کانال‌ها</a>
                     <a href="#how-it-works" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors">نحوه کارکرد</a>
                     <a href="#pricing" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors">تعرفه اشتراک</a>
                     <a href="#testimonials" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors">نظرات مدیران</a>
@@ -388,6 +389,127 @@
         </div>
     </section>
 
+    <!-- ===== 5.5. CHANNEL COMPARISON TABLE ===== -->
+    <section id="comparison" class="relative py-24 md:py-32 bg-[#0c0c10]">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <div class="reveal inline-flex items-center gap-2 px-4 py-2 rounded-full glass-light mb-6">
+                    <span class="text-xs font-semibold text-emerald-400">مقایسه جامع</span>
+                </div>
+                <h2 class="reveal text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-6 text-white">
+                    مقایسه پلتفرم‌های تلگرام و بله
+                </h2>
+                <p class="reveal text-base sm:text-lg text-neutral-400 leading-relaxed">
+                    پُست‌یار هر دو پلتفرم را یکپارچه پشتیبانی می‌کند — اینجا تفاوت‌ها و قابلیت‌ها را ببینید
+                </p>
+            </div>
+
+            <div class="reveal overflow-x-auto rounded-2xl border border-white/[0.08]">
+                <table class="w-full min-w-[600px] text-sm text-right" style="border-collapse: separate; border-spacing: 0;">
+                    <thead>
+                        <tr class="bg-gradient-to-l from-indigo-600/90 to-purple-600/90 text-white">
+                            <th class="py-4 px-5 font-bold text-base text-white" style="border-radius: 0 12px 0 0;">ویژگی</th>
+                            <th class="py-4 px-5 font-bold text-base text-white text-center">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.74 3.98-1.73 6.64-2.88 7.97-3.44 3.8-1.58 4.59-1.86 5.1-1.87.11 0 .37.03.54.17.14.12.18.28.2.45-.01.06.01.24 0 .38z"/></svg>
+                                    تلگرام
+                                </span>
+                            </th>
+                            <th class="py-4 px-5 font-bold text-base text-white text-center" style="border-radius: 12px 0 0 0;">
+                                <span class="inline-flex items-center gap-2">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#f59e0b"/><path d="M12 6v6l4 2" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                                    بله
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">نوع پلتفرم</td>
+                            <td class="py-3.5 px-5 text-center text-neutral-300">پیام‌رسان بین‌المللی</td>
+                            <td class="py-3.5 px-5 text-center text-neutral-300">پیام‌رسان بومی ایرانی</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">دسترسی بدون فیلترشکن</td>
+                            <td class="py-3.5 px-5 text-center"><span class="inline-block px-2.5 py-0.5 rounded-lg bg-red-500/15 text-red-400 text-xs font-bold">نیاز به VP*N</span></td>
+                            <td class="py-3.5 px-5 text-center"><span class="inline-block px-2.5 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs font-bold">بدون نیاز به ابزار</span></td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">سرعت و پایداری در ایران</td>
+                            <td class="py-3.5 px-5 text-center"><span class="text-amber-400">متوسط ⚠️</span></td>
+                            <td class="py-3.5 px-5 text-center"><span class="text-emerald-400">بالا ✅</span></td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">انتشار پست متنی</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">انتشار پست تصویری</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">انتشار پست ویدیویی</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">زمان‌بندی انتشار شمسی</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">ارسال همزمان چندکاناله</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">ربات نرخ لحظه‌ای طلا و سکه</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">پاسخگوی خودکار کلمات کلیدی</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">اتصال به ووکامرس</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">کپشن‌سازی هوش مصنوعی</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">تحلیل آمار بازدید و تعامل</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 text-lg">✅</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">مخاطب هدف (ایرانیان داخل کشور)</td>
+                            <td class="py-3.5 px-5 text-center text-neutral-400">محدود به کاربران VP*N</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 font-medium">بسیار گسترده 🇮🇷</td>
+                        </tr>
+                        <tr class="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium">مخاطب هدف (بین‌المللی)</td>
+                            <td class="py-3.5 px-5 text-center text-emerald-400 font-medium">بسیار گسترده 🌍</td>
+                            <td class="py-3.5 px-5 text-center text-neutral-400">محدود به فارسی‌زبانان</td>
+                        </tr>
+                        <tr class="hover:bg-white/[0.03] transition-colors">
+                            <td class="py-3.5 px-5 text-neutral-200 font-medium" style="border-radius: 0 0 0 12px;">پشتیبانی در پُست‌یار</td>
+                            <td class="py-3.5 px-5 text-center text-indigo-400 font-bold" colspan="2" style="border-radius: 0 0 12px 0;">یکپارچه و همزمان ✨</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="reveal text-center text-neutral-500 text-xs mt-6">پُست‌یار هر دو پلتفرم را با یک رابط واحد مدیریت می‌کند — نیازی به ابزار جداگانه نیست</p>
+        </div>
+    </section>
+
     <!-- ===== 6. PRICING SECTION (Dynamically Rendered from $plans) ===== -->
     <section id="pricing" class="relative py-24 md:py-32 mesh-bg noise">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -650,6 +772,7 @@
                 </div>
                 <div class="flex flex-wrap items-center justify-center gap-8 text-sm text-neutral-400">
                     <a href="#features" class="hover:text-white transition-colors">امکانات سیستم</a>
+                    <a href="#comparison" class="hover:text-white transition-colors">مقایسه کانال‌ها</a>
                     <a href="#how-it-works" class="hover:text-white transition-colors">نحوه کارکرد</a>
                     <a href="#pricing" class="hover:text-white transition-colors">تعرفه اشتراک</a>
                     <a href="#testimonials" class="hover:text-white transition-colors">نظرات مدیران</a>

@@ -151,13 +151,13 @@ class MainController extends BaseController {
                     $referralCode = trim($_GET['ref'] ?? '');
                     Referral::processRegistration((int)$res['user_id'], !empty($referralCode) ? $referralCode : null);
                     Referral::getUserReferralCode((int)$res['user_id']);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     error_log('[Postyar] Post-register referral error: ' . $e->getMessage());
                 }
 
                 try {
                     EmailTemplate::sendByEvent('welcome', (int)$res['user_id']);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     error_log('[Postyar] Welcome email failed for user #' . $res['user_id'] . ': ' . $e->getMessage());
                 }
             }

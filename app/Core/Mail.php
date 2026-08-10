@@ -61,7 +61,7 @@ class Mail {
             // Fallback: ارسال SMTP دستی با stream_context
             return self::sendNative($to, $subject, $body, $config);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log('[Postyar Mail] SMTP Error: ' . $e->getMessage());
             return false;
         }
@@ -80,7 +80,7 @@ class Mail {
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         $headers .= "X-Mailer: Postyar-SaaS/1.0\r\n";
 
-        return mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+        return \mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
     }
 
     /**

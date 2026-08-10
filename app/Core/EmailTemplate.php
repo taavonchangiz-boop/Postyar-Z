@@ -86,7 +86,7 @@ class EmailTemplate {
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         $headers .= "X-Mailer: Postyar-EmailTemplate/1.0\r\n";
 
-        return mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+        return \mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
     }
 
     /**
@@ -139,7 +139,7 @@ class EmailTemplate {
                 $status = 'failed';
                 $errorMsg = 'خطا در ارسال ایمیل (send نادرست برگرداند)';
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $status = 'failed';
             $errorMsg = $e->getMessage();
         }

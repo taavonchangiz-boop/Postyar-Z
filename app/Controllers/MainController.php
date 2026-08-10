@@ -1167,6 +1167,213 @@ class MainController extends BaseController {
     public function handleDeleteUser(){ return (new \WHCM\Modules\Users\Controllers\UserController)->delete(); }
     public function handleBroadcastAnnouncement(){ return (new \WHCM\Modules\Support\Controllers\BroadcastController)->announce(); }
     public function handleWipeTestData(){ return (new \WHCM\Modules\Users\Controllers\UserController)->wipeTestData(); }
+
+    // === هندلرهای GET برای لینک‌های سریع ادمین ===
+    public function handleSuspendUserGet(){
+        $this->checkSuperAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("UPDATE users SET status = 'suspended' WHERE id = ? AND role != 'superadmin'");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت معلق و مسدود گردید. 🚫');
+        $this->redirect('/hnnh');
+    }
+    public function handleActivateUserGet(){
+        $this->checkSuperAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("UPDATE users SET status = 'active' WHERE id = ?");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت مجدداً فعال شد. ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleDeleteUserGet(){
+        $this->checkSuperAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("DELETE FROM users WHERE id = ? AND role != 'superadmin'");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('حساب کاربری مستأجر با موفقیت به طور کامل حذف گردید.');
+        $this->redirect('/hnnh');
+    }
+    public function handleApprovePaymentGet(){
+        $this->checkSuperAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("SELECT * FROM payments WHERE id = ? AND status = 'pending' LIMIT 1");
+        $stmt->execute([$id]);
+        $payment = $stmt->fetch();
+        if (!$payment) { $this->setFlashMessage('تراکنش مورد نظر یافت نشد یا قبلاً پردازش شده است.'); $this->redirect('/hnnh'); return; }
+        $user_id = (int)$payment['user_id'];
+        $plan_id = (int)$payment['plan_id'];
+        $stmt = $db->prepare("SELECT * FROM plans WHERE id = ? LIMIT 1");
+        $stmt->execute([$plan_id]);
+        $plan = $stmt->fetch();
+        if (!$plan) { $this->setFlashMessage('پلن مربوطه یافت نشد.'); $this->redirect('/hnnh'); return; }
+        $db->beginTransaction();
+        try {
+            $now = date('Y-m-d H:i:s');
+            $stmt = $db->prepare("UPDATE payments SET status = 'approved', verified_at = ? WHERE id = ?");
+            $stmt->execute([$now, $id]);
+            $stmt = $db->prepare("UPDATE subscriptions SET status = 'expired' WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $duration = (int)$plan['duration_days'];
+            $end_date = $duration > 0 ? date('Y-m-d H:i:s', strtotime("+{$duration} days")) : '2099-12-30 00:00:00';
+            $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
+            $stmt->execute([$user_id, $plan_id, $now, $end_date]);
+            $db->commit();
+            $this->setFlashMessage('پرداخت با موفقیت تایید و اشتراک کاربر بلافاصله فعال گردید. ✔');
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            $this->setFlashMessage('بروز خطا در پردازش تایید تراکنش: ' . $e->getMessage());
+        }
+        $this->redirect('/hnnh');
+    }
+    public function handleDeletePlanGet(){
+        $this->checkSuperAdmin();
+        $id = (int)($_GET['id'] ?? 0);
+        if ($id <= 0) { $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("DELETE FROM plans WHERE id = ?");
+        $stmt->execute([$id]);
+        $this->setFlashMessage('پلن اشتراک با موفقیت حذف گردید.');
+        $this->redirect('/hnnh');
+    }
+
+    // === تنظیمات سراسری ادمین ===
+    public function handleSaveGoldSettingsAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $fields = ['gold_api_source', 'gold_interval', 'gold_default_template'];
+        foreach ($fields as $f) {
+            $val = $_POST[$f] ?? '';
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$f, $val, $val]);
+        }
+        $this->setFlashMessage('تنظیمات ربات طلا و سکه با موفقیت ذخیره شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleSaveAiSettingsAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $fields = ['ai_global_provider', 'ai_global_model', 'ai_global_key', 'ai_global_url', 'ai_active_by_default'];
+        foreach ($fields as $f) {
+            $val = $_POST[$f] ?? '';
+            if ($f === 'ai_active_by_default') { $val = isset($_POST[$f]) ? '1' : '0'; }
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$f, $val, $val]);
+        }
+        $this->setFlashMessage('تنظیمات سراسری هوش مصنوعی با موفقیت ذخیره شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleDeleteDiscount(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $id = (int)($_POST['discount_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $db->prepare("DELETE FROM discount_codes WHERE id = ?")->execute([$id]);
+        $this->setFlashMessage('کد تخفیف با موفقیت حذف شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleAddDiscount(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $code = strtoupper(trim($_POST['code'] ?? ''));
+        $percentage = (int)($_POST['percentage'] ?? 0);
+        $max_uses = (int)($_POST['max_uses'] ?? 0);
+        $expires_at = trim($_POST['expires_at'] ?? '');
+        if (empty($code) || $percentage <= 0 || $percentage > 100) {
+            $this->setFlashMessage('لطفاً کد تخفیف (معتبر) و درصد (۱ تا ۱۰۰) را وارد کنید.'); $this->redirect('/hnnh'); return;
+        }
+        $db = Bootstrap::getDB();
+        try {
+            $stmt = $db->prepare("INSERT INTO discount_codes (code, type, amount, max_uses, expires_at, active) VALUES (?, 'percent', ?, ?, ?, 1)");
+            $stmt->execute([$code, $percentage, $max_uses > 0 ? $max_uses : 0, $expires_at ?: null]);
+            $this->setFlashMessage('کد تخفیف جدید با موفقیت ایجاد شد! ✔');
+        } catch (\Throwable $e) {
+            $this->setFlashMessage('خطا در ایجاد کد تخفیف: احتمالاً کد تکراری است.');
+        }
+        $this->redirect('/hnnh');
+    }
+    public function handleSaveResponderSettingsAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $fields = ['responder_max_keywords', 'responder_delay', 'responder_fallback'];
+        foreach ($fields as $f) {
+            $val = $_POST[$f] ?? '';
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$f, $val, $val]);
+        }
+        $this->setFlashMessage('تنظیمات پاسخگوی هوشمند با موفقیت ذخیره شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleSaveWooSettingsAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $db = Bootstrap::getDB();
+        $fields = ['woo_help_text', 'woo_max_stores', 'woo_require_ssl'];
+        foreach ($fields as $f) {
+            $val = $_POST[$f] ?? '';
+            if ($f === 'woo_require_ssl') { $val = isset($_POST[$f]) ? '1' : '0'; }
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$f, $val, $val]);
+        }
+        $this->setFlashMessage('تنظیمات ووکامرس با موفقیت ذخیره شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleReopenTicketAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $id = (int)($_POST['ticket_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $db->prepare("UPDATE tickets SET status = 'open' WHERE id = ?")->execute([$id]);
+        $this->setFlashMessage('تیکت با موفقیت مجدداً باز شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleDeleteTicketAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $id = (int)($_POST['ticket_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $db->prepare("DELETE FROM ticket_replies WHERE ticket_id = ?")->execute([$id]);
+        $db->prepare("DELETE FROM tickets WHERE id = ?")->execute([$id]);
+        $this->setFlashMessage('تیکت با موفقیت حذف شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleCloseTicketAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $id = (int)($_POST['ticket_id'] ?? 0);
+        $db = Bootstrap::getDB();
+        $db->prepare("UPDATE tickets SET status = 'closed' WHERE id = ?")->execute([$id]);
+        $this->setFlashMessage('تیکت با موفقیت بسته شد! ✔');
+        $this->redirect('/hnnh');
+    }
+    public function handleCreateTicketAdmin(){
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) { $this->setFlashMessage('خطای امنیتی!'); $this->redirect('/hnnh'); return; }
+        $user_id = (int)($_POST['target_user_id'] ?? 0);
+        $subject = trim($_POST['subject'] ?? '');
+        $category = trim($_POST['category'] ?? 'general');
+        $priority = trim($_POST['priority'] ?? 'normal');
+        $message = trim($_POST['message'] ?? '');
+        if ($user_id <= 0 || empty($subject) || empty($message)) {
+            $this->setFlashMessage('لطفاً کاربر، موضوع و پیام را وارد کنید.'); $this->redirect('/hnnh'); return;
+        }
+        $db = Bootstrap::getDB();
+        try {
+            $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, priority, created_by_admin) VALUES (?, ?, ?, ?, 'replied', ?, 1)");
+            $stmt->execute([$user_id, $subject, $category, $message, $priority]);
+            $this->setFlashMessage('تیکت پشتیبانی با موفقیت برای کاربر ایجاد شد! ✔');
+        } catch (\Throwable $e) {
+            $this->setFlashMessage('خطا در ایجاد تیکت: ' . $e->getMessage());
+        }
+        $this->redirect('/hnnh');
+    }
+
     /**
      * ذخیره تنظیمات شماره کارت بانکی عمومی توسط سوپر ادمین
      */
@@ -1973,5 +2180,12 @@ class MainController extends BaseController {
         unset($_SESSION['sms_reset_user_id']);
         $this->setFlashMessage('رمز عبور با موفقیت تغییر یافت.');
         $this->redirect('/');
+    }
+
+    /**
+     * صفحه آموزش و راهنمای کاربری
+     */
+    public function helpPage() {
+        $this->render('help', ['title' => 'آموزش استفاده از پُست‌یار']);
     }
 }

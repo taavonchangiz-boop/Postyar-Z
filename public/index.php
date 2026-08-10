@@ -101,11 +101,31 @@ try {
     // ثبت مسیرهای ردیابی لینک و وب‌هوک
     Router::get('/go/{code}', 'MainController@handleLinkRedirect');
     Router::get('/dashboard/link-stats', 'MainController@linkStatsSection');
+    Router::get('/help', 'MainController@helpPage');
     Router::post('/reset-password-sms', 'MainController@handleResetPasswordSms');
     Router::get('/sms-verify', 'MainController@showSmsVerifyForm');
     Router::post('/verify-sms-code', 'MainController@handleVerifySmsCode');
     Router::get('/click', 'MainController@handleClick');
     Router::post('/api/webhook', 'MainController@handleApiWebhook');
+
+    // مسیرهای تنظیمات ادمین که قبلاً ثبت نشده بودند
+    Router::post('/hnnh/save-gold-settings-admin', 'MainController@handleSaveGoldSettingsAdmin');
+    Router::post('/hnnh/save-ai-settings-admin', 'MainController@handleSaveAiSettingsAdmin');
+    Router::post('/hnnh/delete-discount', 'MainController@handleDeleteDiscount');
+    Router::post('/hnnh/add-discount', 'MainController@handleAddDiscount');
+    Router::post('/hnnh/save-responder-settings-admin', 'MainController@handleSaveResponderSettingsAdmin');
+    Router::post('/hnnh/save-woo-settings-admin', 'MainController@handleSaveWooSettingsAdmin');
+    Router::post('/hnnh/reopen-ticket', 'MainController@handleReopenTicketAdmin');
+    Router::post('/hnnh/delete-ticket', 'MainController@handleDeleteTicketAdmin');
+    Router::post('/hnnh/close-ticket', 'MainController@handleCloseTicketAdmin');
+    Router::post('/hnnh/create-ticket', 'MainController@handleCreateTicketAdmin');
+
+    // مسیرهای GET برای عملیات ادمین (لینک‌های اکشن سریع)
+    Router::get('/hnnh/suspend-user', 'MainController@handleSuspendUserGet');
+    Router::get('/hnnh/activate-user', 'MainController@handleActivateUserGet');
+    Router::get('/hnnh/delete-user', 'MainController@handleDeleteUserGet');
+    Router::get('/hnnh/approve-payment', 'MainController@handleApprovePaymentGet');
+    Router::get('/hnnh/delete-plan', 'MainController@handleDeletePlanGet');
 
     // پردازش درخواست جاری
     Router::dispatch();

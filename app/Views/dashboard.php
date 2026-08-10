@@ -8,7 +8,7 @@
     <?php $baseUrl = rtrim(str_replace(['/assets', '/public/assets'], '', \WHCM\Core\Bootstrap::getAssetsUrl()), '/'); ?>
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.json">
+    <link rel="manifest" href="<?php echo $baseUrl; ?>/manifest.php">
     <meta name="theme-color" content="#6366f1">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="پُست‌یار">
@@ -1410,7 +1410,19 @@
         var baseUrl = '<?php echo $baseUrl; ?>';
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register(baseUrl + '/service-worker.js', { scope: baseUrl + '/' })
-                .catch(function() {});
+                .then(function(reg) {
+                    reg.addEventListener('updatefound', function() {
+                        var newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'activated') {
+                                console.log('[PWA] نسخه جدید سرویس ورکر فعال شد');
+                            }
+                        });
+                    });
+                })
+                .catch(function(err) {
+                    console.warn('[PWA] خطا در ثبت سرویس ورکر:', err.message);
+                });
         }
     })();
     </script>

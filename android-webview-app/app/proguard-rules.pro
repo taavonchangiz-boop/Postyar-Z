@@ -1,11 +1,8 @@
-# Keep BuildConfig
--keep class ir.belitia.whcm.BuildConfig { *; }
-
-# Keep WebView related classes
+# Postyar ProGuard Rules
+-keepattributes *Annotation*
+-keep class ir.belitia.postyar.** { *; }
+-dontwarn com.google.android.material.**
+-keep class com.google.android.material.** { *; }
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
-
-# Keep AndroidX
--keep class androidx.appcompat.** { *; }
--keep class com.google.android.material.** { *; }

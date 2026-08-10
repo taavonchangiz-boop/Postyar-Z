@@ -1,2 +1,10 @@
-rootProject.name = "WHCM_SaaS_Android"
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'postyar'
 include ':app'

@@ -1,11 +1,11 @@
-// فایل گریدل اصلی پروژه اندروید استودیو
+// Top-level build file for Postyar Android App
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.1'
+        classpath 'com.android.tools.build:gradle:8.2.2'
     }
 }
 
@@ -16,6 +16,7 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+// Clean task
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

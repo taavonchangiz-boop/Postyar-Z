@@ -1014,11 +1014,7 @@ class MainController extends BaseController {
         $this->redirect('/hnnh');
     }
 
-    public function handleCloseTicketAdmin(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->closeAdmin(); }
 
-    /**
-     * بازیابی کلمه عبور با متد ایمن (توکن یکبار مصرف)
-     */
     public function handleResetPassword() {
         if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
             $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');

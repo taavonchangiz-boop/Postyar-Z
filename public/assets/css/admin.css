@@ -174,18 +174,28 @@
             top: 0;
             right: -300px;
             width: 300px;
+            /* استفاده از 100dvh به جای 100vh — در موبایل آدرس‌بار مرورگر محاسبه نمی‌شود */
             height: 100vh;
+            height: 100dvh;
             background-color: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(20px);
             border-left: 1px solid var(--border);
             z-index: 1100;
-            padding: 1.5rem 1rem;
+            padding: 1.5rem 1rem 2.5rem 1rem;
             display: flex;
             flex-direction: column;
             gap: 0.35rem;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             box-shadow: -10px 0 30px rgba(0,0,0,0.5);
             transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @supports not (height: 100dvh) {
+            .drawer-menu {
+                height: -webkit-fill-available;
+            }
         }
 
         .drawer-menu.show {
@@ -193,14 +203,18 @@
         }
 
         .drawer-menu::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
         .drawer-menu::-webkit-scrollbar-track {
             background: transparent;
         }
         .drawer-menu::-webkit-scrollbar-thumb {
-            background: rgba(245, 158, 11, 0.25);
+            background: rgba(245, 158, 11, 0.35);
             border-radius: 2px;
+        }
+        .drawer-menu {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245, 158, 11, 0.35) transparent;
         }
 
         main {
@@ -606,6 +620,94 @@ header {
 @media (min-width: 769px) {
     #admin-bell-popup {
         top: 60px !important;
+    }
+}
+
+/* ===== فیلتر و کارت تیکت‌ها ===== */
+.ticket-filter-btn {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 0.45rem 1rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.ticket-filter-btn:hover {
+    border-color: var(--primary);
+    color: #fff;
+}
+.ticket-filter-btn.active {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.ticket-card-row {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.25s;
+}
+.ticket-card-row:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.ticket-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.ticket-card-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.ticket-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 900;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.ticket-card-subject {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+.ticket-card-preview {
+    color: #94a3b8;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+.ticket-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .ticket-card-row {
+        padding: 1rem;
+    }
+    .ticket-card-header {
+        flex-direction: column;
     }
 }
 

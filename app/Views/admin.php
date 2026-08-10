@@ -1102,56 +1102,105 @@
             </div>
 
             <!-- ========================================== -->
-            <!-- ۸. بخش تیکت‌های پشتیبانی -->
+            <!-- ۸. بخش تیکت‌های پشتیبانی — سیستم حرفه‌ای -->
             <!-- ========================================== -->
             <div id="section-tickets" class="tab-content">
+                <!-- کارت آمار تیکت‌ها -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+                    <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.8) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:16px; padding:1.25rem; text-align:center;">
+                        <div style="font-size:2rem;">🎟</div>
+                        <div style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0;">کل تیکت‌ها</div>
+                        <strong style="color:#a5b4fc; font-size:1.4rem;"><?php echo \WHCM\Domain\TextFormat::fa_digits(count($tickets)); ?></strong>
+                    </div>
+                    <div style="background:linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(15,23,42,0.8) 100%); border:1px solid rgba(245,158,11,0.3); border-radius:16px; padding:1.25rem; text-align:center;">
+                        <div style="font-size:2rem;">⏳</div>
+                        <div style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0;">در انتظار پاسخ</div>
+                        <strong style="color:#fbbf24; font-size:1.4rem;"><?php echo \WHCM\Domain\TextFormat::fa_digits($open_t_count); ?></strong>
+                    </div>
+                    <div style="background:linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.8) 100%); border:1px solid rgba(16,185,129,0.3); border-radius:16px; padding:1.25rem; text-align:center;">
+                        <div style="font-size:2rem;">✔</div>
+                        <div style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0;">پاسخ داده شده</div>
+                        <strong style="color:#34d399; font-size:1.4rem;"><?php
+                            $replied_count = 0;
+                            foreach ($tickets as $tc) { if($tc['status'] === 'replied') $replied_count++; }
+                            echo \WHCM\Domain\TextFormat::fa_digits($replied_count);
+                        ?></strong>
+                    </div>
+                    <div style="background:linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(15,23,42,0.8) 100%); border:1px solid rgba(239,68,68,0.2); border-radius:16px; padding:1.25rem; text-align:center;">
+                        <div style="font-size:2rem;">🔒</div>
+                        <div style="font-size:0.8rem; color:#94a3b8; margin:0.3rem 0;">بسته شده</div>
+                        <strong style="color:#f87171; font-size:1.4rem;"><?php
+                            $closed_count = 0;
+                            foreach ($tickets as $tc) { if($tc['status'] === 'closed') $closed_count++; }
+                            echo \WHCM\Domain\TextFormat::fa_digits($closed_count);
+                        ?></strong>
+                    </div>
+                </div>
+
+                <!-- دکمه ارسال پیام جدید + فیلتر -->
                 <div class="card">
-                    <h2>🎫 تیکت‌های پشتیبانی کاربران</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:1rem;">
+                        <h2 style="margin:0; border:none; padding:0;">🎫 مرکز تیکت‌ها و پیام‌رسانی</h2>
+                        <button type="button" class="btn" style="background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); font-size:0.85rem; padding:0.7rem 1.2rem;" onclick="document.getElementById('newTicketModal').style.display='flex'">✉️ ارسال پیام جدید به کاربر</button>
+                    </div>
+
+                    <!-- فیلتر وضعیت -->
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+                        <button type="button" class="ticket-filter-btn active" onclick="filterTickets('all', this)">همه</button>
+                        <button type="button" class="ticket-filter-btn" onclick="filterTickets('open', this)">⏳ باز</button>
+                        <button type="button" class="ticket-filter-btn" onclick="filterTickets('replied', this)">✔ پاسخ‌داده‌شده</button>
+                        <button type="button" class="ticket-filter-btn" onclick="filterTickets('closed', this)">🔒 بسته‌شده</button>
+                    </div>
+
                     <?php if (empty($tickets)): ?>
                         <div style="text-align:center; padding:3rem 1rem;">
-                            <div style="font-size:3.5rem; margin-bottom:1rem;">📭</div>
+                            <div style="font-size:4rem; margin-bottom:1rem;">📭</div>
                             <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:0.75rem; font-weight:bold;">هنوز هیچ تیکتی ثبت نشده است</p>
-                            <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8;">کاربران از بخش «پشتیبانی» در پیشخوان خود تیکت ثبت می‌کنند.<br>پس از ثبت تیکت توسط کاربر، گفتگو و پاسخ‌دهی در اینجا نمایش داده می‌شود.</p>
+                            <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8; margin-bottom:1.5rem;">کاربران از بخش «پشتیبانی» در پیشخوان خود تیکت ثبت می‌کنند.<br>همچنین می‌توانید با دکمه بالا پیام مستقیم به هر کاربر ارسال کنید.</p>
+                            <button type="button" class="btn" style="background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);" onclick="document.getElementById('newTicketModal').style.display='flex'">✉️ ارسال پیام به کاربر</button>
                         </div>
                     <?php else: ?>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>کاربر</th>
-                                        <th>موضوع و تیکت</th>
-                                        <th>وضعیت</th>
-                                        <th>پاسخ مستقیم</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($tickets as $t): ?>
-                                        <tr>
-                                            <td data-label="کاربر">
-                                                <strong><?php echo htmlspecialchars($t['user_name']); ?></strong><br>
-                                                <span style="font-size: 0.8rem; color: var(--text-muted);"><?php echo htmlspecialchars($t['user_email']); ?></span>
-                                            </td>
-                                            <td data-label="موضوع و پیام">
-                                                <strong style="color:#ffffff;"><?php echo htmlspecialchars($t['subject']); ?></strong><br>
-                                                <button type="button" class="btn btn-outline btn-sm" style="margin-top:0.5rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important; color:#ffffff !important; font-weight:800; border:none; font-size:0.78rem; padding:0.4rem 0.8rem; box-shadow:0 4px 10px rgba(99,102,241,0.3);" onclick='openAdminTicketModal(<?php echo json_encode($t, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE); ?>)'>👁 مشاهده گفتگو و مدیریت تیکت</button>
-                                            </td>
-                                            <td data-label="وضعیت تیکت">
-                                                <span class="badge badge-<?php echo $t['status'] === 'open' ? 'pending' : 'approved'; ?>">
-                                                    <?php echo $t['status'] === 'open' ? 'در انتظار پاسخ ⏳' : 'پاسخ داده شده ✔'; ?>
-                                                </span>
-                                            </td>
-                                            <td data-label="پاسخ مستقیم">
-                                                <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/reply-ticket'); ?>" method="POST" style="display:flex; gap:0.5rem;">
-                                                    <?php echo $csrf_field; ?>
-                                                    <input type="hidden" name="ticket_id" value="<?php echo $t['id']; ?>">
-                                                    <input type="text" name="reply" required placeholder="پاسخ..." style="padding:0.4rem; border-radius:8px; font-size:0.8rem; width:120px;">
-                                                    <button type="submit" class="btn btn-success" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:8px;">ثبت</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        <div class="table-responsive" style="border:none; background:transparent; border-radius:0;">
+                            <div id="tickets-list-container">
+                                <?php foreach ($tickets as $t): ?>
+                                <div class="ticket-card-row" data-status="<?php echo $t['status']; ?>">
+                                    <div class="ticket-card-header">
+                                        <div class="ticket-card-user">
+                                            <div class="ticket-avatar"><?php echo mb_substr(htmlspecialchars($t['user_name'] ?? '؟'), 0, 1); ?></div>
+                                            <div>
+                                                <strong style="color:#fff; font-size:0.9rem;"><?php echo htmlspecialchars($t['user_name'] ?? 'نامشخص'); ?></strong><br>
+                                                <span style="font-size:0.75rem; color:#94a3b8;"><?php echo htmlspecialchars($t['user_email'] ?? ''); ?></span>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                                            <?php if (!empty($t['created_by_admin'])): ?>
+                                                <span style="font-size:0.7rem; background:rgba(99,102,241,0.2); color:#a5b4fc; padding:0.2rem 0.6rem; border-radius:6px;">📤 ارسال توسط ادمین</span>
+                                            <?php endif; ?>
+                                            <span class="badge badge-<?php echo $t['status'] === 'open' ? 'pending' : ($t['status'] === 'replied' ? 'approved' : 'danger'); ?>">
+                                                <?php echo $t['status'] === 'open' ? '⏳ باز' : ($t['status'] === 'replied' ? '✔ پاسخ‌داده‌شده' : '🔒 بسته‌شده'); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ticket-card-subject"><?php echo htmlspecialchars($t['subject']); ?></div>
+                                    <div class="ticket-card-preview"><?php echo mb_substr(strip_tags($t['message']), 0, 120); ?>...</div>
+                                    <div class="ticket-card-actions">
+                                        <button type="button" class="btn btn-sm" style="background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important; color:#fff !important; font-weight:800; border:none;" onclick='openAdminTicketModal(<?php echo json_encode($t, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_UNICODE); ?>)'>👁 مشاهده و پاسخ</button>
+                                        <?php if ($t['status'] === 'closed'): ?>
+                                            <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/reopen-ticket'); ?>" method="POST" style="display:inline;">
+                                                <?php echo $csrf_field; ?>
+                                                <input type="hidden" name="ticket_id" value="<?php echo $t['id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline" title="باز کردن مجدد">🔄</button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/delete-ticket'); ?>" method="POST" style="display:inline;" onsubmit="return confirm('آیا از حذف این تیکت اطمینان دارید؟')">
+                                            <?php echo $csrf_field; ?>
+                                            <input type="hidden" name="ticket_id" value="<?php echo $t['id']; ?>">
+                                            <button type="submit" class="btn btn-sm" style="background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);" title="حذف تیکت">🗑</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1298,6 +1347,61 @@
                 <?php echo $csrf_field; ?>
                 <input type="hidden" name="ticket_id" id="at-close-id">
                 <button type="submit" class="btn btn-danger" style="width:100%; padding:0.6rem; font-size:0.85rem; background:rgba(239, 68, 68, 0.2); border:1px solid #ef4444; color:#ef4444;">بستن این تیکت بدون پاسخ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- مدال ایجاد تیکت جدید (ارسال پیام ادمین به کاربر) -->
+    <div id="newTicketModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1300; align-items:center; justify-content:center; padding:1rem; overflow-y:auto;">
+        <div class="card" style="width:100%; max-width:540px; margin:auto; position:relative; background:#0f172a; border:1px solid #6366f1; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.8);">
+            <button onclick="document.getElementById('newTicketModal').style.display='none'" style="position:absolute; top:15px; left:15px; background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">✖</button>
+            <h3 style="color:#a5b4fc; margin-bottom:1.5rem;">✉️ ارسال پیام جدید به کاربر</h3>
+            <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/create-ticket'); ?>" method="POST" enctype="multipart/form-data">
+                <?php echo $csrf_field; ?>
+                <div class="form-group">
+                    <label>انتخاب کاربر مقصد <span style="color:#ef4444;">*</span></label>
+                    <select name="target_user_id" required style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
+                        <option value="">— کاربر را انتخاب کنید —</option>
+                        <?php foreach ($users as $u): ?>
+                            <option value="<?php echo $u['id']; ?>"><?php echo htmlspecialchars($u['name']); ?> (<?php echo htmlspecialchars($u['email']); ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>موضوع پیام <span style="color:#ef4444;">*</span></label>
+                    <input type="text" name="subject" required placeholder="موضوع پیام یا تیکت..." style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>دسته‌بندی</label>
+                        <select name="category" style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
+                            <option value="general">🔍 عمومی</option>
+                            <option value="technical">💻 فنی</option>
+                            <option value="billing">💳 مالی</option>
+                            <option value="feature">🚀 پیشنهاد ویژگی</option>
+                            <option value="bug">🐛 گزارش باگ</option>
+                            <option value="other">📋 سایر</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>اولویت</label>
+                        <select name="priority" style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
+                            <option value="low">🟢 پایین</option>
+                            <option value="normal" selected>🟡 عادی</option>
+                            <option value="high">🟠 بالا</option>
+                            <option value="critical">🔴 بحرانی</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>متن پیام <span style="color:#ef4444;">*</span></label>
+                    <textarea name="message" rows="5" required placeholder="متن پیام خود را بنویسید..." style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155; line-height:1.8;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="font-size:0.8rem; color:#94a3b8;">پیوست فایل (اختیاری):</label>
+                    <input type="file" name="attachment" accept="image/*,.pdf" style="padding:0.4rem; font-size:0.8rem;">
+                </div>
+                <button type="submit" class="btn btn-success" style="width:100%; padding:0.85rem;">📤 ارسال پیام به کاربر</button>
             </form>
         </div>
     </div>

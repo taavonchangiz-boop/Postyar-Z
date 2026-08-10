@@ -274,6 +274,8 @@ class Bootstrap {
             'v2_add_ticket_columns' => function($db) {
                 try { $db->exec("ALTER TABLE tickets ADD COLUMN attachment TEXT NULL"); } catch (\Exception $e) {}
                 try { $db->exec("ALTER TABLE tickets ADD COLUMN assigned_to INTEGER NULL"); } catch (\Exception $e) {}
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN priority VARCHAR(20) DEFAULT 'normal'"); } catch (\Exception $e) {}
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN created_by_admin INTEGER DEFAULT 0"); } catch (\Exception $e) {}
             },
             'v2_create_tickets_table' => function($db) {
                 $driver = self::getConfig('database.driver', 'sqlite');

@@ -153,6 +153,100 @@ class TicketController extends BaseController
         $this->redirect('/hnnh');
     }
 
+    public function adminCreate()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $target_user_id = (int)($_POST['target_user_id'] ?? 0);
+        $subject = trim($_POST['subject'] ?? '');
+        $category = trim($_POST['category'] ?? 'general');
+        $message = trim($_POST['message'] ?? '');
+        $priority = trim($_POST['priority'] ?? 'normal');
+
+        if ($target_user_id <= 0) {
+            $this->setFlashMessage('لطفاً کاربر مقصد را انتخاب کنید.');
+            $this->redirect('/hnnh');
+        }
+        if (empty($subject) || empty($message)) {
+            $this->setFlashMessage('عنوان و متن پیام الزامی هستند.');
+            $this->redirect('/hnnh');
+        }
+
+        $db = Bootstrap::getDB();
+        // بررسی وجود کاربر
+        $stmt = $db->prepare("SELECT id, name FROM users WHERE id = ? LIMIT 1");
+        $stmt->execute([$target_user_id]);
+        $target_user = $stmt->fetch();
+        if (!$target_user) {
+            $this->setFlashMessage('کاربر مقصد یافت نشد.');
+            $this->redirect('/hnnh');
+        }
+
+        $admin = Auth::user();
+        $admin_name = $admin['name'] ?? 'مدیر سیستم';
+
+        $attachment = $this->handleAttachment('attachment');
+        if ($attachment) {
+            $message .= "\n\n[پیوست: " . $attachment . "]";
+        }
+
+        // ذخیره اولین پیام ادمین در فیلد message
+        $full_message = "[پیام مدیر سیستم ({$admin_name}) در تاریخ " . TextFormat::now_jalali() . "]:\n" . $message;
+
+        $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, priority, assigned_to, attachment, created_by_admin) VALUES (?, ?, ?, ?, 'replied', ?, ?, ?, 1)");
+        $stmt->execute([$target_user_id, $subject, $category, $full_message, $priority, Auth::tenantId(), $attachment]);
+
+        $this->setFlashMessage('پیام شما با موفقیت به کاربر «' . htmlspecialchars($target_user['name']) . '» ارسال شد. ✔');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * باز کردن مجدد تیکت بسته‌شده توسط ادمین
+     */
+    public function reopenAdmin()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $ticket_id = (int)($_POST['ticket_id'] ?? 0);
+        if ($ticket_id <= 0) {
+            $this->setFlashMessage('شناسه تیکت نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("UPDATE tickets SET status = 'open' WHERE id = ?");
+        $stmt->execute([$ticket_id]);
+        $this->setFlashMessage('تیکت مجدداً باز شد. 🎫');
+        $this->redirect('/hnnh');
+    }
+
+    /**
+     * حذف تیکت توسط ادمین
+     */
+    public function deleteAdmin()
+    {
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $ticket_id = (int)($_POST['ticket_id'] ?? 0);
+        if ($ticket_id <= 0) {
+            $this->setFlashMessage('شناسه تیکت نامعتبر است.');
+            $this->redirect('/hnnh');
+        }
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare("DELETE FROM tickets WHERE id = ?");
+        $stmt->execute([$ticket_id]);
+        $this->setFlashMessage('تیکت با موفقیت حذف شد. 🗑');
+        $this->redirect('/hnnh');
+    }
+
     public function closeUser()
     {
         $this->checkAuth();

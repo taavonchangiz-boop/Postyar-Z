@@ -140,6 +140,11 @@ class MainController extends BaseController {
 
         $res = Auth::register($name, $email, $password, $business_name, $business_type);
         if ($res['success']) {
+            // ---- ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق ----
+            // استفاده از Auth::login() به جای ست مستقیم سشن — سازگاری کامل با LiteSpeed
+            Auth::login($email, $password);
+            RateLimit::clear('login_web');
+
             // ---- پردازش‌های پس از ثبت‌نام (غیرمسدودکننده) ----
             if (!empty($res['user_id'])) {
                 try {
@@ -157,10 +162,6 @@ class MainController extends BaseController {
                 }
             }
 
-            // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق — بدون session_regenerate_id برای سازگاری با LiteSpeed
-            if (!Auth::check() && !empty($res['user_id'])) {
-                $_SESSION['user_id'] = (int)$res['user_id'];
-            }
             $this->setFlashMessage('ثبت‌نام شما با موفقیت انجام شد و به صورت خودکار وارد حساب شدید! ✨');
             if (Auth::isSuperAdmin()) {
                 $this->redirect('/hnnh');
@@ -989,6 +990,9 @@ class MainController extends BaseController {
     public function handleDeletePlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->delete(); }
     public function handleCreateTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->create(); }
     public function handleReplyTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->reply(); }
+    public function handleAdminCreateTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->adminCreate(); }
+    public function handleReopenTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->reopenAdmin(); }
+    public function handleDeleteTicket(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->deleteAdmin(); }
 
     public function handleCloseTicketUser(){ return (new \WHCM\Modules\Support\Controllers\TicketController)->closeUser(); }
 

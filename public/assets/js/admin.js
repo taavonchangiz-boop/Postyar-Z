@@ -384,6 +384,23 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 })();
 
+/* ===== فیلتر تیکت‌ها بر اساس وضعیت ===== */
+function filterTickets(status, btn) {
+    var rows = document.querySelectorAll('.ticket-card-row');
+    for (var i = 0; i < rows.length; i++) {
+        if (status === 'all' || rows[i].getAttribute('data-status') === status) {
+            rows[i].style.display = '';
+        } else {
+            rows[i].style.display = 'none';
+        }
+    }
+    var btns = document.querySelectorAll('.ticket-filter-btn');
+    for (var j = 0; j < btns.length; j++) {
+        btns[j].classList.remove('active');
+    }
+    if (btn) btn.classList.add('active');
+}
+
 /* ===== تبدیل خودکار اعداد به فارسی ===== */
 if(typeof autoConvertToPersianDigits === 'function'){
     if(document.readyState === 'complete' || document.readyState === 'interactive'){

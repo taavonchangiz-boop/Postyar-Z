@@ -797,6 +797,49 @@ class Bootstrap {
                 // افزودن ستون expiry_reminder_sent برای جلوگیری از ارسال تکراری یادآوری انقضا
                 try { $db->exec("ALTER TABLE subscriptions ADD COLUMN expiry_reminder_sent INTEGER DEFAULT 0"); } catch (\Exception $e) {}
             },
+            'v9_create_plans_table' => function($db) {
+                // ایجاد جدول plans در صورتی که از ابتدا وجود نداشته باشد
+                $driver = self::getConfig('database.driver', 'sqlite');
+                try {
+                    if ($driver === 'mysql') {
+                        $db->exec("CREATE TABLE IF NOT EXISTS plans (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            title VARCHAR(100) NOT NULL,
+                            price DECIMAL(12,2) DEFAULT 0.00,
+                            duration_days INT DEFAULT 30,
+                            max_channels INT DEFAULT 1,
+                            max_posts INT DEFAULT 10,
+                            features TEXT,
+                            payment_url TEXT NULL,
+                            image_url TEXT NULL,
+                            description TEXT NULL,
+                            early_renewal_discount INT DEFAULT 0,
+                            general_discount INT DEFAULT 0,
+                            discount_badge_text VARCHAR(150) NULL,
+                            is_featured INT DEFAULT 0,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                    } else {
+                        $db->exec("CREATE TABLE IF NOT EXISTS plans (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            title VARCHAR(100) NOT NULL,
+                            price DECIMAL(12,2) DEFAULT 0.00,
+                            duration_days INTEGER DEFAULT 30,
+                            max_channels INTEGER DEFAULT 1,
+                            max_posts INTEGER DEFAULT 10,
+                            features TEXT,
+                            payment_url TEXT NULL,
+                            image_url TEXT NULL,
+                            description TEXT NULL,
+                            early_renewal_discount INTEGER DEFAULT 0,
+                            general_discount INTEGER DEFAULT 0,
+                            discount_badge_text VARCHAR(150) NULL,
+                            is_featured INTEGER DEFAULT 0,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        );");
+                    }
+                } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

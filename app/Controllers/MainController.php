@@ -53,7 +53,12 @@ class MainController extends BaseController {
 
         // دریافت لیست پلن‌ها جهت نمایش در لندینگ پیج
         $db = Bootstrap::getDB();
-        $plans = $db->query("SELECT * FROM plans ORDER BY price ASC")->fetchAll();
+        $plans = [];
+        try {
+            $plans = $db->query("SELECT * FROM plans ORDER BY price ASC")->fetchAll();
+        } catch (\Throwable $e) {
+            $plans = [];
+        }
 
         $this->render('home', [
             'title' => 'پُست‌یار | سامانه هوشمند مدیریت و انتشار کانال‌ها',

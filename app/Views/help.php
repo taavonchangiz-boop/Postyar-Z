@@ -5,33 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?php echo htmlspecialchars($title ?? 'آموزش استفاده از پُست‌یار'); ?> | پُست‌یار</title>
     <meta name="theme-color" content="#6366f1">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
+    <?php $baseUrl = rtrim(str_replace(['/assets', '/public/assets'], '', \WHCM\Core\Bootstrap::getAssetsUrl()), '/'); ?>
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo $baseUrl; ?>/assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo $baseUrl; ?>/assets/icons/favicon-16x16.png">
     <style>
         @font-face {
             font-family: 'Vazirmatn';
-            src: url('/assets/fonts/Vazirmatn-Regular.woff2') format('woff2');
+            src: url('<?php echo $baseUrl; ?>/assets/fonts/Vazirmatn-Regular.woff2') format('woff2');
             font-weight: 400;
             font-style: normal;
             font-display: swap;
         }
         @font-face {
             font-family: 'Vazirmatn';
-            src: url('/assets/fonts/Vazirmatn-Medium.woff2') format('woff2');
+            src: url('<?php echo $baseUrl; ?>/assets/fonts/Vazirmatn-Medium.woff2') format('woff2');
             font-weight: 500;
             font-style: normal;
             font-display: swap;
         }
         @font-face {
             font-family: 'Vazirmatn';
-            src: url('/assets/fonts/Vazirmatn-Bold.woff2') format('woff2');
+            src: url('<?php echo $baseUrl; ?>/assets/fonts/Vazirmatn-Bold.woff2') format('woff2');
             font-weight: 700;
             font-style: normal;
             font-display: swap;
         }
         @font-face {
             font-family: 'Vazirmatn';
-            src: url('/assets/fonts/Vazirmatn-Black.woff2') format('woff2');
+            src: url('<?php echo $baseUrl; ?>/assets/fonts/Vazirmatn-Black.woff2') format('woff2');
             font-weight: 900;
             font-style: normal;
             font-display: swap;

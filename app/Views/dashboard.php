@@ -97,6 +97,7 @@
             <div class="menu-item" data-target="upgrade" onclick="switchSection('upgrade')">💎 خرید اشتراک</div>
             <div class="menu-item" data-target="referral" onclick="switchSection('referral')">🎯 زیرمجموعه‌گیری</div>
             <div class="menu-item" data-target="wallet" onclick="switchSection('wallet')">💰 کیف پول</div>
+            <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/help'); ?>" class="menu-item">📖 آموزش استفاده</a>
             <?php if (\WHCM\Core\Auth::isSuperAdmin()): ?>
                 <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh'); ?>" class="menu-item" style="color: var(--warning); border: 1px dashed var(--warning); margin-top: 1rem;">👑 پنل مدیریت کل</a>
             <?php endif; ?>
@@ -169,6 +170,10 @@
                     <span class="mobile-more-icon">💰</span>
                     <span>کیف پول</span>
                 </div>
+                <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/help'); ?>" class="mobile-more-item">
+                    <span class="mobile-more-icon">📖</span>
+                    <span>آموزش استفاده</span>
+                </a>
                 <?php if (\WHCM\Core\Auth::isSuperAdmin()): ?>
                 <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh'); ?>" class="mobile-more-item mobile-more-admin">
                     <span class="mobile-more-icon">👑</span>

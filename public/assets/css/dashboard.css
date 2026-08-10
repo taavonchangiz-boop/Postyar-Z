@@ -1667,4 +1667,4 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
     -moz-appearance: textfield;
-}
+}/* Push Toggle */\n#push-toggle-btn.push-active {\n    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;\n    border-color: #10b981 !important;\n    color: white !important;\n}\n#push-toggle-btn:hover {\n    transform: scale(1.03);\n    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);\n}\n#push-toggle-btn.push-active:hover {\n    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);\n}

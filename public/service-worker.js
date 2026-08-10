@@ -1,4 +1,4 @@
-const CACHE_NAME = 'postyar-pwa-v4';
+const CACHE_NAME = 'postyar-pwa-v5';
 
 // مسیر پایه پویا — از لوکیشن خود سرویس ورکر استخراج می‌شود
 // چون SW در کنار index.php قرار دارد، مسیر آن برابر scope است
@@ -20,6 +20,7 @@ const STATIC_ASSETS = [
     'js/home.js',
     'js/utils.js',
     'js/pwa-install.js',
+    'js/push.js',
     'images/logo.webp',
     'images/logo-full.webp',
     'images/logo-white-bg.webp',

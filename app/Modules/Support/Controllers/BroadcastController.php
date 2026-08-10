@@ -5,6 +5,7 @@ use WHCM\Core\Bootstrap;
 use WHCM\Core\Csrf;
 use WHCM\Domain\TextFormat;
 use WHCM\Controllers\BaseController;
+use WHCM\Controllers\MainController;
 
 /**
  * کنترلر ماژول Support — اعلان همگانی
@@ -40,7 +41,19 @@ class BroadcastController extends BaseController
             $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, 'global_announcement', ?)");
             $stmt->execute([$announcement_data]);
         }
-        $this->setFlashMessage('اعلان درون‌برنامه‌ای با موفقیت برای تمامی کاربران ارسال گردید. 📢');
+        // ارسال پوش ناتیفیکیشن همگانی
+        try {
+            $pushResults = MainController::sendPushBroadcast($title, $message);
+            $sentCount = count(array_filter($pushResults, function ($r) { return $r['success']; }));
+            if ($sentCount > 0) {
+                $this->setFlashMessage('اعلان برای ' . $sentCount . ' کاربر از طریق مرورگر ارسال شد. 📢🔔');
+            } else {
+                $this->setFlashMessage('اعلان درون‌برنامه‌ای ذخیره شد. (اشتراک پوش فعالی یافت نشد) 📢');
+            }
+        } catch (\Throwable $e) {
+            error_log('[Postyar Broadcast Push] ' . $e->getMessage());
+            $this->setFlashMessage('اعلان ذخیره شد اما ارسال پوش با خطا مواجه شد. 📢');
+        }
         $this->redirect('/hnnh');
     }
 }

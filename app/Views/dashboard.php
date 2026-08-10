@@ -1146,6 +1146,21 @@
                             </div>
                         <?php endif; ?>
 
+                        <!-- اعلان‌های مرورگر -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span style="font-size: 1.5rem;">🔔</span>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">اعلان‌های مرورگر</div>
+                                    <div id="push-toggle-label" style="color: var(--text-muted); font-size: 0.8rem;">برای دریافت اعلان روی موبایل و دسکتاپ فعال کنید</div>
+                                </div>
+                            </div>
+                            <button type="button" id="push-toggle-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; border-radius: 2rem; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 600; white-space: nowrap; transition: all 0.2s;">
+                                <span id="push-toggle-icon">🔕</span>
+                                <span id="push-toggle-text">فعال‌سازی</span>
+                            </button>
+                        </div>
+
                         <button type="submit" class="btn btn-success" style="width:100%; padding:1rem; background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); border:none;">ذخیره تنظیمات پیشرفته و اتوماسیون پُست‌یار 💾✔</button>
                     </form>
                 </div>
@@ -1350,6 +1365,9 @@
 </main>
     </div>
 
+    <script>
+        window.postyarBaseUrl = '<?php echo $baseUrl; ?>';
+    </script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js"></script>
@@ -1426,6 +1444,7 @@
         }
     })();
     </script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js"></script>
 </body>
 </html>

@@ -81,4 +81,13 @@ return [
         'api_key' => '',                                     // ← کلید API sms.ir
         'line_number' => '',                                 // ← شماره خط ارسال
     ],
+
+    // تنظیمات Web Push (اعلان مرورگر PWA)
+    // کلیدها با ابزارهای آنلاین Web Push VAPID Generator تولید می‌شوند
+    'vapid' => [
+        'enabled' => false,                                  // ← true برای فعال‌سازی پوش ناتیفیکیشن
+        'subject' => 'mailto:noreply@your-domain.ir',        // ← ایمیل تماس (الزامی برای VAPID)
+        'public_key' => '',                                  // ← کلید عمومی VAPID (base64url)
+        'private_key_pem' => '',                              // ← محتوای کامل PEM کلید خصوصی EC
+    ],
 ];

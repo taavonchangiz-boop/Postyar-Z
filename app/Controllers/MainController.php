@@ -18,6 +18,8 @@ use WHCM\Domain\Referral;
 use WHCM\Domain\Wallet;
 use WHCM\Core\EmailTemplate;
 
+use WHCM\Core\WebPush;
+
 /**
  * کنترلر اصلی هدایت‌کننده و پردازشگر درخواست‌های وب
  *
@@ -2183,5 +2185,197 @@ class MainController extends BaseController {
      */
     public function helpPage() {
         $this->render('help', ['title' => 'آموزش استفاده از پُست‌یار']);
+    }
+
+    // ─── Push Notification ──────────────────────────────────────
+
+    /**
+     * بازگرداندن کلید عمومی VAPID برای ثبت اعلان در مرورگر
+     */
+    public function getVapidPublicKey() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $vapid = Bootstrap::getConfig('vapid');
+        if (empty($vapid['public_key'])) {
+            http_response_code(503);
+            echo json_encode(['success' => false, 'message' => 'پوش ناتیفیکیشن فعال نیست.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'publicKey' => $vapid['public_key']]);
+    }
+
+    /**
+     * ثبت اشتراک Push کاربر
+     */
+    public function handlePushSubscribe() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        Auth::requireLogin();
+        $userId = Auth::id();
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $endpoint    = $input['endpoint'] ?? '';
+        $keysP256dh  = $input['keys']['p256dh'] ?? '';
+        $keysAuth    = $input['keys']['auth'] ?? '';
+
+        if (!$endpoint || !$keysP256dh || !$keysAuth) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'پارامترهای اشتراک ناقص است.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $db = Bootstrap::getDB();
+
+        // حذف اشتراک قبلی این کاربر (هر کاربر فقط یک اشتراک فعال)
+        $db->prepare('DELETE FROM push_subscriptions WHERE user_id = ?')->execute([$userId]);
+
+        $stmt = $db->prepare('INSERT INTO push_subscriptions (user_id, endpoint, keys_p256dh, keys_auth) VALUES (?, ?, ?, ?)');
+        $stmt->execute([$userId, $endpoint, $keysP256dh, $keysAuth]);
+
+        echo json_encode(['success' => true, 'message' => 'اشتراک اعلان با موفقیت ثبت شد.'], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * لغو اشتراک Push کاربر
+     */
+    public function handlePushUnsubscribe() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        Auth::requireLogin();
+        $userId = Auth::id();
+
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare('DELETE FROM push_subscriptions WHERE user_id = ?');
+        $stmt->execute([$userId]);
+
+        echo json_encode(['success' => true, 'message' => 'اشتراک اعلان لغو شد.'], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * بررسی وضعیت اشتراک Push کاربر
+     */
+    public function getPushStatus() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        Auth::requireLogin();
+        $userId = Auth::id();
+
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare('SELECT id FROM push_subscriptions WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+
+        echo json_encode([
+            'success' => true,
+            'subscribed' => ($stmt->fetch() !== false),
+            'enabled' => !empty(Bootstrap::getConfig('vapid.enabled')),
+        ]);
+    }
+
+    /**
+     * ارسال اعلان به یک کاربر خاص (برای ادمین و سیستم)
+     */
+    public static function sendPushToUser(int $userId, string $title, string $body, string $url = ''): bool {
+        $vapid = Bootstrap::getConfig('vapid');
+        if (empty($vapid['enabled']) || empty($vapid['private_key_pem'])) {
+            return false;
+        }
+
+        $db = Bootstrap::getDB();
+        $stmt = $db->prepare('SELECT endpoint, keys_p256dh, keys_auth FROM push_subscriptions WHERE user_id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $sub = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$sub) return false;
+
+        $appUrl = Bootstrap::getConfig('app.url');
+        $payload = json_encode([
+            'title' => $title,
+            'body'  => $body,
+            'url'   => $url ?: $appUrl . '/dashboard',
+        ], JSON_UNESCAPED_UNICODE);
+
+        try {
+            $result = WebPush::send(
+                $sub['endpoint'],
+                $sub['keys_p256dh'],
+                $sub['keys_auth'],
+                $payload,
+                [
+                    'subject'    => $vapid['subject'],
+                    'publicKey'  => $vapid['public_key'],
+                    'privateKey' => $vapid['private_key_pem'],
+                ]
+            );
+
+            // اگر اشتراک منقضی شده، حذف شود
+            if (!$result['success'] && in_array($result['status'], [404, 410])) {
+                $db->prepare('DELETE FROM push_subscriptions WHERE endpoint = ?')->execute([$sub['endpoint']]);
+            }
+
+            return $result['success'];
+        } catch (\Throwable $e) {
+            error_log('[Postyar Push] Send error for user ' . $userId . ': ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * ارسال اعلان به تمام کاربران (برداشت)
+     */
+    public static function sendPushBroadcast(string $title, string $body, string $url = ''): array {
+        $vapid = Bootstrap::getConfig('vapid');
+        if (empty($vapid['enabled']) || empty($vapid['private_key_pem'])) {
+            return [];
+        }
+
+        $db = Bootstrap::getDB();
+        $subs = $db->query('SELECT id, endpoint, keys_p256dh, keys_auth FROM push_subscriptions')->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($subs)) return [];
+
+        $appUrl = Bootstrap::getConfig('app.url');
+        $payload = json_encode([
+            'title' => $title,
+            'body'  => $body,
+            'url'   => $url ?: $appUrl . '/dashboard',
+        ], JSON_UNESCAPED_UNICODE);
+
+        $vapidConfig = [
+            'subject'    => $vapid['subject'],
+            'publicKey'  => $vapid['public_key'],
+            'privateKey' => $vapid['private_key_pem'],
+        ];
+
+        $results = [];
+        $expiredEndpoints = [];
+
+        foreach ($subs as $sub) {
+            try {
+                $result = WebPush::send(
+                    $sub['endpoint'],
+                    $sub['keys_p256dh'],
+                    $sub['keys_auth'],
+                    $payload,
+                    $vapidConfig
+                );
+                $results[] = $result;
+
+                if (!$result['success'] && in_array($result['status'], [404, 410])) {
+                    $expiredEndpoints[] = $sub['endpoint'];
+                }
+            } catch (\Throwable $e) {
+                $results[] = ['success' => false, 'error' => $e->getMessage()];
+            }
+        }
+
+        // پاکسازی اشتراک‌های منقضی
+        if (!empty($expiredEndpoints)) {
+            $placeholders = implode(',', array_fill(0, count($expiredEndpoints), '?'));
+            $db->prepare("DELETE FROM push_subscriptions WHERE endpoint IN ($placeholders)")
+               ->execute($expiredEndpoints);
+        }
+
+        return $results;
     }
 }

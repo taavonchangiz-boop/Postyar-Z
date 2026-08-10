@@ -127,6 +127,12 @@ try {
     Router::get('/hnnh/approve-payment', 'MainController@handleApprovePaymentGet');
     Router::get('/hnnh/delete-plan', 'MainController@handleDeletePlanGet');
 
+    // مسیرهای پوش ناتیفیکیشن
+    Router::get('/api/push/vapid-key', 'MainController@getVapidPublicKey');
+    Router::post('/api/push/subscribe', 'MainController@handlePushSubscribe');
+    Router::post('/api/push/unsubscribe', 'MainController@handlePushUnsubscribe');
+    Router::get('/api/push/status', 'MainController@getPushStatus');
+
     // پردازش درخواست جاری
     Router::dispatch();
 

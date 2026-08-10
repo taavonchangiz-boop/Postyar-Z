@@ -19,6 +19,15 @@ android {
         buildConfigField "String", "DASHBOARD_URL", "\"https://belitia.ir/dashboard\""
     }
 
+    signingConfigs {
+        release {
+            storeFile file('../postyar-release.jks')
+            storePassword 'postyar2024'
+            keyAlias 'postyar'
+            keyPassword 'postyar2024'
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
@@ -27,6 +36,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

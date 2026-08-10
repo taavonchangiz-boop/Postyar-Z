@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -125,8 +126,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Cache
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setAppCacheEnabled(true);
-        settings.setAppCachePath(getCacheDir().getAbsolutePath());
 
         // رندر
         settings.setLoadWithOverviewMode(true);
@@ -240,8 +239,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-            super.onReceivedError(view, request, errorResponse);
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
             if (request.isForMainFrame()) {
                 showErrorPage();
             }
@@ -259,12 +257,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        @Override
-        public void onReceivedSslError(WebView view, android.webkit.SslErrorHandler handler, android.webkit.SslError error) {
-            // امنیت: هرگز SSL خطا را نادیده نگیر
-            handler.cancel();
-            showErrorPage();
-        }
     }
 
     // ─── WebChromeClient ────────────────────────────────────────

@@ -74,4 +74,12 @@ return [
         'api_key' => '',
         'line_number' => '',
     ],
+
+    // تنظیمات Web Push (اعلان مرورگر)
+    'vapid' => [
+        'enabled' => true,
+        'subject' => 'mailto:noreply@postyar.ir', // آدرس اطلاع‌رسانی (الزامی)
+        'public_key' => 'BKgawjdc4YGc22tErmPvTsc2Md/Lj9ROOLWu5Izabu98uW2WR1vRzxe7CWM4HcDh33y575ut9dZqEjAUSNWXVZ0',
+        'private_key_pem' => base64_decode('LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUQxNnRzbUduZVJRVXhEOVdLTy93c1V0SUw2YUZ4T0U0Q3FLQmg5RWNhdEJvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFcUJyQ04xemhnWnpiYTBTdVkrOU94ell4Mzh1UDFFNDR0YTdrak5OcHU3M3k1YlpaSFc5SFBGN3NKWXpnZHdPSGZmTG52bTYzMTFtb1NNQlJJMVpkVm5RPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo='),
+    ],
 ];

@@ -621,6 +621,35 @@
                 flex: 1;
             }
 
+            /* بخش زیرمجموعه‌گیری - مرتب‌سازی موبایل */
+            #section-referral [style*="grid-template-columns:1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+            #section-referral [style*="grid-template-columns:repeat(3"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 0.6rem !important;
+            }
+            #section-referral [style*="grid-template-columns:repeat(3"] > div {
+                padding: 0.75rem 0.5rem !important;
+            }
+            #section-referral [style*="grid-template-columns:repeat(3"] > div > div[style*="font-size:1.8rem"] {
+                font-size: 1.3rem !important;
+            }
+            #section-referral [style*="grid-template-columns:repeat(3"] > div > div[style*="font-size:0.8rem"] {
+                font-size: 0.72rem !important;
+            }
+            #section-referral [style*="display:flex"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            #section-referral [style*="display:flex"] form {
+                width: 100%;
+            }
+            #section-referral [style*="display:flex"] form input {
+                flex: 1;
+            }
+
             /* نمودار */
             .analytics-graph {
                 height: 200px;

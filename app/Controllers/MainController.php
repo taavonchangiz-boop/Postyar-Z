@@ -157,9 +157,9 @@ class MainController extends BaseController {
                 }
             }
 
-            // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق
-            if (!Auth::check()) {
-                Auth::login($email, $password);
+            // ورود خودکار کاربر بلافاصله پس از ثبت‌نام موفق — بدون session_regenerate_id برای سازگاری با LiteSpeed
+            if (!Auth::check() && !empty($res['user_id'])) {
+                $_SESSION['user_id'] = (int)$res['user_id'];
             }
             $this->setFlashMessage('ثبت‌نام شما با موفقیت انجام شد و به صورت خودکار وارد حساب شدید! ✨');
             if (Auth::isSuperAdmin()) {

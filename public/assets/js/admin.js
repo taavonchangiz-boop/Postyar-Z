@@ -367,15 +367,12 @@ document.addEventListener('DOMContentLoaded', function(){
     function initJalaliDatepicker(){
         if(typeof jalaliDatepicker === 'undefined') return false;
         try{
-            var inputs = document.querySelectorAll('[data-jdp]');
-            if(inputs.length === 0) return true;
             jalaliDatepicker.startWatch({
                 separatorChar: '/',
-                openOnFocus: true
+                openOnFocus: true,
+                showTodayBtn: true,
+                showEmptyBtn: false
             });
-            for(var i=0;i<inputs.length;i++){
-                inputs[i].removeAttribute('data-jdp');
-            }
             return true;
         }catch(e){ return false; }
     }

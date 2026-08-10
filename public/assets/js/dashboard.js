@@ -255,31 +255,6 @@ function closeTicketModal() {
     document.getElementById('ticketModal').style.display = 'none';
 }
 
-/* ===== راه‌اندازی تقویم شمسی جلالی ===== */
-(function(){
-    function initJalaliDatepicker(){
-        if(typeof jalaliDatepicker === 'undefined') return false;
-        try{
-            var inputs = document.querySelectorAll('[data-jdp]');
-            if(inputs.length === 0) return true;
-            jalaliDatepicker.startWatch({
-                separatorChar: '/',
-                openOnFocus: true
-            });
-            for(var i=0;i<inputs.length;i++){
-                inputs[i].removeAttribute('data-jdp');
-            }
-            return true;
-        }catch(e){ return false; }
-    }
-    if(!initJalaliDatepicker()){
-        var timer = setInterval(function(){
-            if(initJalaliDatepicker()) clearInterval(timer);
-        }, 200);
-        setTimeout(function(){ clearInterval(timer); }, 10000);
-    }
-})();
-
 /* ===== تبدیل خودکار اعداد به فارسی ===== */
 if(typeof autoConvertToPersianDigits === 'function'){
     if(document.readyState === 'complete' || document.readyState === 'interactive'){

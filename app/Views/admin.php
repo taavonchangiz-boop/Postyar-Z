@@ -23,15 +23,15 @@
     <meta name="format-detection" content="telephone=no">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/admin.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.css" onerror="this.remove()">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css">
 </head>
 <body>
 
     <!-- کشوی منوی مدیریت در موبایل (Drawer) -->
     <div class="drawer-overlay" id="drawer-overlay"></div>
     <div class="drawer-menu" id="drawer-menu">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; border-bottom:1px solid var(--border); padding-bottom:1rem;">
-            <span style="font-weight:bold; color:var(--primary); font-size:1.1rem;">منوی مدیریت پُست‌یار</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
+            <span style="font-weight:bold; color:var(--primary); font-size:1rem;">منوی مدیریت پُست‌یار</span>
             <button class="close-btn" style="position:static;">✖</button>
         </div>
         <div class="menu-item active" data-target="dashboard" data-toggle-drawer="true" onclick="switchSection('dashboard')">📊 وضعیت کلی و آمارگیری حرفه‌ای</div>
@@ -1108,7 +1108,11 @@
                 <div class="card">
                     <h2>🎫 تیکت‌های پشتیبانی کاربران</h2>
                     <?php if (empty($tickets)): ?>
-                        <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">تیکتی وجود ندارد.</p>
+                        <div style="text-align:center; padding:3rem 1rem;">
+                            <div style="font-size:3.5rem; margin-bottom:1rem;">📭</div>
+                            <p style="color:var(--text-muted); font-size:1.05rem; margin-bottom:0.75rem; font-weight:bold;">هنوز هیچ تیکتی ثبت نشده است</p>
+                            <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8;">کاربران از بخش «پشتیبانی» در پیشخوان خود تیکت ثبت می‌کنند.<br>پس از ثبت تیکت توسط کاربر، گفتگو و پاسخ‌دهی در اینجا نمایش داده می‌شود.</p>
+                        </div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table>
@@ -1158,7 +1162,7 @@
 
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/admin.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js"></script>
     <!-- مدال هدیه دادن اشتراک به کاربر -->
     <div id="giftModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; padding:1rem;">
         <div class="card" style="width:100%; max-width:480px; margin:0; position:relative; background:#1e293b; border:1px solid #334155;">

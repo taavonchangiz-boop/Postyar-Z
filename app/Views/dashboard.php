@@ -24,7 +24,7 @@
 
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.css" onerror="this.remove()">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css">
 </head>
 <body>
 
@@ -1288,7 +1288,7 @@
 
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jalalidatepicker@3.4.1/dist/jalalidatepicker.min.js" onerror="this.remove()"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js"></script>
     <script>
         window.__dashboardSavedCard = "<?php echo htmlspecialchars($saved_card); ?>";
         if (typeof jalaliDatepicker !== 'undefined') {

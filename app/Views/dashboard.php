@@ -34,24 +34,28 @@
     <!-- هدر بالای صفحه با لوگوی اختصاصی پُست‌یار -->
     <header>
         <div class="logo-container">
-            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="logo-img">
+            <div class="logo-frame">
+                <div class="logo-frame-inner">
+                    <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="logo-img">
+                </div>
+            </div>
             <span class="logo-text">پُست‌یار</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.75rem;">
             <!-- دکمه زنگوله اعلان‌های کاربر -->
             <div style="position:relative;">
-                <button type="button" onclick="var p=document.getElementById('user-bell-popup'); p.style.display=(p.style.display==='flex'?'none':'flex');" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                <button type="button" onclick="var p=document.getElementById('user-bell-popup'); p.style.display=(p.style.display==='flex'?'none':'flex');" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
                     <span>🔔</span>
                     <?php if (!empty($announcement)): ?>
-                        <span style="position:absolute; top:2px; right:2px; width:10px; height:10px; background:#ef4444; border-radius:50%; border:2px solid #0f172a;"></span>
+                        <span style="position:absolute; top:0.125rem; right:0.125rem; width:0.625rem; height:0.625rem; background:#ef4444; border-radius:50%; border:2px solid #0f172a;"></span>
                     <?php endif; ?>
                 </button>
-                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:60px; width:290px; background:#0f172a; border:1px solid #4f46e5; border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column; padding:1rem;">
+                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:3.75rem; width:18.125rem; background:#0f172a; border:1px solid #4f46e5; border-radius:1rem; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column; padding:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #334155; padding-bottom:0.6rem; margin-bottom:0.75rem;">
                         <strong style="color:white; font-size:0.9rem;">🔔 صندوق اعلان‌ها و اخبار</strong>
                     </div>
                     <?php if (!empty($announcement)): ?>
-                        <div style="padding:0.65rem; background:#1e293b; border-radius:10px; border-left:3px solid #6366f1; margin-bottom:0.5rem; cursor:pointer;" onclick="switchSection('dashboard'); document.getElementById('user-bell-popup').style.display='none';">
+                        <div style="padding:0.65rem; background:#1e293b; border-radius:0.625rem; border-left:0.1875rem solid #6366f1; margin-bottom:0.5rem; cursor:pointer;" onclick="switchSection('dashboard'); document.getElementById('user-bell-popup').style.display='none';">
                             <div style="font-weight:900; color:#38bdf8; font-size:0.85rem; margin-bottom:0.3rem;">📢 <?php echo htmlspecialchars($announcement['title']); ?></div>
                             <div style="font-size:0.78rem; color:#cbd5e1;"><?php echo htmlspecialchars(mb_substr($announcement['message'], 0, 70)) . '...'; ?></div>
                         </div>
@@ -63,13 +67,13 @@
 
             <!-- نشان جذاب و چندرنگ کاربر و نوع اشتراک -->
             <div class="user-badge" style="display:flex; align-items:center; gap:0.6rem; background:rgba(15, 23, 42, 0.9); border:1px solid rgba(99, 102, 241, 0.45); padding:0.35rem 1rem; border-radius:9999px; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
-                <span style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:#ffffff; font-size:0.9rem; font-weight:bold; flex-shrink:0;">
+                <span style="display:flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:50%; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:#ffffff; font-size:0.9rem; font-weight:bold; flex-shrink:0;">
                     👤
                 </span>
                 <span class="header-username" style="color:#f8fafc; font-weight:850; font-size:0.92rem; white-space:nowrap;">
                     <?php echo htmlspecialchars($user['name']); ?>
                 </span>
-                <span class="header-plan-badge" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; font-size:0.78rem; font-weight:900; padding:0.2rem 0.75rem; border-radius:12px; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35); white-space:nowrap;">
+                <span class="header-plan-badge" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; font-size:0.78rem; font-weight:900; padding:0.2rem 0.75rem; border-radius:0.75rem; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35); white-space:nowrap;">
                     💎 <?php echo \WHCM\Domain\TextFormat::fa_digits($quota['plan_title']); ?>
                 </span>
             </div>
@@ -382,11 +386,11 @@
                             <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem;">
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">انتخاب روز از تقویم:</label>
-                                    <input type="text" name="sched_date" id="sched_date_input" data-jdp placeholder="کلیک کنید تا تقویم باز شود..." style="background-color: rgba(15,23,42,0.6); color: #34d399; font-weight: bold; border: 2px solid #34d399; border-radius:12px; padding:0.85rem 1rem; cursor: pointer;" readonly>
+                                    <input type="text" name="sched_date" id="sched_date_input" data-jdp placeholder="کلیک کنید تا تقویم باز شود..." style="background-color: rgba(15,23,42,0.6); color: #34d399; font-weight: bold; border: 2px solid #34d399; border-radius:0.75rem; padding:0.85rem 1rem; cursor: pointer;" readonly>
                                 </div>
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">ساعت:</label>
-                                    <select name="sched_hour" id="sched_hour" style="border-radius:12px;">
+                                    <select name="sched_hour" id="sched_hour" style="border-radius:0.75rem;">
                                         <?php for($h=0; $h<=23; $h++): ?>
                                             <option value="<?php echo str_pad($h,2,'0',STR_PAD_LEFT); ?>"><?php echo \WHCM\Domain\TextFormat::fa_digits(str_pad($h,2,'0',STR_PAD_LEFT)); ?></option>
                                         <?php endfor; ?>
@@ -394,7 +398,7 @@
                                 </div>
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">دقیقه:</label>
-                                    <select name="sched_minute" id="sched_minute" style="border-radius:12px;">
+                                    <select name="sched_minute" id="sched_minute" style="border-radius:0.75rem;">
                                         <?php for($i=0; $i<=59; $i++): ?>
                                             <option value="<?php echo str_pad($i,2,'0',STR_PAD_LEFT); ?>"><?php echo \WHCM\Domain\TextFormat::fa_digits(str_pad($i,2,'0',STR_PAD_LEFT)); ?></option>
                                         <?php endfor; ?>
@@ -947,7 +951,7 @@
                         </div>
                         <div class="form-group">
                             <label for="profile_birthday">تاریخ تولد (شمسی):</label>
-                            <input type="text" name="birthday" id="profile_birthday" data-jdp placeholder="مثلاً: ۱۳۷۰/۰۶/۱۵" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>" style="background-color:rgba(15,23,42,0.6); color:#34d399; font-weight:bold; border:2px solid #34d399; border-radius:12px; padding:0.85rem 1rem; cursor:pointer;" readonly>
+                            <input type="text" name="birthday" id="profile_birthday" data-jdp placeholder="مثلاً: ۱۳۷۰/۰۶/۱۵" value="<?php echo htmlspecialchars($user['birthday'] ?? ''); ?>" style="background-color:rgba(15,23,42,0.6); color:#34d399; font-weight:bold; border:2px solid #34d399; border-radius:0.75rem; padding:0.85rem 1rem; cursor:pointer;" readonly>
                             <small style="color:var(--text-muted); font-size:0.78rem; margin-top:0.25rem; display:block;">تاریخ تولد به صورت شمسی (مثلاً: ۱۳۷۰/۰۶/۱۵)</small>
                         </div>
                         <button type="submit" class="btn btn-success">بروزرسانی مشخصات کاربری ✔</button>
@@ -1078,21 +1082,21 @@
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
                             <div class="form-group">
                                 <label>قالب متن ارسالی به کانال‌ها:</label>
-                                <select name="caption_format" style="border-radius:12px;">
+                                <select name="caption_format" style="border-radius:0.75rem;">
                                     <option value="plain" <?php echo $caption_format === 'plain' ? 'selected' : ''; ?>>متن ساده + دکمه‌های شیشه‌ای</option>
                                     <option value="html" <?php echo $caption_format === 'html' ? 'selected' : ''; ?>>متن HTML (لینک روی متن)</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label>روش دریافت پیام‌ها (پاسخ خودکار):</label>
-                                <select name="inbound_method" style="border-radius:12px;">
+                                <select name="inbound_method" style="border-radius:0.75rem;">
                                     <option value="polling" <?php echo $inbound_method === 'polling' ? 'selected' : ''; ?>>Polling خودکار (getUpdates)</option>
                                     <option value="webhook" <?php echo $inbound_method === 'webhook' ? 'selected' : ''; ?>>وبهوک (Webhook)</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label>سرعت بررسی پیام‌ها (Polling):</label>
-                                <select name="poll_interval" style="border-radius:12px;">
+                                <select name="poll_interval" style="border-radius:0.75rem;">
                                     <option value="every_30_seconds" <?php echo $poll_interval === 'every_30_seconds' ? 'selected' : ''; ?>>هر ۳۰ ثانیه (تقریباً بلادرنگ)</option>
                                     <option value="every_1_minute" <?php echo $poll_interval === 'every_1_minute' ? 'selected' : ''; ?>>هر ۱ دقیقه (پیشنهادی)</option>
                                     <option value="every_2_minutes" <?php echo $poll_interval === 'every_2_minutes' ? 'selected' : ''; ?>>هر ۲ دقیقه</option>
@@ -1107,7 +1111,7 @@
                             <div class="form-row" style="margin-bottom: 1rem;">
                                 <div class="form-group">
                                     <label>سرویس هوش مصنوعی:</label>
-                                    <select id="whcm-ai-provider" onchange="onAiProviderChange(this.value)" style="border-radius:12px;">
+                                    <select id="whcm-ai-provider" onchange="onAiProviderChange(this.value)" style="border-radius:0.75rem;">
                                         <option value="">-- انتخاب سرویس --</option>
                                         <option value="openai">OpenAI (GPT)</option>
                                         <option value="gemini">Google Gemini</option>
@@ -1120,7 +1124,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>مدل هوش مصنوعی:</label>
-                                    <select id="ai-model-select" onchange="onAiModelChange(this.value)" style="border-radius:12px;">
+                                    <select id="ai-model-select" onchange="onAiModelChange(this.value)" style="border-radius:0.75rem;">
                                         <option value="<?php echo htmlspecialchars($ai_model); ?>"><?php echo htmlspecialchars($ai_model); ?></option>
                                     </select>
                                     <input type="hidden" name="ai_model" id="ai-model-hidden" value="<?php echo htmlspecialchars($ai_model); ?>">

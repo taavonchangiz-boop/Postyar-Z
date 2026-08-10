@@ -179,7 +179,23 @@ if (document.readyState !== 'loading') {
     window.addEventListener('DOMContentLoaded', initDashboard);
 }
 
-/* بستن پاپ‌آپ اموجی با کلیک در خارج از کادر */
+/* ===== دراور منوی بیشتر (موبایل) ===== */
+function toggleMobileMoreMenu() {
+    var overlay = document.getElementById('mobileMoreOverlay');
+    var drawer = document.getElementById('mobileMoreDrawer');
+    var isOpen = drawer.classList.contains('open');
+    if (isOpen) {
+        overlay.classList.remove('active');
+        drawer.classList.remove('open');
+        document.body.style.overflow = '';
+    } else {
+        overlay.classList.add('active');
+        drawer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+/* ===== بستن پاپ‌آپ اموجی با کلیک در خارج از کادر ===== */
 window.addEventListener('click', function(event) {
     var popup = document.getElementById('emoji-popup');
     var btn = document.querySelector('.emoji-picker-btn');

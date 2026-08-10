@@ -63,13 +63,13 @@
 
             <!-- نشان جذاب و چندرنگ کاربر و نوع اشتراک -->
             <div class="user-badge" style="display:flex; align-items:center; gap:0.6rem; background:rgba(15, 23, 42, 0.9); border:1px solid rgba(99, 102, 241, 0.45); padding:0.35rem 1rem; border-radius:9999px; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
-                <span style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:#ffffff; font-size:0.9rem; font-weight:bold;">
+                <span style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color:#ffffff; font-size:0.9rem; font-weight:bold; flex-shrink:0;">
                     👤
                 </span>
-                <span style="color:#f8fafc; font-weight:850; font-size:0.92rem;">
+                <span class="header-username" style="color:#f8fafc; font-weight:850; font-size:0.92rem; white-space:nowrap;">
                     <?php echo htmlspecialchars($user['name']); ?>
                 </span>
-                <span style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; font-size:0.78rem; font-weight:900; padding:0.2rem 0.75rem; border-radius:12px; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35);">
+                <span class="header-plan-badge" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; font-size:0.78rem; font-weight:900; padding:0.2rem 0.75rem; border-radius:12px; box-shadow:0 2px 8px rgba(16, 185, 129, 0.35); white-space:nowrap;">
                     💎 <?php echo \WHCM\Domain\TextFormat::fa_digits($quota['plan_title']); ?>
                 </span>
             </div>
@@ -121,9 +121,64 @@
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
                 <span>تیکت‌ها</span>
             </div>
-            <div class="mobile-nav-item" data-target="settings">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
-                <span>تنظیمات</span>
+            <div class="mobile-nav-item" onclick="toggleMobileMoreMenu()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <span>بیشتر</span>
+            </div>
+        </div>
+
+        <!-- دراور منوی بیشتر (موبایل) -->
+        <div class="mobile-more-overlay" id="mobileMoreOverlay" onclick="toggleMobileMoreMenu()"></div>
+        <div class="mobile-more-drawer" id="mobileMoreDrawer">
+            <div class="mobile-more-handle"></div>
+            <div class="mobile-more-title">منوی کامل</div>
+            <div class="mobile-more-grid">
+                <?php if (!empty($quota['features']['gold_ticker'])): ?>
+                <div class="mobile-more-item" data-target="ticker" onclick="switchSection('ticker'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">🪙</span>
+                    <span>ربات طلا و سکه</span>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($quota['features']['auto_responder'])): ?>
+                <div class="mobile-more-item" data-target="responder" onclick="switchSection('responder'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">🤖</span>
+                    <span>پاسخگوی خودکار</span>
+                </div>
+                <?php endif; ?>
+                <div class="mobile-more-item" data-target="inbox" onclick="switchSection('inbox'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">📩</span>
+                    <span>صندوق پیام</span>
+                </div>
+                <div class="mobile-more-item" data-target="settings" onclick="switchSection('settings'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">👤</span>
+                    <span>تنظیمات حساب</span>
+                </div>
+                <div class="mobile-more-item" data-target="advanced-settings" onclick="switchSection('advanced-settings'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">⚙</span>
+                    <span>تنظیمات پیشرفته</span>
+                </div>
+                <div class="mobile-more-item" data-target="upgrade" onclick="switchSection('upgrade'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">💎</span>
+                    <span>خرید اشتراک</span>
+                </div>
+                <div class="mobile-more-item" data-target="referral" onclick="switchSection('referral'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">🎯</span>
+                    <span>زیرمجموعه‌گیری</span>
+                </div>
+                <div class="mobile-more-item" data-target="wallet" onclick="switchSection('wallet'); toggleMobileMoreMenu();">
+                    <span class="mobile-more-icon">💰</span>
+                    <span>کیف پول</span>
+                </div>
+                <?php if (\WHCM\Core\Auth::isSuperAdmin()): ?>
+                <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh'); ?>" class="mobile-more-item mobile-more-admin">
+                    <span class="mobile-more-icon">👑</span>
+                    <span>پنل مدیریت کل</span>
+                </a>
+                <?php endif; ?>
+                <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/logout'); ?>" class="mobile-more-item mobile-more-logout">
+                    <span class="mobile-more-icon">🚪</span>
+                    <span>خروج از حساب</span>
+                </a>
             </div>
         </div>
 

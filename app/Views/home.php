@@ -39,7 +39,7 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                         <div class="w-full h-full bg-[#0a0a0a] rounded-[10px] flex items-center justify-center overflow-hidden">
                             <?php if (class_exists('\WHCM\Core\Bootstrap')): ?>
-                                <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="w-7 h-7 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/logo-white-bg.webp" alt="پُست‌یار" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                             <?php endif; ?>
                             <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="<?php echo class_exists('\WHCM\Core\Bootstrap') ? 'display:none;' : ''; ?>">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>

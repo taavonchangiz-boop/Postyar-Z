@@ -944,8 +944,25 @@
     scroll-snap-align: start;
 }
 @media (max-width: 768px) {
-            .plans-container { gap: 1rem; padding: 0.5rem 0.75rem 1rem; }
-            .plans-container .plan-card { flex: 0 0 78vw; min-width: 78vw; max-width: 78vw; }
+            .plans-container {
+                flex-direction: column;
+                flex-wrap: wrap;
+                overflow-x: visible;
+                overflow-y: visible;
+                scroll-snap-type: none;
+                gap: 1rem;
+                padding: 0.5rem;
+            }
+            .plans-container .plan-card {
+                flex: 0 0 auto;
+                min-width: 0;
+                max-width: 100%;
+                width: 100%;
+                scroll-snap-align: none;
+            }
+            .plan-card.featured-plan {
+                transform: scale(1) translateY(0);
+            }
 }
 @media (min-width: 1200px) {
             .plans-container { justify-content: center; }
@@ -1290,6 +1307,34 @@
             color: #c7d2fe;
         }
 
+        /* کارت بانکی در بخش خرید اشتراک */
+        .credit-card {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            padding: 1.25rem 1.25rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        .credit-card:active {
+            transform: scale(0.98);
+        }
+        @media (max-width: 640px) {
+            .credit-card {
+                padding: 1rem;
+                border-radius: 14px;
+            }
+            .credit-card-number {
+                font-size: 1rem !important;
+                letter-spacing: 1px !important;
+            }
+            #section-upgrade .payment-box form {
+                max-width: 100% !important;
+            }
+        }
+
         .toast {
             position: fixed;
             bottom: 20px;
@@ -1314,17 +1359,46 @@
             .plans-container {
                 display: flex;
                 flex-direction: column;
-                gap: 1.25rem;
-                padding: 0 0.5rem;
+                gap: 1rem;
+                padding: 0 0.25rem;
             }
 
             .plan-card {
                 width: 100%;
                 margin: 0;
+                padding: 0.9rem 0.75rem;
+                border-radius: 16px;
             }
 
             .plan-card.featured-plan {
                 transform: scale(1) translateY(0);
+            }
+
+            .plan-card-img-wrapper {
+                height: 90px;
+            }
+
+            .plan-card h3 {
+                font-size: 0.95rem;
+            }
+
+            .plan-card ul li {
+                font-size: 0.72rem;
+                gap: 0.25rem;
+            }
+
+            .plan-card ul {
+                gap: 0.35rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .plan-card .price {
+                font-size: 0.9rem !important;
+            }
+
+            .plan-card .btn {
+                padding: 0.6rem 0.5rem;
+                font-size: 0.8rem;
             }
 
             /* تبدیل جدول‌ها به کارت‌های مستقل در موبایل جهت خوانایی ۱۰۰٪ بی‌نقص */

@@ -869,6 +869,22 @@ class Bootstrap {
                     }
                 } catch (\Exception $e) {}
             },
+
+            'v11_responder_logs_table' => function($db) {
+                try {
+                    $db->exec("CREATE TABLE IF NOT EXISTS responder_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        tenant_id INTEGER NOT NULL,
+                        channel_id INTEGER NULL,
+                        sender_id VARCHAR(100) DEFAULT '',
+                        sender_name VARCHAR(200) DEFAULT '',
+                        message_text TEXT DEFAULT '',
+                        matched_keyword VARCHAR(255) DEFAULT '',
+                        reply_sent INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )");
+                } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

@@ -225,9 +225,20 @@ class MainController extends BaseController {
         }
 
         // دریافت لیست کامل کلمات کلیدی پاسخگوی خودکار مستأجر
-        $stmt = $db->prepare("SELECT ar.*, c.name as channel_name FROM auto_replies ar JOIN channels c ON ar.channel_id = c.id WHERE ar.tenant_id = ? ORDER BY ar.id DESC");
+        $stmt = $db->prepare("SELECT ar.*, c.name as channel_name, c.platform as channel_platform FROM auto_replies ar JOIN channels c ON ar.channel_id = c.id WHERE ar.tenant_id = ? ORDER BY ar.id DESC");
         $stmt->execute([$tenant_id]);
         $auto_replies = $stmt->fetchAll();
+
+        // دریافت وضعیت فعال/غیرفعال پاسخگوی خودکار هر کانال
+        $responder_settings = [];
+        try {
+            $stmt2 = $db->prepare("SELECT key_name, key_value FROM settings WHERE tenant_id = ? AND key_name LIKE 'responder_enabled_%'");
+            $stmt2->execute([$tenant_id]);
+            $rs_rows = $stmt2->fetchAll();
+            foreach ($rs_rows as $r) {
+                $responder_settings[$r['key_name']] = $r['key_value'];
+            }
+        } catch (\Throwable $e) {}
 
         // دریافت تاریخچه پست‌های ارسالی مستأجر — LIMIT 50 + LEFT JOIN بهینه (بدون N+1)
         $stmt = $db->prepare("
@@ -286,6 +297,7 @@ class MainController extends BaseController {
             'edit_channel' => $edit_channel,
             'settings' => $settings,
             'auto_replies' => $auto_replies,
+            'responder_settings' => $responder_settings,
             'posts' => $posts,
             'offers' => $offers,
             'inbox' => $inbox,
@@ -942,6 +954,35 @@ class MainController extends BaseController {
 
         $this->setFlashMessage('پاسخ خودکار کلمه کلیدی با موفقیت حذف گردید.');
         $this->redirect('/dashboard');
+    }
+
+    /**
+     * تغییر وضعیت روشن/خاموش پاسخگوی خودکار کانال (AJAX)
+     */
+    public function handleToggleResponder() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkAuth();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            echo json_encode(['success' => false, 'message' => 'خطای امنیتی'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        $tenant_id = Auth::tenantId();
+        $channel_id = (int)($_POST['channel_id'] ?? 0);
+        $enabled = (int)($_POST['enabled'] ?? 0);
+        if ($channel_id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'شناسه کانال نامعتبر'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        $db = Bootstrap::getDB();
+        $key_name = 'responder_enabled_' . $channel_id;
+        $stmt = $db->prepare("SELECT id FROM settings WHERE tenant_id = ? AND key_name = ? LIMIT 1");
+        $stmt->execute([$tenant_id, $key_name]);
+        if ($stmt->fetch()) {
+            $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = ? AND key_name = ?")->execute([$enabled ? '1' : '0', $tenant_id, $key_name]);
+        } else {
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, ?, ?)")->execute([$tenant_id, $key_name, $enabled ? '1' : '0']);
+        }
+        echo json_encode(['success' => true, 'message' => $enabled ? 'پاسخگوی خودکار فعال شد ✅' : 'پاسخگوی خودکار غیرفعال شد ⏸'], JSON_UNESCAPED_UNICODE);
     }
 
     /**

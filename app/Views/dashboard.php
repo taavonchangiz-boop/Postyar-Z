@@ -787,66 +787,166 @@
             </div>
 
             <!-- ========================================== -->
-            <!-- ۵. بخش پاسخگوی خودکار -->
+            <!-- ۵. بخش پاسخگوی هوشمند (کلمات کلیدی) -->
             <!-- ========================================== -->
             <div id="section-responder" class="tab-content">
-                <div class="card">
-                    <h2>🤖 کلمات کلیدی پاسخگوی خودکار</h2>
-                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/add-auto-reply'); ?>" method="POST">
-                        <?php echo $csrf_field; ?>
-                        <div class="form-row">
-                            <div class="form-group">
+                <!-- توضیح عملکرد -->
+                <div class="card" style="background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(99,102,241,0.3); margin-bottom: 1.5rem;">
+                    <h2>🤖 دریافت پیام‌های مشترکین و ارسال خودکار</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.8; margin-bottom: 0.75rem;">
+                        این سیستم با بررسی پیام‌های ورودی به ربات کانال‌های تلگرام و بله، در صورت وجود کلمه کلیدی تعریف‌شده، پاسخ از پیش تنظیم‌شده را به صورت خودکار ارسال می‌کند.
+                    </p>
+                    <p style="color: #94a3b8; font-size: 0.8rem; line-height: 1.7;">
+                        ⚡ نحوه کار: ابتدا حالت پاسخگویی را برای کانال مورد نظر فعال کنید، سپس کلمات کلیدی و پاسخ‌های آماده را تعریف نمایید.
+                        هرگاه کاربری پیامی حاوی آن کلمه کلیدی ارسال کند، ربات بلافاصله پاسخ متناظر را ارسال خواهد کرد.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- پنل چپ: مدیریت کلمات کلیدی -->
+                    <div class="card">
+                        <h2 style="font-size: 1rem; margin-bottom: 1rem;">📝 محتوای قالب‌های پاسخگویی خودکار</h2>
+                        
+                        <form id="ar-add-form" action="javascript:void(0);" onsubmit="addAutoReplyAjax()">
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
                                 <label for="ar-channel">انتخاب ربات کانال:</label>
-                                <select name="channel_id" id="ar-channel" required>
+                                <select name="channel_id" id="ar-channel" required style="border-radius:10px;">
                                     <option value="">-- کانال هدف را انتخاب کنید --</option>
                                     <?php foreach ($channels as $ch): ?>
-                                        <option value="<?php echo $ch['id']; ?>"><?php echo htmlspecialchars($ch['name']); ?></option>
+                                        <option value="<?php echo $ch['id']; ?>"><?php echo htmlspecialchars($ch['name']); ?> (<?php echo $ch['platform'] === 'telegram' ? '✈️ تلگرام' : '💬 بله'; ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="ar-keyword">کلمه کلیدی:</label>
-                                <input type="text" name="keyword" id="ar-keyword" required placeholder="مثلاً: طلا">
+                            <div class="form-row" style="margin-bottom: 0.75rem;">
+                                <div class="form-group">
+                                    <label for="ar-keyword">کلمه کلیدی (متن اضافه):</label>
+                                    <input type="text" name="keyword" id="ar-keyword" required placeholder="مثلاً: سلام، آدرس، قیمت" style="border-radius:10px;">
+                                </div>
+                                <div class="form-group" style="display:flex; align-items:flex-end;">
+                                    <button type="submit" class="btn btn-primary" style="background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3); border-radius:10px; padding:0.6rem 1.2rem; white-space:nowrap;">+ افزودن</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="ar-reply">متن پاسخ خودکار:</label>
-                            <textarea name="reply_text" id="ar-reply" rows="4" required placeholder="پاسخ را بنویسید..."></textarea>
-                        </div>
-                        <button type="submit" class="btn">ثبت کلمه کلیدی پاسخگو 🤖</button>
-                    </form>
-                </div>
+                            <div class="form-group" style="margin-bottom: 0.75rem;">
+                                <label for="ar-reply">متن پاسخ خودکار:</label>
+                                <textarea name="reply_text" id="ar-reply" rows="3" required placeholder="پاسخ خودکار را بنویسید..." style="border-radius:10px;"></textarea>
+                            </div>
+                        </form>
 
-                <div class="card">
-                    <h2>📋 کلمات کلیدی تعریف شده</h2>
-                    <?php if (empty($auto_replies)): ?>
-                        <p style="color:var(--text-muted); text-align: center; padding: 2rem 0;">هیچ قانون پاسخ خودکاری تعریف نشده است.</p>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>کانال</th>
-                                        <th>کلمه کلیدی</th>
-                                        <th>متن پاسخ</th>
-                                        <th>عملیات</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($auto_replies as $rule): ?>
+                        <!-- جدول قالب‌های تعریف‌شده -->
+                        <div style="margin-top: 1rem; max-height: 350px; overflow-y: auto;">
+                            <div id="ar-list-container">
+                            <?php if (empty($auto_replies)): ?>
+                                <p style="color:var(--text-muted); text-align:center; padding:1.5rem 0; font-size:0.85rem;">هیچ قالب پاسخگویی تعریف نشده است. از فرم بالا افزودن کنید.</p>
+                            <?php else: ?>
+                                <table style="width:100%; font-size:0.85rem;">
+                                    <thead>
                                         <tr>
-                                            <td data-label="کانال"><strong><?php echo htmlspecialchars($rule['channel_name']); ?></strong></td>
-                                            <td data-label="کلمه کلیدی"><code><?php echo htmlspecialchars($rule['keyword']); ?></code></td>
-                                            <td data-label="متن پاسخ"><span style="font-size:0.8rem;"><?php echo htmlspecialchars($rule['reply_text']); ?></span></td>
-                                            <td data-label="عملیات">
-                                                <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/delete-auto-reply'); ?>&id=<?php echo $rule['id']; ?>" class="btn btn-danger btn-sm">حذف</a>
+                                            <th style="text-align:right; padding:0.5rem;">کلمه کلید</th>
+                                            <th style="text-align:center; padding:0.5rem;">وضعیت</th>
+                                            <th style="text-align:center; padding:0.5rem;">عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($auto_replies as $rule): ?>
+                                        <tr id="ar-row-<?php echo $rule['id']; ?>">
+                                            <td style="padding:0.5rem;">
+                                                <div style="font-weight:bold; color:white;"><?php echo htmlspecialchars($rule['keyword']); ?></div>
+                                                <div style="color:#64748b; font-size:0.75rem; margin-top:0.25rem;"><?php echo htmlspecialchars(mb_substr($rule['reply_text'], 0, 60)) . (mb_strlen($rule['reply_text']) > 60 ? '...' : ''); ?></div>
+                                                <div style="color:#475569; font-size:0.7rem; margin-top:0.15rem;">کانال: <?php echo htmlspecialchars($rule['channel_name']); ?> <?php echo ($rule['channel_platform'] ?? '') === 'telegram' ? '✈️' : '💬'; ?></div>
+                                            </td>
+                                            <td style="text-align:center; padding:0.5rem;">
+                                                <span class="badge badge-success" style="font-size:0.7rem;">سرویس</span>
+                                            </td>
+                                            <td style="text-align:center; padding:0.5rem;">
+                                                <button type="button" onclick="deleteAutoReplyAjax(<?php echo $rule['id']; ?>)" class="btn btn-danger btn-sm" style="font-size:0.75rem; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px;">حذف</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+                            </div>
                         </div>
-                    <?php endif; ?>
+                    </div>
+
+                    <!-- پنل راست: وضعیت کانال‌ها + گزارش آخرین ارتباط‌ها -->
+                    <div>
+                        <!-- کارت وضعیت پاسخگویی هر کانال -->
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h2 style="font-size: 1rem; margin-bottom: 1rem;">⚙️ حالت پاسخگویی خودکار</h2>
+                            <p style="color:var(--text-muted); font-size:0.78rem; margin-bottom:1rem;">برای هر کانال می‌توانید به‌صورت جداگانه پاسخگوی خودکار را فعال یا غیرفعال کنید:</p>
+                            <?php if (empty($channels)): ?>
+                                <p style="color:#94a3b8; text-align:center; padding:1rem; font-size:0.85rem;">هیچ کانالی ثبت نشده است. ابتدا از بخش «کانال‌ها» یک کانال اضافه کنید.</p>
+                            <?php else: ?>
+                                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                                    <?php foreach ($channels as $ch): ?>
+                                        <?php 
+                                            $is_enabled = !empty($responder_settings['responder_enabled_' . $ch['id']]) ? (int)$responder_settings['responder_enabled_' . $ch['id']] : 0;
+                                            $platform_icon = $ch['platform'] === 'telegram' ? '✈️' : '💬';
+                                            $platform_label = $ch['platform'] === 'telegram' ? 'تلگرام' : 'بله';
+                                        ?>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; border:1px solid <?php echo $is_enabled ? '#10b981' : '#334155'; ?>; border-radius:12px; padding:0.75rem 1rem; transition: all 0.3s;">
+                                            <div>
+                                                <strong style="color:white; font-size:0.9rem;"><?php echo htmlspecialchars($ch['name']); ?></strong>
+                                                <div style="color:#64748b; font-size:0.72rem;"><?php echo $platform_icon . ' ' . $platform_label; ?></div>
+                                            </div>
+                                            <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+                                                <input type="checkbox" <?php echo $is_enabled ? 'checked' : ''; ?> onchange="toggleResponder(<?php echo $ch['id']; ?>, this.checked)" style="opacity:0; width:0; height:0;">
+                                                <span style="position:absolute; cursor:pointer; inset:0; background:<?php echo $is_enabled ? '#10b981' : '#475569'; ?>; border-radius:26px; transition:0.3s;"></span>
+                                                <span style="position:absolute; content:''; height:20px; width:20px; left:<?php echo $is_enabled ? '25px' : '3px'; ?>; bottom:3px; background:white; border-radius:50%; transition:0.3s;"></span>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- کارت آخرین ارتباط‌ها -->
+                        <div class="card">
+                            <h2 style="font-size: 1rem; margin-bottom: 1rem;">📊 آخرین ارتباط‌های مشترکین</h2>
+                            <p style="color:var(--text-muted); font-size:0.78rem; margin-bottom:1rem;">نمایش آخرین پیام‌های دریافتی و وضعیت پاسخگویی خودکار:</p>
+                            <div id="responder-log-area" style="max-height: 250px; overflow-y: auto;">
+                                <?php
+                                    // دریافت آخرین لاگ‌های پاسخگوی خودکار
+                                    $log_db = \WHCM\Core\Bootstrap::getDB();
+                                    try {
+                                        $log_stmt = $log_db->prepare("SELECT * FROM responder_logs WHERE tenant_id = ? ORDER BY id DESC LIMIT 20");
+                                        $log_stmt->execute([$user['id']]);
+                                        $responder_logs = $log_stmt->fetchAll();
+                                    } catch (\Throwable $e) { $responder_logs = []; }
+                                ?>
+                                <?php if (empty($responder_logs)): ?>
+                                    <p style="color:#94a3b8; text-align:center; padding:1.5rem 0; font-size:0.82rem;">هنوز پیامی دریافت نشده یا لاگی موجود نیست.</p>
+                                <?php else: ?>
+                                    <table style="width:100%; font-size:0.8rem;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:right; padding:0.4rem;">پیام</th>
+                                                <th style="text-align:center; padding:0.4rem; width:60px;">وضعیت</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($responder_logs as $log): ?>
+                                                <tr>
+                                                    <td style="padding:0.4rem; color:#e2e8f0;">
+                                                        <div style="color:#94a3b8; font-size:0.7rem;"><?php echo htmlspecialchars($log['sender_name'] ?? 'کاربر'); ?></div>
+                                                        <div style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?php echo htmlspecialchars($log['message_text'] ?? ''); ?></div>
+                                                    </td>
+                                                    <td style="text-align:center; padding:0.4rem;">
+                                                        <?php if (!empty($log['replied'])): ?>
+                                                            <span style="color:#10b981; font-size:1rem;">✅</span>
+                                                        <?php else: ?>
+                                                            <span style="color:#475569; font-size:1rem;">➖</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1287,7 +1387,7 @@
                                     $final_price = $base_price * (1 - ($early_discount / 100));
                                 }
                             ?>
-                            <div class="plan-card <?php echo $is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : ''); ?>">
+                            <div class="plan-card <?php echo $is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : ''); ?>" id="plan-card-<?php echo $p['id']; ?>">
                                 <div>
                                     <div class="plan-card-img-wrapper">
                                         <img src="<?php echo \WHCM\Core\Bootstrap::getPlanImageUrl($p['image_url']); ?>" alt="<?php echo htmlspecialchars($p['title']); ?>" class="plan-card-img">
@@ -1360,7 +1460,9 @@
                         $saved_bank = $global_bank['admin_bank_name'] ?? 'بانک سامان';
                     ?>
                     <div id="payment-box" class="payment-box hidden">
-                        <h4 style="margin-bottom: 1rem; color: #ffffff;">💳 جزئیات پرداخت پلن انتخابی <strong id="sel-title" style="color:#a5b4fc;">...</strong></h4>
+                        <h4 style="margin-bottom: 0.5rem; color: #ffffff;">💳 جزئیات پرداخت پلن انتخابی</h4>
+                        <h3 id="sel-title" style="color:#a5b4fc; margin-bottom:0.25rem;">...</h3>
+                        <p style="font-size:1.1rem; color:#10b981; font-weight:900; margin-bottom:1rem;">مبلغ: <span id="sel-price">۰</span> <span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">تومان</span></p>
                         
                         <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: center;">
                             <div>

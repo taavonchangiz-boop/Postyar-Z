@@ -206,6 +206,20 @@ window.addEventListener('click', function(event) {
 
 /* ===== انتخاب پلن و نمایش فرم پرداخت ===== */
 function selectPlan(id, title, price, paymentUrl) {
+    // حذف حالت انتخاب از تمام کارت‌های پلن
+    var allCards = document.querySelectorAll('.plan-card');
+    for (var i = 0; i < allCards.length; i++) {
+        allCards[i].style.outline = 'none';
+        allCards[i].style.outlineOffset = '0';
+        allCards[i].style.boxShadow = '';
+    }
+    // قفل کردن پلن انتخاب‌شده با حاشیه سبز
+    var selectedCard = document.getElementById('plan-card-' + id);
+    if (selectedCard) {
+        selectedCard.style.outline = '3px solid #10b981';
+        selectedCard.style.outlineOffset = '3px';
+        selectedCard.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
+    }
     document.getElementById('payment-box').classList.remove('hidden');
     document.getElementById('sel-title').textContent = title;
     document.getElementById('sel-price').textContent = price.toLocaleString('fa-IR');
@@ -405,6 +419,74 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
     setTimeout(processPostQueue, 1500);
 } else {
     window.addEventListener('DOMContentLoaded', function() { setTimeout(processPostQueue, 1500); });
+}
+
+/* ===== پاسخگوی هوشمند — AJAX ===== */
+function addAutoReplyAjax() {
+    var channel_id = document.getElementById('ar-channel').value;
+    var keyword = document.getElementById('ar-keyword').value.trim();
+    var reply_text = document.getElementById('ar-reply').value.trim();
+    if (!channel_id || !keyword || !reply_text) { alert('تمامی فیلدها الزامی هستند.'); return; }
+
+    var formData = 'channel_id=' + encodeURIComponent(channel_id) + '&keyword=' + encodeURIComponent(keyword) + '&reply_text=' + encodeURIComponent(reply_text) + '&csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/add-auto-reply'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            alert('قالب پاسخگویی با موفقیت اضافه شد. 🤖');
+            window.location.reload();
+        }
+    };
+    xhr.send(formData);
+}
+
+function deleteAutoReplyAjax(id) {
+    if (!confirm('آیا مطمئن هستید؟')) return;
+    var row = document.getElementById('ar-row-' + id);
+    if (row) row.style.opacity = '0.3';
+
+    var formData = 'reply_id=' + encodeURIComponent(id) + '&csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/delete-auto-reply'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (row) {
+                row.style.transition = 'opacity 0.3s';
+                setTimeout(function() { row.remove(); }, 300);
+            }
+        }
+    };
+    xhr.send(formData);
+}
+
+function toggleResponder(channelId, enabled) {
+    var formData = 'channel_id=' + encodeURIComponent(channelId) + '&enabled=' + (enabled ? '1' : '0') + '&csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/toggle-responder'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                // به‌روزرسانی ظاهر toggle
+                var checkbox = event.target;
+                var track = checkbox.parentElement.querySelector('span:first-of-type');
+                var thumb = checkbox.parentElement.querySelector('span:last-of-type');
+                if (res.success) {
+                    track.style.background = enabled ? '#10b981' : '#475569';
+                    thumb.style.left = enabled ? '25px' : '3px';
+                    // بوردر والد
+                    var parentCard = checkbox.closest('div[style*="border"]');
+                    if (parentCard) parentCard.style.borderColor = enabled ? '#10b981' : '#334155';
+                }
+            } catch(e) { console.log('toggle error', e); }
+        }
+    };
+    xhr.send(formData);
 }
 
 /* ===== تبدیل خودکار اعداد به فارسی ===== */

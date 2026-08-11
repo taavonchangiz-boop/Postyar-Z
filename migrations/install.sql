@@ -387,6 +387,19 @@ CREATE TABLE IF NOT EXISTS ticket_replies (
     FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
 );
 
+-- جدول لاگ پاسخگوی خودکار
+CREATE TABLE IF NOT EXISTS responder_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id INTEGER NOT NULL,
+    channel_id INTEGER NULL,
+    sender_id VARCHAR(100) DEFAULT '',
+    sender_name VARCHAR(200) DEFAULT '',
+    message_text TEXT DEFAULT '',
+    matched_keyword VARCHAR(255) DEFAULT '',
+    reply_sent INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ---- ایندکس‌های بهینه‌سازی ----
 CREATE INDEX IF NOT EXISTS idx_channels_tenant_id ON channels(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_channels_platform_cid ON channels(platform, channel_id);
@@ -414,3 +427,4 @@ CREATE INDEX IF NOT EXISTS idx_link_tracking_code ON link_tracking(code);
 CREATE INDEX IF NOT EXISTS idx_link_clicks_link ON link_clicks(link_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_user ON verification_codes(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_ticket_replies_ticket ON ticket_replies(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_responder_logs_tenant ON responder_logs(tenant_id, created_at);

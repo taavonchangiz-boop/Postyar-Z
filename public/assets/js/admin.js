@@ -261,11 +261,26 @@ document.addEventListener('DOMContentLoaded', function(){
       {v:'gpt-4o', t:'GPT-4o (پرچمدار)'},
       {v:'gpt-4o-mini', t:'GPT-4o-mini (سریع و اقتصادی)'},
       {v:'gpt-4-turbo', t:'GPT-4 Turbo'},
-      {v:'gpt-3.5-turbo', t:'GPT-3.5 Turbo'}
+      {v:'gpt-3.5-turbo', t:'GPT-3.5 Turbo'},
+      {v:'o1-mini', t:'o1-mini (استدلالی)'},
+      {v:'o3-mini', t:'o3-mini (استدلالی پیشرفته)'}
+    ],
+    'deepseek': [
+      {v:'deepseek-chat', t:'DeepSeek V3 (پرچمدار)'},
+      {v:'deepseek-reasoner', t:'DeepSeek R1 (استدلالی)'}
+    ],
+    'anthropic': [
+      {v:'claude-sonnet-4-20250514', t:'Claude 4 Sonnet (پرچمدار)'},
+      {v:'claude-3-5-sonnet-20241022', t:'Claude 3.5 Sonnet'},
+      {v:'claude-3-5-haiku-20241022', t:'Claude 3.5 Haiku (سریع)'}
     ],
     'openrouter': [
-      {v:'anthropic/claude-3.5-sonnet', t:'Claude 3.5 Sonnet'},
+      {v:'anthropic/claude-sonnet-4-20250514', t:'Claude 4 Sonnet via OpenRouter'},
+      {v:'anthropic/claude-3.5-sonnet', t:'Claude 3.5 Sonnet via OpenRouter'},
+      {v:'deepseek/deepseek-chat', t:'DeepSeek V3 via OpenRouter'},
+      {v:'deepseek/deepseek-reasoner', t:'DeepSeek R1 via OpenRouter'},
       {v:'meta-llama/llama-3.1-70b-instruct', t:'Llama 3.1 70B'},
+      {v:'google/gemini-2.0-flash-001', t:'Gemini 2.0 Flash via OpenRouter'},
       {v:'openai/gpt-4o', t:'GPT-4o via OpenRouter'},
       {v:'google/gemini-pro', t:'Gemini Pro via OpenRouter'}
     ],
@@ -276,15 +291,17 @@ document.addEventListener('DOMContentLoaded', function(){
       {v:'gemma2-9b-it', t:'Gemma2 9B'}
     ],
     'gemini': [
+      {v:'gemini-2.5-pro-preview-05-06', t:'Gemini 2.5 Pro (پیشرفته)'},
       {v:'gemini-2.0-flash', t:'Gemini 2.0 Flash (پیشنهادی)'},
       {v:'gemini-1.5-pro', t:'Gemini 1.5 Pro'},
-      {v:'gemini-1.5-flash', t:'Gemini 1.5 Flash'},
-      {v:'gemini-pro', t:'Gemini Pro'}
+      {v:'gemini-1.5-flash', t:'Gemini 1.5 Flash'}
     ],
     'custom': []
   };
   var urlsMap = {
     'openai': 'https://api.openai.com/v1/chat/completions',
+    'deepseek': 'https://api.deepseek.com/v1/chat/completions',
+    'anthropic': 'https://api.anthropic.com/v1/messages',
     'openrouter': 'https://openrouter.ai/api/v1/chat/completions',
     'groq': 'https://api.groq.com/openai/v1/chat/completions',
     'gemini': 'https://generativelanguage.googleapis.com/v1beta/openAI/chat/completions',

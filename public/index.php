@@ -56,6 +56,7 @@ try {
     Router::post('/dashboard/trigger-gold-publish', 'MainController@handleTriggerGoldPublish');
     Router::post('/dashboard/add-auto-reply', 'MainController@handleAddAutoReply');
     Router::post('/dashboard/delete-auto-reply', 'MainController@handleDeleteAutoReply');
+    Router::post('/dashboard/toggle-responder', 'MainController@handleToggleResponder');
     Router::post('/dashboard/add-ticket', 'MainController@handleCreateTicket');
     Router::post('/reset-password', 'MainController@handleResetPassword');
     Router::get('/reset-password', 'MainController@showResetPasswordForm');

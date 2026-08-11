@@ -721,10 +721,12 @@
                             <div class="form-group">
                                 <label for="ai-g-provider">ارائه‌دهنده پیش‌فرض هوش مصنوعی در پلتفرم:</label>
                                 <select name="ai_global_provider" id="ai-g-provider" style="border-radius:10px;">
-                                    <option value="openai">OpenAI (GPT-4o / GPT-4o-mini / GPT-3.5-turbo)</option>
-                                    <option value="openrouter">OpenRouter AI (Claude 3.5 Sonnet / Llama 3)</option>
-                                    <option value="groq">Groq (Llama-3.3-70b / Llama-3.1-8b)</option>
-                                    <option value="gemini">Google Gemini Pro (2.0 Flash / 1.5 Pro)</option>
+                                    <option value="openai">OpenAI (GPT-4o / o3-mini / GPT-3.5-turbo)</option>
+                                    <option value="deepseek">DeepSeek (V3 / R1 استدلالی)</option>
+                                    <option value="anthropic">Anthropic Claude (Claude 4 Sonnet / 3.5)</option>
+                                    <option value="openrouter">OpenRouter AI (تمام مدل‌ها با یک کلید)</option>
+                                    <option value="groq">Groq (Llama-3.3-70b / Mixtral)</option>
+                                    <option value="gemini">Google Gemini (2.5 Pro / 2.0 Flash)</option>
                                     <option value="custom">مدل دلخواه دستی (Custom AI Model / Custom URL)</option>
                                 </select>
                             </div>

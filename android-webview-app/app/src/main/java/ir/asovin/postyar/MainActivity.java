@@ -27,7 +27,6 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 /**
  * اکتیویتی اصلی اپلیکیشن پُست‌یار
@@ -39,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private ProgressBar progressBar;
-    private SwipeRefreshLayout swipeRefreshLayout;
     private ValueCallback<Uri[]> uploadMessage;
     private boolean isSplashVisible = true;
     private boolean hasLoadedOnce = false;
@@ -54,10 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
         webView = findViewById(R.id.webview);
         progressBar = findViewById(R.id.progress_bar);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh);
 
         setupWebView();
-        setupSwipeRefresh();
         handleIncomingIntent(getIntent());
         loadApp();
     }
@@ -99,18 +95,6 @@ public class MainActivity extends AppCompatActivity {
         webView.addJavascriptInterface(new NativeBridge(), "PostyarNative");
     }
 
-    private void setupSwipeRefresh() {
-        int primaryColor = 0xFF6366F1;
-        swipeRefreshLayout.setColorSchemeColors(primaryColor, 0xFFF97316);
-        swipeRefreshLayout.setProgressBackgroundColorSchemeColor(0xFF0A0A0A);
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            if (hasLoadedOnce) {
-                webView.reload();
-            }
-            swipeRefreshLayout.setRefreshing(false);
-        });
-    }
-
     private void loadApp() {
         if (isNetworkAvailable()) {
             showSplash();
@@ -129,14 +113,12 @@ public class MainActivity extends AppCompatActivity {
             super.onPageStarted(view, url, favicon);
             progressBar.setVisibility(View.VISIBLE);
             progressBar.setProgress(0);
-            swipeRefreshLayout.setEnabled(false);
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             progressBar.setVisibility(View.GONE);
-            swipeRefreshLayout.setEnabled(true);
 
             if (isSplashVisible && url.contains(Uri.parse(BuildConfig.APP_URL).getHost())) {
                 hideSplash();
@@ -247,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             webView.loadDataWithBaseURL(null, ERROR_HTML, "text/html", "UTF-8", null);
         }
-        swipeRefreshLayout.setEnabled(true);
         progressBar.setVisibility(View.GONE);
     }
 

@@ -890,10 +890,10 @@
                                                 <strong style="color:white; font-size:0.9rem;"><?php echo htmlspecialchars($ch['name']); ?></strong>
                                                 <div style="color:#64748b; font-size:0.72rem;"><?php echo $platform_icon . ' ' . $platform_label; ?></div>
                                             </div>
-                                            <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
-                                                <input type="checkbox" <?php echo $is_enabled ? 'checked' : ''; ?> onchange="toggleResponder(<?php echo $ch['id']; ?>, this.checked)" style="opacity:0; width:0; height:0;">
-                                                <span style="position:absolute; cursor:pointer; inset:0; background:<?php echo $is_enabled ? '#10b981' : '#475569'; ?>; border-radius:26px; transition:0.3s;"></span>
-                                                <span style="position:absolute; content:''; height:20px; width:20px; left:<?php echo $is_enabled ? '25px' : '3px'; ?>; bottom:3px; background:white; border-radius:50%; transition:0.3s;"></span>
+                                            <label class="responder-toggle" style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;" id="toggle-label-<?php echo $ch['id']; ?>">
+                                                <input type="checkbox" <?php echo $is_enabled ? 'checked' : ''; ?> onchange="toggleResponder(<?php echo $ch['id']; ?>, this.checked)" style="opacity:0; width:0; height:0; position:absolute;">
+                                                <span class="toggle-track" style="position:absolute; cursor:pointer; inset:0; background:<?php echo $is_enabled ? '#10b981' : '#475569'; ?>; border-radius:26px; transition:0.3s;"></span>
+                                                <span class="toggle-thumb" style="position:absolute; height:20px; width:20px; left:<?php echo $is_enabled ? '25px' : '3px'; ?>; bottom:3px; background:white; border-radius:50%; transition:0.3s;"></span>
                                             </label>
                                         </div>
                                     <?php endforeach; ?>
@@ -1441,7 +1441,7 @@
                                         <?php endif; ?>
                                     </ul>
                                 </div>
-                                <button class="btn btn-success" onclick="selectPlan(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars($p['title']); ?>', <?php echo $final_price; ?>, '<?php echo htmlspecialchars($p['payment_url'] ?? ''); ?>')" style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">انتخاب این پلن</button>
+                                <button class="btn btn-success plan-select-btn" id="plan-btn-<?php echo $p['id']; ?>" onclick="selectPlan(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['title'])); ?>', <?php echo $final_price; ?>, '<?php echo htmlspecialchars(addslashes($p['payment_url'] ?? '')); ?>')" style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">انتخاب این پلن</button>
                             </div>
                         <?php endforeach; ?>
                     </div>

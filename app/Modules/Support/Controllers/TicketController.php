@@ -60,6 +60,12 @@ class TicketController extends BaseController
         $db = Bootstrap::getDB();
         $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, attachment) VALUES (?, ?, ?, ?, 'open', ?)");
         $stmt->execute([$tenant_id, $subject, $category, $message, $attachment]);
+
+        // ارسال نوتیفیکیشن پوش به ادمین‌ها
+        try {
+            \WHCM\Controllers\MainController::sendPushBroadcast('🎫 تیکت جدید', 'تیکت از «' . Auth::user()['name'] . '»: ' . mb_substr($subject, 0, 60), '/hnnh');
+        } catch (\Throwable $e) {}
+
         $this->setFlashMessage('تیکت پشتیبانی شما با موفقیت ارسال شد و در صف پاسخگویی قرار گرفت. 🎫');
         $this->redirect('/dashboard');
     }
@@ -95,6 +101,12 @@ class TicketController extends BaseController
         $status = $close ? 'closed' : 'open';
         $stmt = $db->prepare("UPDATE tickets SET message = ?, status = ?, attachment = COALESCE(?, attachment) WHERE id = ?");
         $stmt->execute([$new_msg, $status, $attachment ?: null, $ticket_id]);
+
+        // ارسال نوتیفیکیشن پوش به ادمین‌ها (کاربر پاسخ داده)
+        try {
+            \WHCM\Controllers\MainController::sendPushBroadcast('👤 پاسخ کاربر به تیکت', mb_substr($reply, 0, 60), '/hnnh');
+        } catch (\Throwable $e) {}
+
         $this->setFlashMessage($close ? 'پاسخ شما ثبت و تیکت بسته شد. ✔' : 'پاسخ شما با موفقیت ثبت شد. ✔');
         $this->redirect('/dashboard');
     }
@@ -130,6 +142,17 @@ class TicketController extends BaseController
         $status = $close ? 'closed' : 'replied';
         $stmt = $db->prepare("UPDATE tickets SET message = ?, status = ?, assigned_to = ?, attachment = COALESCE(?, attachment) WHERE id = ?");
         $stmt->execute([$new_msg, $status, $assigned_to ?: null, $attachment ?: null, $ticket_id]);
+
+        // ارسال نوتیفیکیشن پوش به کاربر صاحب تیکت
+        try {
+            $stmt_user = $db->prepare("SELECT user_id FROM tickets WHERE id = ? LIMIT 1");
+            $stmt_user->execute([$ticket_id]);
+            $ticket_user_id = (int)$stmt_user->fetchColumn();
+            if ($ticket_user_id > 0) {
+                \WHCM\Controllers\MainController::sendPushToUser($ticket_user_id, '📩 پاسخ جدید به تیکت شما', mb_substr($reply, 0, 80), '/dashboard');
+            }
+        } catch (\Throwable $e) {}
+
         $this->setFlashMessage($close ? 'پاسخ ثبت و تیکت بسته شد. ✔' : 'پاسخ شما به تیکت با موفقیت ثبت شد. ✔');
         $this->redirect('/hnnh');
     }

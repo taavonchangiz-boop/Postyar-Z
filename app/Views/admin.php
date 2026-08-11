@@ -687,6 +687,15 @@
                             </div>
                         </div>
 
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="gold-custom-url">🔑 آدرس API دستی / کلید اختصاصی (برای سورس custom یا جایگزینی):
+                            <span style="display:block; color:var(--text-muted); font-size:0.78rem; margin-top:0.25rem;">این آدرس به کاربرانی که پلن طلاطلا دارند به عنوان API پیش‌فرض تخصیص داده می‌شود. اگر خالی بگذارید، آدرس پیش‌فرض TGJU استفاده خواهد شد.</span></label>
+                            <?php 
+                                $saved_gold_url = \WHCM\Core\Bootstrap::getConfig('defaults.gold_api_url', 'https://api.tgju.org/v1/data/sana/home');
+                            ?>
+                            <input type="url" name="gold_custom_api_url" id="gold-custom-url" value="<?php echo htmlspecialchars($saved_gold_url); ?>" placeholder="https://api.example.com/gold/prices" class="dir-ltr" style="border-radius:10px; font-size:0.85rem;">
+                        </div>
+
                         <div class="form-group">
                             <label for="gold-default-template">الگوی پیش‌فرض ارسال قیمت طلا برای کاربران جدید:</label>
                             <textarea name="gold_default_template" id="gold-default-template" rows="6" style="font-family: monospace, Vazirmatn; line-height: 1.8;">🔸 نرخ لحظه‌ای طلا و سکه در بازار:

@@ -18,6 +18,19 @@ class GoldTicker {
      */
     public static function fetchValues(string $url = ''): array {
         if (empty($url)) {
+            // اول تنظیمات ادمین کل (gold_custom_api_url) را چک می‌کنیم
+            try {
+                $db = Bootstrap::getDB();
+                $stmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = 'gold_custom_api_url' LIMIT 1");
+                $stmt->execute();
+                $admin_url = $stmt->fetchColumn();
+                if (!empty($admin_url)) {
+                    $url = $admin_url;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        if (empty($url)) {
             $url = Bootstrap::getConfig('defaults.gold_api_url');
         }
 

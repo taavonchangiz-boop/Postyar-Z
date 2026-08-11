@@ -1449,6 +1449,11 @@ class MainController extends BaseController {
             $val = $_POST[$f] ?? '';
             $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, ?, ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$f, $val, $val]);
         }
+        // ذخیره آدرس API دستی طلا (کلید اختصاصی مدیر)
+        $custom_url = trim($_POST['gold_custom_api_url'] ?? '');
+        if (!empty($custom_url)) {
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, 'gold_custom_api_url', ?) ON CONFLICT(tenant_id, key_name) DO UPDATE SET key_value = ?")->execute([$custom_url, $custom_url]);
+        }
         $this->setFlashMessage('تنظیمات ربات طلا و سکه با موفقیت ذخیره شد! ✔');
         $this->redirect('/hnnh');
     }

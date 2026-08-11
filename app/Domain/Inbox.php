@@ -42,7 +42,8 @@ class Inbox {
         $sender_id = (string)($msg['from']['id'] ?? ($msg['sender_chat']['id'] ?? ($msg['chat']['id'] ?? '')));
         // پاکسازی متون دریافتی جهت امنیت بالا
         $sender_name = htmlspecialchars(trim($msg['from']['first_name'] ?? ($msg['sender_chat']['title'] ?? ($msg['chat']['title'] ?? ''))), ENT_QUOTES, 'UTF-8');
-        $message_text = htmlspecialchars(trim($msg['text']), ENT_QUOTES, 'UTF-8');
+        $message_text = trim($msg['text']);
+        // هنگام مقایسه کلمه کلیدی، نباید htmlspecialchars شده باشد
 
         if (empty($sender_id) || empty($message_text)) {
             return;
@@ -58,29 +59,49 @@ class Inbox {
         $db = Bootstrap::getDB();
         $tenant_id = (int)$channel['tenant_id'];
         $reply_text = '';
+        $matched_keyword = '';
+        $reply_sent = 0;
 
-        // ۱. بررسی کلمات کلیدی فعال برای این کانال و مستاجر
-        $stmt = $db->prepare("SELECT * FROM auto_replies WHERE tenant_id = ? AND channel_id = ? AND active = 1");
-        $stmt->execute([$tenant_id, $channel['id']]);
-        $auto_replies = $stmt->fetchAll();
+        // ۰. بررسی اینکه آیا پاسخگوی خودکار برای این کانال فعال است یا خیر
+        $stmt_check = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = ? AND key_name = ? LIMIT 1");
+        $stmt_check->execute([$tenant_id, 'responder_enabled_' . (int)$channel['id']]);
+        $enabled_row = $stmt_check->fetch();
+        $responder_enabled = $enabled_row && (int)$enabled_row['key_value'] === 1;
 
-        foreach ($auto_replies as $rule) {
-            $keyword = trim($rule['keyword']);
-            
-            // مقایسه هوشمند غیرحساس به حروف بزرگ و کوچک (فارسی/انگلیسی)
-            $found = function_exists('mb_stripos')
-                ? mb_stripos($message_text, $keyword) !== false
-                : stripos($message_text, $keyword) !== false;
+        // ۱. بررسی کلمات کلیدی فعال برای این کانال و مستاجر (فقط اگر فعال باشد)
+        if ($responder_enabled) {
+            $stmt = $db->prepare("SELECT * FROM auto_replies WHERE tenant_id = ? AND channel_id = ? AND active = 1");
+            $stmt->execute([$tenant_id, $channel['id']]);
+            $auto_replies = $stmt->fetchAll();
 
-            if ($found) {
-                $reply_text = $rule['reply_text'];
-                // ارسال زنده پاسخ خودکار به کاربر پیام‌رسان
-                self::sendReplyToUser($channel, $sender_id, $reply_text);
-                break;
+            foreach ($auto_replies as $rule) {
+                $keyword = trim($rule['keyword']);
+                
+                // مقایسه هوشمند غیرحساس به حروف بزرگ و کوچک (فارسی/انگلیسی)
+                $found = function_exists('mb_stripos')
+                    ? mb_stripos($message_text, $keyword) !== false
+                    : stripos($message_text, $keyword) !== false;
+
+                if ($found) {
+                    $reply_text = $rule['reply_text'];
+                    $matched_keyword = $keyword;
+                    // ارسال زنده پاسخ خودکار به کاربر پیام‌رسان
+                    $sent = self::sendReplyToUser($channel, $sender_id, $reply_text);
+                    $reply_sent = $sent ? 1 : 0;
+                    break;
+                }
             }
         }
 
-        // ۲. ثبت نهایی پیام در صندوق پیام‌های مستاجر
+        // ۱.۵. ثبت در لاگ پاسخگوی خودکار
+        try {
+            $safe_text = mb_substr($message_text, 0, 500);
+            $stmt_log = $db->prepare("INSERT INTO responder_logs (tenant_id, channel_id, sender_id, sender_name, message_text, matched_keyword, reply_sent) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt_log->execute([$tenant_id, $channel['id'], $sender_id, $sender_name, $safe_text, $matched_keyword, $reply_sent]);
+        } catch (\Throwable $e) {}
+
+        // ۲. ثبت نهایی پیام در صندوق پیام‌های مستأجر
+        $safe_message = $message_text . (!empty($reply_text) ? "\n\n[پاسخ خودکار ارسال شد: {$reply_text}]" : '');
         $stmt = $db->prepare("
             INSERT INTO inbox (tenant_id, channel_id, sender_id, sender_name, message_text) 
             VALUES (?, ?, ?, ?, ?)
@@ -90,7 +111,7 @@ class Inbox {
             $channel['id'],
             $sender_id,
             $sender_name,
-            $message_text . (!empty($reply_text) ? "\n\n[پاسخ خودکار ارسال شد: {$reply_text}]" : '')
+            $safe_message
         ]);
     }
 

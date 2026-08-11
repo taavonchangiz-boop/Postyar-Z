@@ -49,6 +49,12 @@ class PaymentController extends BaseController
             $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
             $stmt->execute([$user_id, $plan_id, $start_date, $end_date]);
             $db->commit();
+
+            // ارسال نوتیفیکیشن پوش به کاربر
+            try {
+                \WHCM\Controllers\MainController::sendPushToUser($user_id, '✅ اشتراک شما فعال شد!', 'پلن «' . $plan['title'] . '» با موفقیت فعال گردید. ✔', '/dashboard');
+            } catch (\Throwable $e) {}
+
             $this->setFlashMessage('پرداخت با موفقیت تایید و اشتراک کاربر بلافاصله فعال گردید. ✔');
         } catch (\Exception $e) {
             $db->rollBack();

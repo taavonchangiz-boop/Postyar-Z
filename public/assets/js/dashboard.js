@@ -206,19 +206,31 @@ window.addEventListener('click', function(event) {
 
 /* ===== انتخاب پلن و نمایش فرم پرداخت ===== */
 function selectPlan(id, title, price, paymentUrl) {
-    // حذف حالت انتخاب از تمام کارت‌های پلن
+    // حذف حالت انتخاب از تمام کارت‌های پلن و بازگردانی دکمه‌ها
     var allCards = document.querySelectorAll('.plan-card');
+    var allBtns = document.querySelectorAll('.plan-select-btn');
     for (var i = 0; i < allCards.length; i++) {
         allCards[i].style.outline = 'none';
         allCards[i].style.outlineOffset = '0';
         allCards[i].style.boxShadow = '';
+        allCards[i].style.position = '';
     }
-    // قفل کردن پلن انتخاب‌شده با حاشیه سبز
+    for (var j = 0; j < allBtns.length; j++) {
+        allBtns[j].textContent = 'انتخاب این پلن';
+        allBtns[j].style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+    }
+    // قفل کردن پلن انتخاب‌شده
     var selectedCard = document.getElementById('plan-card-' + id);
+    var selectedBtn = document.getElementById('plan-btn-' + id);
     if (selectedCard) {
         selectedCard.style.outline = '3px solid #10b981';
         selectedCard.style.outlineOffset = '3px';
-        selectedCard.style.boxShadow = '0 0 25px rgba(16,185,129,0.4)';
+        selectedCard.style.boxShadow = '0 0 30px rgba(16,185,129,0.5)';
+        selectedCard.style.position = 'relative';
+    }
+    if (selectedBtn) {
+        selectedBtn.textContent = '✅ این پلن انتخاب شد (قفل شده)';
+        selectedBtn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
     }
     document.getElementById('payment-box').classList.remove('hidden');
     document.getElementById('sel-title').textContent = title;
@@ -468,20 +480,28 @@ function toggleResponder(channelId, enabled) {
     xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/toggle-responder'), true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    var label = document.getElementById('toggle-label-' + channelId);
+    var track = label ? label.querySelector('.toggle-track') : null;
+    var thumb = label ? label.querySelector('.toggle-thumb') : null;
+    var parentCard = label ? label.closest('div[style*="border"]') : null;
+    
+    // به‌روزرسانی فوری ظاهر
+    if (track) track.style.background = enabled ? '#10b981' : '#475569';
+    if (thumb) thumb.style.left = enabled ? '25px' : '3px';
+    if (parentCard) parentCard.style.borderColor = enabled ? '#10b981' : '#334155';
+    
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
             try {
                 var res = JSON.parse(xhr.responseText);
-                // به‌روزرسانی ظاهر toggle
-                var checkbox = event.target;
-                var track = checkbox.parentElement.querySelector('span:first-of-type');
-                var thumb = checkbox.parentElement.querySelector('span:last-of-type');
-                if (res.success) {
-                    track.style.background = enabled ? '#10b981' : '#475569';
-                    thumb.style.left = enabled ? '25px' : '3px';
-                    // بوردر والد
-                    var parentCard = checkbox.closest('div[style*="border"]');
-                    if (parentCard) parentCard.style.borderColor = enabled ? '#10b981' : '#334155';
+                if (!res.success) {
+                    // برگرداندن به وضعیت قبلی در صورت خطا
+                    if (track) track.style.background = enabled ? '#475569' : '#10b981';
+                    if (thumb) thumb.style.left = enabled ? '3px' : '25px';
+                    if (parentCard) parentCard.style.borderColor = '#334155';
+                    var cb = label ? label.querySelector('input[type="checkbox"]') : null;
+                    if (cb) cb.checked = !enabled;
+                    alert(res.message || 'خطا در تغییر وضعیت');
                 }
             } catch(e) { console.log('toggle error', e); }
         }

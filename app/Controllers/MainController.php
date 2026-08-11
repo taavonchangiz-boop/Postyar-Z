@@ -749,6 +749,17 @@ class MainController extends BaseController {
             $support_agents = $db->query("SELECT id, name, email FROM users WHERE role = 'support_agent' AND status = 'active' ORDER BY id ASC")->fetchAll();
         } catch (\Throwable $e) { $support_agents = []; }
 
+        // ۷. دریافت تنظیمات سراسری (tenant_id=0) برای فرم‌های ادمین
+        $admin_settings = [];
+        $stmt_settings = $db->prepare("SELECT key_name, key_value FROM settings WHERE tenant_id = 0");
+        $stmt_settings->execute([]);
+        foreach ($stmt_settings->fetchAll() as $row) {
+            $admin_settings[$row['key_name']] = $row['key_value'];
+        }
+
+        // ۸. دریافت کدهای تخفیف فعال
+        $discounts = $db->query("SELECT * FROM discount_codes ORDER BY id DESC")->fetchAll();
+
         $this->render('admin', [
             'title' => $is_support ? 'پنل پشتیبانی' : 'پنل مدیریت ارشد کل',
             'is_support' => $is_support,
@@ -761,6 +772,8 @@ class MainController extends BaseController {
             'tickets' => $tickets,
             'ticket_categories' => $ticket_categories,
             'support_agents' => $support_agents,
+            'admin_settings' => $admin_settings,
+            'discounts' => $discounts ?? [],
             'csrf_field' => Csrf::field(),
             'message' => $this->getFlashMessage(),
             'total_users' => $total_users,
@@ -1298,45 +1311,27 @@ class MainController extends BaseController {
     }
 
     /**
-     * قلب تپنده — Polling پیام‌ها + پردازش پست‌های زمان‌بندی‌شده
-     * این متد از داشبورد کاربر فراخوانی می‌شود تا پیام‌های دریافتی بررسی و پست‌های زمان‌بندی ارسال شوند.
+     * قلب تپنده — پردازش پست‌های زمان‌بندی‌شده (فقط دیتابیس، بدون HTTP)
+     * ⚠️ Polling پیام‌ها و پاسخگوی خودکار فقط از طریق cron.php انجام می‌شود
      */
     public function handleHeartbeat() {
         header('Content-Type: application/json; charset=utf-8');
         $this->checkAuth();
 
-        $polled = 0;
         $sent = 0;
 
         try {
-            set_time_limit(20);
+            set_time_limit(10);
 
-            // ۱. Polling پیام‌ها برای کانال‌های بدون وبهوک
-            $tenant_id = Auth::tenantId();
-            $db = Bootstrap::getDB();
-
-            // بررسی سهمیه فقط یک‌بار (رفع N+1)
-            $quota = Quota::getTenantQuota($tenant_id);
-            $can_auto_respond = $quota['has_active_sub'] && !empty($quota['features']['auto_responder']);
-
-            if ($can_auto_respond) {
-                $stmt = $db->prepare("SELECT * FROM channels WHERE tenant_id = ? AND webhook_active = 0");
-                $stmt->execute([$tenant_id]);
-                $channels = $stmt->fetchAll();
-                foreach ($channels as $ch) {
-                    Inbox::pollChannelUpdates($ch);
-                    $polled++;
-                }
-            }
-
-            // ۲. پردازش پست‌های زمان‌بندی‌شده
+            // فقط پردازش پست‌های زمان‌بندی‌شده (بدون HTTP — فقط دیتابیس)
+            // ⚠️ Polling پیام‌ها و پاسخگوی خودکار فقط از طریق cron.php انجام می‌شود
             $sent = ScheduledPost::processAll();
 
         } catch (\Throwable $e) {
             error_log('[Postyar Heartbeat] Error: ' . $e->getMessage());
         }
 
-        echo json_encode(['success' => true, 'polled' => $polled, 'sent' => $sent], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => true, 'sent' => $sent], JSON_UNESCAPED_UNICODE);
     }
 
     public function handleEditPlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->edit(); }

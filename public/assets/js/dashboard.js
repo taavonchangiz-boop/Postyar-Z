@@ -57,7 +57,14 @@ function toggleScheduleInput(val) {
 
 /* ===== بستن اعلان همگانی ===== */
 function closeBroadcastBanner() {
-    document.getElementById('broadcast-alert-banner').style.display = 'none';
+    var banner = document.getElementById('broadcast-alert-banner');
+    if (banner) banner.style.display = 'none';
+    // علامت‌گذاری خوانده‌شده در سرور
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/mark-announcement-read'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send('csrf_token=' + encodeURIComponent(window.__csrfToken || ''));
 }
 
 /* ===== تب‌بندی بخش‌های داشبورد ===== */

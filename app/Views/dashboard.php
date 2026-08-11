@@ -22,9 +22,9 @@
     <meta name="apple-mobile-web-app-title" content="پُست‌یار">
     <meta name="format-detection" content="telephone=no">
 
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css?v=12">
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css?v=12">
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css?v=12">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css?v=13">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css?v=13">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css?v=13">
 </head>
 <body>
 
@@ -214,8 +214,8 @@
                 <script>autoDismissAlert('system-alert-toast', 5000);</script>
             <?php endif; ?>
 
-            <!-- نمایش اعلان همگانی مدیر کل پلتفرم در صورت وجود -->
-            <?php if (!empty($announcement)): ?>
+            <!-- نمایش اعلان همگانی مدیر کل پلتفرم — فقط اگر کاربر هنوز نخوانده -->
+            <?php if (!empty($announcement) && !empty($announcement_unread)): ?>
                 <div class="broadcast-alert" id="broadcast-alert-banner">
                     <span class="broadcast-alert-close" onclick="closeBroadcastBanner()">✖</span>
                     <h4 style="font-weight:900; margin-bottom:0.4rem; color:#ffffff;">📢 پیام همگانی مدیریت: <?php echo htmlspecialchars($announcement['title']); ?></h4>
@@ -1603,9 +1603,9 @@
         window.postyarBaseUrl = '<?php echo $baseUrl; ?>';
         window.__csrfToken = '<?php echo \WHCM\Core\Csrf::getToken(); ?>';
     </script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js?v=12"></script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js?v=12"></script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js?v=12"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js?v=13"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js?v=13"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js?v=13"></script>
     <script>
         window.__dashboardSavedCard = "<?php echo htmlspecialchars($saved_card); ?>";
         // مقداردهی اولیه دراپ‌داون هوش مصنوعی
@@ -1686,8 +1686,8 @@
         }
     })();
     </script>
-    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js?v=12"></script>
-    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js?v=12"></script>
+    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js?v=13"></script>
+    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js?v=13"></script>
     <script>
     /* اجرای قلب تپنده پس از بارگذاری */
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -1695,7 +1695,7 @@
     } else {
         window.addEventListener('DOMContentLoaded', function() { setTimeout(postyarHeartbeat, 2000); });
     }
-    setInterval(postyarHeartbeat, 30000);
+    setInterval(postyarHeartbeat, 60000);
     </script>
 </body>
 </html>

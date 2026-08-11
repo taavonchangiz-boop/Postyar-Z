@@ -671,41 +671,38 @@
                             <div class="form-group">
                                 <label for="gold-source">سورس رسمی دریافت زنده نرخ‌ها (API):</label>
                                 <select name="gold_api_source" id="gold-source" style="border-radius:10px;">
-                                    <option value="tgju">سامانه شبکه اطلاع‌رسانی طلا، سکه و ارز (TGJU API)</option>
-                                    <option value="tala_ir">اتحادیه طلا و جواهر ایران (Tala.ir)</option>
-                                    <option value="cbi">بانک مرکزی جمهوری اسلامی ایران</option>
-                                    <option value="custom">سورس اختصاصی و وب‌هوک دستی</option>
+                                    <option value="tgju" <?php echo (($admin_settings['gold_api_source'] ?? 'tgju') === 'tgju') ? 'selected' : ''; ?>>سامانه شبکه اطلاع‌رسانی طلا، سکه و ارز (TGJU API)</option>
+                                    <option value="tala_ir" <?php echo (($admin_settings['gold_api_source'] ?? '') === 'tala_ir') ? 'selected' : ''; ?>>اتحادیه طلا و جواهر ایران (Tala.ir)</option>
+                                    <option value="cbi" <?php echo (($admin_settings['gold_api_source'] ?? '') === 'cbi') ? 'selected' : ''; ?>>بانک مرکزی جمهوری اسلامی ایران</option>
+                                    <option value="custom" <?php echo (($admin_settings['gold_api_source'] ?? '') === 'custom') ? 'selected' : ''; ?>>سورس اختصاصی و وب‌هوک دستی</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="gold-interval">دوره تناوب استعلام نرخ زنده (Interval):</label>
                                 <select name="gold_interval" id="gold-interval" style="border-radius:10px;">
-                                    <option value="60">هر ۶۰ ثانیه یک‌بار (پرفشار)</option>
-                                    <option value="180" selected>هر ۳ دقیقه یک‌بار (پیشنهادی)</option>
-                                    <option value="300">هر ۵ دقیقه یک‌بار</option>
+                                    <option value="60" <?php echo (($admin_settings['gold_interval'] ?? '') === '60') ? 'selected' : ''; ?>>هر ۶۰ ثانیه یک‌بار (پرفشار)</option>
+                                    <option value="180" <?php echo (($admin_settings['gold_interval'] ?? '180') === '180') ? 'selected' : ''; ?>>هر ۳ دقیقه یک‌بار (پیشنهادی)</option>
+                                    <option value="300" <?php echo (($admin_settings['gold_interval'] ?? '') === '300') ? 'selected' : ''; ?>>هر ۵ دقیقه یک‌بار</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 1.5rem;">
                             <label for="gold-custom-url">🔑 آدرس API دستی / کلید اختصاصی (برای سورس custom یا جایگزینی):
-                            <span style="display:block; color:var(--text-muted); font-size:0.78rem; margin-top:0.25rem;">این آدرس به کاربرانی که پلن طلاطلا دارند به عنوان API پیش‌فرض تخصیص داده می‌شود. اگر خالی بگذارید، آدرس پیش‌فرض TGJU استفاده خواهد شد.</span></label>
-                            <?php 
-                                $saved_gold_url = \WHCM\Core\Bootstrap::getConfig('defaults.gold_api_url', 'https://api.tgju.org/v1/data/sana/home');
-                            ?>
-                            <input type="url" name="gold_custom_api_url" id="gold-custom-url" value="<?php echo htmlspecialchars($saved_gold_url); ?>" placeholder="https://api.example.com/gold/prices" class="dir-ltr" style="border-radius:10px; font-size:0.85rem;">
+                            <span style="display:block; color:var(--text-muted); font-size:0.78rem; margin-top:0.25rem;">این آدرس به کاربرانی که پلن طلا دارند به عنوان API پیش‌فرض تخصیص داده می‌شود. اگر خالی بگذارید، آدرس پیش‌فرض TGJU استفاده خواهد شد.</span></label>
+                            <input type="url" name="gold_custom_api_url" id="gold-custom-url" value="<?php echo htmlspecialchars($admin_settings['gold_custom_api_url'] ?? ''); ?>" placeholder="https://api.example.com/gold/prices" class="dir-ltr" style="border-radius:10px; font-size:0.85rem;">
                         </div>
 
                         <div class="form-group">
                             <label for="gold-default-template">الگوی پیش‌فرض ارسال قیمت طلا برای کاربران جدید:</label>
-                            <textarea name="gold_default_template" id="gold-default-template" rows="6" style="font-family: monospace, Vazirmatn; line-height: 1.8;">🔸 نرخ لحظه‌ای طلا و سکه در بازار:
+                            <textarea name="gold_default_template" id="gold-default-template" rows="6" style="font-family: monospace, Vazirmatn; line-height: 1.8;"><?php echo htmlspecialchars($admin_settings['gold_default_template'] ?? '🔸 نرخ لحظه‌ای طلا و سکه در بازار:
 
 🥇 طلا ۱۸ عیار: {gold_18k} تومان
 🪙 سکه امامی: {coin_emami} تومان
 🪙 سکه بهار آزادی: {coin_bahar} تومان
 🌕 انس جهانی طلا: {gold_ounce} دلار
 
-📌 به‌روزرسانی خودکار توسط پُست‌یار</textarea>
+📌 به‌روزرسانی خودکار توسط پُست‌یار'); ?></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.9rem; font-size: 1rem;">
@@ -723,43 +720,43 @@
                     <h2>🧠 تنظیمات سراسری هوش مصنوعی و مدل‌های مولد</h2>
                     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">تعریف ارائه‌دهندگان هوش مصنوعی (OpenAI، OpenRouter، Groq و مدل‌های دلخواه دستی) برای کاربران پُست‌یار</p>
                     
-                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/save-ai-settings-admin'); ?>" method="POST">
+                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/hnnh/save-ai-settings-admin'); ?>" method="POST" data-saved-provider="<?php echo htmlspecialchars($admin_settings['ai_global_provider'] ?? 'openai'); ?>" data-saved-model="<?php echo htmlspecialchars($admin_settings['ai_global_model'] ?? ''); ?>" data-saved-url="<?php echo htmlspecialchars($admin_settings['ai_global_url'] ?? ''); ?>">
                         <?php echo $csrf_field; ?>
                         
                         <div class="form-row" style="margin-bottom: 1.5rem;">
                             <div class="form-group">
                                 <label for="ai-g-provider">ارائه‌دهنده پیش‌فرض هوش مصنوعی در پلتفرم:</label>
                                 <select name="ai_global_provider" id="ai-g-provider" style="border-radius:10px;">
-                                    <option value="openai">OpenAI (GPT-4o / o3-mini / GPT-3.5-turbo)</option>
-                                    <option value="deepseek">DeepSeek (V3 / R1 استدلالی)</option>
-                                    <option value="anthropic">Anthropic Claude (Claude 4 Sonnet / 3.5)</option>
-                                    <option value="openrouter">OpenRouter AI (تمام مدل‌ها با یک کلید)</option>
-                                    <option value="groq">Groq (Llama-3.3-70b / Mixtral)</option>
-                                    <option value="gemini">Google Gemini (2.5 Pro / 2.0 Flash)</option>
-                                    <option value="custom">مدل دلخواه دستی (Custom AI Model / Custom URL)</option>
+                                    <option value="openai" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'openai') ? 'selected' : ''; ?>>OpenAI (GPT-4o / o3-mini / GPT-3.5-turbo)</option>
+                                    <option value="deepseek" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'deepseek') ? 'selected' : ''; ?>>DeepSeek (V3 / R1 استدلالی)</option>
+                                    <option value="anthropic" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'anthropic') ? 'selected' : ''; ?>>Anthropic Claude (Claude 4 Sonnet / 3.5)</option>
+                                    <option value="openrouter" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'openrouter') ? 'selected' : ''; ?>>OpenRouter AI (تمام مدل‌ها با یک کلید)</option>
+                                    <option value="groq" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'groq') ? 'selected' : ''; ?>>Groq (Llama-3.3-70b / Mixtral)</option>
+                                    <option value="gemini" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'gemini') ? 'selected' : ''; ?>>Google Gemini (2.5 Pro / 2.0 Flash)</option>
+                                    <option value="custom" <?php echo (($admin_settings['ai_global_provider'] ?? '') === 'custom') ? 'selected' : ''; ?>>مدل دلخواه دستی (Custom AI Model / Custom URL)</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="ai-g-model">نام مدل پیش‌فرض (Model Name):</label>
                                 <select name="ai_global_model" id="ai-g-model" style="border-radius:10px;" class="dir-ltr"></select>
-                                <input type="text" id="ai-g-model-custom" placeholder="نام مدل دلخواه را وارد کنید" style="display:none; margin-top:0.5rem; border-radius:10px;" class="dir-ltr">
+                                <input type="text" id="ai-g-model-custom" placeholder="نام مدل دلخواه را وارد کنید" style="display:none; margin-top:0.5rem; border-radius:10px;" class="dir-ltr" value="<?php echo htmlspecialchars($admin_settings['ai_global_model'] ?? ''); ?>">
                             </div>
                         </div>
 
                         <div class="form-row" style="margin-bottom: 1.5rem;">
                             <div class="form-group">
                                 <label for="ai-g-key">کلید اصلی دسترسی به API (Global API Key):</label>
-                                <input type="password" name="ai_global_key" id="ai-g-key" placeholder="sk-..." class="dir-ltr">
+                                <input type="password" name="ai_global_key" id="ai-g-key" placeholder="sk-..." class="dir-ltr" value="<?php echo htmlspecialchars($admin_settings['ai_global_key'] ?? ''); ?>">
                             </div>
                             <div class="form-group">
                                 <label for="ai-g-url">آدرس اختصاصی endpoint (برای مدل دستی / Custom URL):</label>
-                                <input type="url" name="ai_global_url" id="ai-g-url" placeholder="https://api.openai.com/v1/chat/completions" class="dir-ltr">
+                                <input type="url" name="ai_global_url" id="ai-g-url" placeholder="https://api.openai.com/v1/chat/completions" class="dir-ltr" value="<?php echo htmlspecialchars($admin_settings['ai_global_url'] ?? ''); ?>">
                             </div>
                         </div>
 
                         <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;">
                             <label style="display:flex; align-items:center; gap:0.5rem; color:white; cursor:pointer; margin:0;">
-                                <input type="checkbox" name="ai_active_by_default" value="1" checked style="width:18px; height:18px;">
+                                <input type="checkbox" name="ai_active_by_default" value="1" <?php echo (empty($admin_settings['ai_active_by_default']) || $admin_settings['ai_active_by_default'] === '1') ? 'checked' : ''; ?> style="width:18px; height:18px;">
                                 <span>فعال‌سازی دستیار نگارش هوشمند (AI Writer) برای کاربران دارای اشتراک مجاز</span>
                             </label>
                         </div>

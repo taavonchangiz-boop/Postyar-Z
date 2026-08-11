@@ -338,12 +338,18 @@ document.addEventListener('DOMContentLoaded', function(){
     var prov = document.getElementById('ai-g-provider');
     var sel = document.getElementById('ai-g-model');
     if(!prov || !sel) return;
-    var savedModel = 'gpt-4o';
+    var form = prov.closest('form');
+    var savedProvider = form ? (form.getAttribute('data-saved-provider') || 'openai') : 'openai';
+    var savedModel = form ? (form.getAttribute('data-saved-model') || '') : '';
+    var savedUrl = form ? (form.getAttribute('data-saved-url') || '') : '';
+    // تنظیم آدرس ذخیره‌شده
+    var urlInput = document.getElementById('ai-g-url');
+    if(urlInput && savedUrl) urlInput.value = savedUrl;
+    prov.value = savedProvider;
     prov.addEventListener('change', function(){ fillModels(this.value, null); });
     fillModels(prov.value, savedModel);
     var custom = document.getElementById('ai-g-model-custom');
     if(custom){ custom.addEventListener('input', function(){ sel.value = this.value; }); }
-    var form = prov.closest('form');
     if(form){ form.addEventListener('submit', function(){ if(prov.value==='custom' && custom){ sel.value = custom.value; } }); }
   });
 })();

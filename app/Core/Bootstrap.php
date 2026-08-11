@@ -133,19 +133,30 @@ class Bootstrap {
      * مکانیزم بارگذاری خودکار کلاس‌ها (PSR-4)
      */
     private static function autoload(string $class) {
+        // ۱. لود کلاس‌های WHCM
         $prefix = 'WHCM\\';
         $base_dir = __DIR__ . '/../';
 
         $len = strlen($prefix);
-        if (strncmp($prefix, $class, $len) !== 0) {
-            return;
+        if (strncmp($prefix, $class, $len) === 0) {
+            $relative_class = substr($class, $len);
+            $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+            if (file_exists($file)) {
+                require $file;
+                return;
+            }
         }
 
-        $relative_class = substr($class, $len);
-        $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-        if (file_exists($file)) {
-            require $file;
+        // ۲. لود PHPMailer
+        $pm_prefix = 'PHPMailer\\PHPMailer\\';
+        $pm_len = strlen($pm_prefix);
+        if (strncmp($pm_prefix, $class, $pm_len) === 0) {
+            $pm_base = __DIR__ . '/../../vendor/phpmailer/phpmailer/';
+            $pm_relative = substr($class, $pm_len);
+            $pm_file = $pm_base . str_replace('\\', '/', $pm_relative) . '.php';
+            if (file_exists($pm_file)) {
+                require $pm_file;
+            }
         }
     }
 

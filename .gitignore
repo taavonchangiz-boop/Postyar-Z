@@ -60,3 +60,4 @@ deprecated.php
 node_modules/
 vendor/
 composer.lock
+vendor/

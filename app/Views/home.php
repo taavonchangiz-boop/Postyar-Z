@@ -798,6 +798,10 @@
             <h2 class="text-xl font-black text-white text-center mb-6">✨ ساخت حساب کاربری جدید</h2>
             <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/register'); ?>" method="POST">
                 <?php echo $csrf_field ?? ''; ?>
+                <?php $ref_code = trim($_GET['ref'] ?? ''); ?>
+                <?php if (!empty($ref_code)): ?>
+                <input type="hidden" name="ref" value="<?php echo htmlspecialchars($ref_code); ?>">
+                <?php endif; ?>
                 <div class="form-group">
                     <label>نام و نام خانوادگی:</label>
                     <input type="text" name="name" required placeholder="هومن نقشی">

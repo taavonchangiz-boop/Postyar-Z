@@ -31,9 +31,10 @@
     <div class="drawer-overlay" id="drawer-overlay"></div>
     <div class="drawer-menu" id="drawer-menu">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
-            <span style="font-weight:bold; color:var(--primary); font-size:1rem;">منوی مدیریت پُست‌یار</span>
+            <span style="font-weight:bold; color:var(--primary); font-size:1rem;"><?php echo $is_support ? 'پنل پشتیبانی' : 'منوی مدیریت پُست‌یار'; ?></span>
             <button class="close-btn" style="position:static;">✖</button>
         </div>
+        <?php if (!$is_support): ?>
         <div class="menu-item active" data-target="dashboard" data-toggle-drawer="true" onclick="switchSection('dashboard')">📊 وضعیت کلی و آمارگیری حرفه‌ای</div>
         <div class="menu-item" data-target="users" data-toggle-drawer="true" onclick="switchSection('users')">👥 مدیریت کاربران و هدیه اشتراک</div>
         <div class="menu-item" data-target="payments" data-toggle-drawer="true" onclick="switchSection('payments')">💳 تایید فیش‌های واریزی</div>
@@ -46,11 +47,11 @@
         <div class="menu-item" data-target="admin-woo" data-toggle-drawer="true" onclick="switchSection('admin-woo')">🛍 تنظیمات اتصال ووکامرس</div>
         <div class="menu-item" data-target="broadcast" data-toggle-drawer="true" onclick="switchSection('broadcast')">📢 ارسال اعلان همگانی</div>
         <div class="menu-item" data-target="bank" data-toggle-drawer="true" onclick="switchSection('bank')">💳 تنظیمات کارت بانکی</div>
-        <div class="menu-item" data-target="tickets" data-toggle-drawer="true" onclick="switchSection('tickets')">🎫 تیکت‌های پشتیبانی</div>
         <div class="menu-item" data-target="referral-settings" data-toggle-drawer="true" onclick="switchSection('referral-settings')">🎯 تنظیمات زیرمجموعه‌گیری</div>
         <div class="menu-item" data-target="sms-settings" data-toggle-drawer="true" onclick="switchSection('sms-settings')">📱 تنظیمات پیامک</div>
         <div class="menu-item" data-target="email-settings" data-toggle-drawer="true" onclick="switchSection('email-settings')">📧 تنظیمات ایمیل</div>
-        <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard'); ?>" class="menu-item" style="color:var(--primary); border-top:1px solid var(--border); padding-top:1rem; border-radius:0; margin-top:1rem;">🏠 رفتن به پیشخوان کاربری</a>
+        <?php endif; ?>
+        <div class="menu-item <?php echo $is_support ? 'active' : ''; ?>" data-target="tickets" data-toggle-drawer="true" onclick="switchSection('tickets')">🎫 تیکت‌های پشتیبانی</div>
         <a href="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/logout'); ?>" class="menu-item logout-btn" style="margin-top:0.5rem; padding-top:0;">🚪 خروج از حساب</a>
     </div>
 
@@ -97,7 +98,7 @@
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="admin-badge">مدیر ارشد پلتفرم 👑</div>
+            <div class="admin-badge"><?php echo $is_support ? 'پشتیبان پُست‌یار 🎧' : 'مدیر ارشد پلتفرم 👑'; ?></div>
             <!-- دکمه بازکردن همبرگری کشویی موبایل -->
             <button class="hamburger-btn">☰</button>
         </div>
@@ -332,9 +333,16 @@
                                     <input type="text" name="business_name" id="man-biz" placeholder="مثال: گالری آسوین">
                                 </div>
                                 <div class="form-group">
-                                    <label for="man-biz-type">نوع کسب و کار:</label>
-                                    <input type="text" name="business_type" id="man-biz-type" placeholder="مثال: طلا و جواهرات">
+                                    <label for="man-role">نقش کاربر:</label>
+                                    <select name="role" id="man-role" style="border-radius:12px;">
+                                        <option value="user">کاربر عادی (مستأجر)</option>
+                                        <option value="support_agent">پشتیبان (فقط تیکت‌ها)</option>
+                                    </select>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="man-biz-type">نوع کسب و کار:</label>
+                                <input type="text" name="business_type" id="man-biz-type" placeholder="مثال: طلا و جواهرات">
                             </div>
                             <button type="submit" class="btn" style="width:100%;">ثبت و ایجاد دستی کاربر 👤</button>
                         </form>
@@ -1333,8 +1341,8 @@
                     <label style="font-size:0.8rem; color:#94a3b8;">ارجاع به پشتیبان دیگر (اختیاری):</label>
                     <select name="assigned_to" style="width:100%; padding:0.5rem; border-radius:8px; background:#1e293b; color:white; border:1px solid #334155;">
                         <option value="0">— بدون ارجاع —</option>
-                        <?php foreach ($users as $au): if(($au['role'] ?? '')==='superadmin'): ?>
-                        <option value="<?php echo $au['id']; ?>"><?php echo htmlspecialchars($au['name']); ?> (<?php echo htmlspecialchars($au['email']); ?>)</option>
+                        <?php foreach ($users as $au): if(($au['role'] ?? '')==='superadmin' || ($au['role'] ?? '')==='support_agent'): ?>
+                        <option value="<?php echo $au['id']; ?>"><?php echo htmlspecialchars($au['name']); ?> (<?php echo htmlspecialchars($au['email']); ?>)<?php echo ($au['role'] ?? '')==='support_agent' ? ' 🎧' : ' 👑'; ?></option>
                         <?php endif; endforeach; ?>
                     </select>
                 </div>
@@ -1407,6 +1415,27 @@
     </div>
 
 
+    <!-- پشتیبان: فقط بخش تیکت -->
+    <?php if ($is_support): ?>
+    <script>
+    (function(){
+        var sections = document.querySelectorAll('.tab-content');
+        for (var i = 0; i < sections.length; i++) {
+            if (sections[i].id !== 'section-tickets') {
+                sections[i].style.display = 'none';
+            }
+        }
+        var items = document.querySelectorAll('.sidebar-desktop .menu-item');
+        for (var j = 0; j < items.length; j++) {
+            var target = items[j].getAttribute('data-target');
+            if (target && target !== 'tickets') {
+                items[j].style.display = 'none';
+            }
+        }
+    }());
+    </script>
+    <?php endif; ?>
+
     <!-- PWA: ثبت سرویس ورکر و بنر نصب (فقط موبایل/تبلت) -->
     <script>
     (function(){
@@ -1415,7 +1444,7 @@
             navigator.serviceWorker.register(baseUrl + '/service-worker.js', { scope: baseUrl + '/' })
                 .catch(function() {});
         }
-    })();
+    }());
     </script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js"></script>
 </body>

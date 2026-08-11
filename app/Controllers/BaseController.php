@@ -54,6 +54,16 @@ abstract class BaseController {
     }
 
     /**
+     * بررسی دسترسی مدیر یا پشتیبان (بدون IP Whitelist)
+     */
+    protected function checkAdminOrSupport() {
+        if (!Auth::check() || !Auth::isAdminOrSupport()) {
+            $this->setFlashMessage('دسترسی شما غیرمجاز است.');
+            $this->redirect('/');
+        }
+    }
+
+    /**
      * دریافت IP واقعی کاربر (با پشتیبانی از Trusted Proxies)
      *
      * @return string

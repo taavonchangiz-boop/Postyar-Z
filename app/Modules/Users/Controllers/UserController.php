@@ -20,13 +20,28 @@ class UserController extends BaseController
         $password = $_POST['password'] ?? '';
         $business_name = trim($_POST['business_name'] ?? '');
         $business_type = trim($_POST['business_type'] ?? '');
+        $role = trim($_POST['role'] ?? 'user');
+        
+        // فقط نقش‌های مجاز
+        $allowed_roles = ['user', 'support_agent'];
+        if (!in_array($role, $allowed_roles, true)) {
+            $role = 'user';
+        }
+        
         if (empty($name) || empty($email) || empty($password)) {
             $this->setFlashMessage('پر کردن فیلدهای نام، ایمیل و کلمه عبور الزامی است.');
             $this->redirect('/hnnh');
         }
         $res = Auth::register($name, $email, $password, $business_name, $business_type);
         if ($res['success']) {
-            $this->setFlashMessage('کاربر جدید با موفقیت به صورت دستی ثبت و ایجاد شد! ✔');
+            // تغییر نقش اگر پشتیبان باشد
+            if ($role === 'support_agent' && !empty($res['user_id'])) {
+                $db = Bootstrap::getDB();
+                $db->prepare("UPDATE users SET role = 'support_agent' WHERE id = ?")->execute([$res['user_id']]);
+                $this->setFlashMessage('کاربر پشتیبان با موفقیت ایجاد شد! ✔ (دسترسی محدود به تیکت‌ها)');
+            } else {
+                $this->setFlashMessage('کاربر جدید با موفقیت به صورت دستی ثبت و ایجاد شد! ✔');
+            }
         } else {
             $this->setFlashMessage($res['message']);
         }

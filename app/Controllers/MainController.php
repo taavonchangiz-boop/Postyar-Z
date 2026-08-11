@@ -155,7 +155,8 @@ class MainController extends BaseController {
             // ---- پردازش‌های پس از ثبت‌نام (غیرمسدودکننده) ----
             if (!empty($res['user_id'])) {
                 try {
-                    $referralCode = trim($_GET['ref'] ?? '');
+                    // اولویت خواندن از POST (فرم) و سپس GET (لینک مستقیم)
+                    $referralCode = trim($_POST['ref'] ?? $_GET['ref'] ?? '');
                     Referral::processRegistration((int)$res['user_id'], !empty($referralCode) ? $referralCode : null);
                     Referral::getUserReferralCode((int)$res['user_id']);
                 } catch (\Throwable $e) {
@@ -509,14 +510,33 @@ class MainController extends BaseController {
         }
 
         $tenant_id = Auth::tenantId();
-        $plan_id = (int)$_POST['plan_id'];
-        $amount = (float)$_POST['amount'];
+        $plan_id = (int)($_POST['plan_id'] ?? 0);
+        $amount = (float)($_POST['amount'] ?? 0);
         $ref_num = trim($_POST['reference_num'] ?? '');
-        
-        // آپلود خودکار عکس رسید پرداخت به فرمت وب‌پی
-        $receipt_photo = $this->uploadAndConvertToWebp('receipt_photo', 'receipts');
+
+        // اعتبارسنجی وجود پلن قبل از ثبت پرداخت (جلوگیری از خطای FOREIGN KEY)
+        if ($plan_id <= 0) {
+            $this->setFlashMessage('خطا: پلن انتخابی نامعتبر است. لطفاً دوباره تلاش کنید.');
+            $this->redirect('/dashboard');
+        }
 
         $db = Bootstrap::getDB();
+        $stmt = $db->prepare("SELECT id, price FROM plans WHERE id = ? LIMIT 1");
+        $stmt->execute([$plan_id]);
+        $plan = $stmt->fetch();
+        if (!$plan) {
+            $this->setFlashMessage('خطا: پلن انتخابی یافت نشد. ممکن است حذف شده باشد.');
+            $this->redirect('/dashboard');
+        }
+
+        // اعتبارسنجی مبلغ
+        if ($amount <= 0) {
+            $this->setFlashMessage('خطا: مبلغ پرداخت نامعتبر است.');
+            $this->redirect('/dashboard');
+        }
+
+        // آپلود خودکار عکس رسید پرداخت به فرمت وب‌پی
+        $receipt_photo = $this->uploadAndConvertToWebp('receipt_photo', 'receipts');
 
         // ثبت پرداخت با وضعیت در انتظار تایید به همراه عکس رسید
         $stmt = $db->prepare("INSERT INTO payments (user_id, plan_id, amount, reference_num, payment_method, status, receipt_photo) VALUES (?, ?, ?, ?, 'card_to_card', 'pending', ?)");
@@ -527,7 +547,7 @@ class MainController extends BaseController {
     }
 
     /**
-     * پنل مدیریت کل (Super Admin)
+     * پنل مدیریت کل (Super Admin) و پشتیبان
      */
     public function admin() {
         // جلوگیری از کش شدن پنل مدیریت در هاست اشتراکی و مرورگر کاربر
@@ -535,7 +555,13 @@ class MainController extends BaseController {
         header("Cache-Control: post-check=0, pre-check=0", false);
         header("Pragma: no-cache");
 
-        $this->checkSuperAdmin();
+        // پشتیبان فقط دسترسی تیکت دارد
+        $is_support = Auth::isSupportAgent();
+        if ($is_support) {
+            $this->checkAdminOrSupport();
+        } else {
+            $this->checkSuperAdmin();
+        }
 
         $db = Bootstrap::getDB();
 
@@ -646,7 +672,8 @@ class MainController extends BaseController {
         $total_revenue = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status = 'approved'")->fetchColumn();
 
         $this->render('admin', [
-            'title' => 'پنل مدیریت ارشد کل',
+            'title' => $is_support ? 'پنل پشتیبانی' : 'پنل مدیریت ارشد کل',
+            'is_support' => $is_support,
             'users' => $users,
             'total_user_pages' => $total_user_pages,
             'current_page' => $current_page,
@@ -976,16 +1003,49 @@ class MainController extends BaseController {
         }
 
         if ($send_type === 'instant') {
-            // ارسال با URL اصلی (بدون لینک کوتاه) به کانال‌ها
-            $res = Sender::sendPostToChannels($tenant_id, $channel_ids, $title, $content, $media_url, $post_id);
-            
-            if ($res['success']) {
-                $db->prepare("UPDATE posts SET status = 'sent' WHERE id = ?")->execute([$post_id]);
-                $this->setFlashMessage('پست شما با موفقیت به تمام کانال‌های هدف ارسال گردید! ⚡✈');
-            } else {
-                $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
-                $this->setFlashMessage('ارسال پست با خطا مواجه شد. جزئیات کانال‌ها را بررسی نمایید.');
+            // ارسال غیرمسدودکننده: ابتدا ریدایرکت کاربر، سپس ارسال در پس‌زمینه
+            // این از قطع اتصال مرورگر (Secure Connection Failed) هنگام تایم‌اوت API جلوگیری می‌کند
+            $db->prepare("UPDATE posts SET status = 'sending' WHERE id = ?")->execute([$post_id]);
+
+            // تنظیم پیام و بستن سشن قبل از ریدایرکت
+            $this->setFlashMessage('پست شما در حال ارسال به کانال‌ها می‌باشد... ⚡');
+            session_write_close();
+
+            // ریدایرکت سریع — کاربر فوراً به داشبورد برمی‌گردد
+            header('Location: ' . Bootstrap::getRouteUrl('/dashboard'));
+            header('Content-Length: 0');
+            header('Connection: close');
+            flush();
+
+            // ادامه اجرا پس از ریدایرکت (غیرمسدودکننده)
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
             }
+            ignore_user_abort(true);
+            set_time_limit(120);
+
+            try {
+                $res = Sender::sendPostToChannels($tenant_id, $channel_ids, $title, $content, $media_url, $post_id);
+                
+                if ($res['success']) {
+                    $db->prepare("UPDATE posts SET status = 'sent' WHERE id = ?")->execute([$post_id]);
+                } else {
+                    $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
+                    $error_msgs = [];
+                    foreach ($res['channels'] ?? [] as $ch) {
+                        if (!$ch['success']) {
+                            $error_msgs[] = $ch['name'] . ': ' . ($ch['message'] ?? '');
+                        }
+                    }
+                    if (!empty($error_msgs)) {
+                        error_log('[Postyar] Send failed for post #' . $post_id . ': ' . implode(' | ', $error_msgs));
+                    }
+                }
+            } catch (\Throwable $e) {
+                $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
+                error_log('[Postyar] Exception sending post #' . $post_id . ': ' . $e->getMessage());
+            }
+            return;
         } else {
             $this->setFlashMessage('پست شما با موفقیت برای تاریخ شمسی تعیین شده زمان‌بندی گردید. ⏰');
         }

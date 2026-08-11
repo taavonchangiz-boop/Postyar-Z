@@ -1351,9 +1351,9 @@
 
                             <!-- دکمه اتصال مستقیم به برنامه همراه بانک بلو جهت کارت به کارت فوری -->
                             <div style="margin-bottom: 1.5rem; text-align: center;">
-                                <a href="blubank://transfer" target="_blank" class="btn btn-outline btn-bluebank" style="width: 100%; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
+                                <button type="button" onclick="openBluBank()" class="btn btn-outline btn-bluebank" style="width: 100%; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">
                                     🚀 کارت به کارت فوری در اپلیکیشن بلو بانک (مخصوص گوشی)
-                                </a>
+                                </button>
                             </div>
 
                             <button type="submit" class="btn btn-block" style="width:100%;">ثبت نهایی رسید و واریز 💳</button>

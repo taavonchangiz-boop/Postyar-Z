@@ -271,6 +271,33 @@ function closeTicketModal() {
     document.getElementById('ticketModal').style.display = 'none';
 }
 
+/* ===== دکمه بلو بانک (Deep Link) ===== */
+function openBluBank() {
+    // لیست URL scheme‌های ممکن بلو بانک — به ترتیب اولویت
+    var schemes = [
+        'blubank://transfer',
+        'blu://transfer',
+        'blubank://main',
+        'intent://transfer#Intent;scheme=blubank;package=ir.blubank.android;end'
+    ];
+    
+    for (var i = 0; i < schemes.length; i++) {
+        try {
+            var started = window.open(schemes[i], '_self');
+            // اگر window.open null برگرداند یعنی پاپ‌آپ بلاک شده
+            if (!started) {
+                window.location.href = schemes[i];
+            }
+            return;
+        } catch (e) {
+            continue;
+        }
+    }
+    
+    // اگر هیچ scheme‌ای کار نکرد
+    alert('اپلیکیشن بلو بانک روی دستگاه شما نصب نیست. لطفاً ابتدا آن را از بازار یا گوگل‌پلی نصب کنید.');
+}
+
 /* ===== تبدیل خودکار اعداد به فارسی ===== */
 if(typeof autoConvertToPersianDigits === 'function'){
     if(document.readyState === 'complete' || document.readyState === 'interactive'){

@@ -198,6 +198,21 @@ class Auth {
     }
 
     /**
+     * بررسی اینکه آیا کاربر پشتیبان است
+     */
+    public static function isSupportAgent(): bool {
+        $user = self::user();
+        return $user && $user['role'] === 'support_agent';
+    }
+
+    /**
+     * بررسی اینکه آیا کاربر مدیر کل یا پشتیبان است
+     */
+    public static function isAdminOrSupport(): bool {
+        return self::isSuperAdmin() || self::isSupportAgent();
+    }
+
+    /**
      * شناسه مستاجر جاری (Tenant ID) برای فیلتر دیتابیس
      */
     public static function tenantId() {

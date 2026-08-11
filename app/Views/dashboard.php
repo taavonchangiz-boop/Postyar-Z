@@ -727,7 +727,7 @@
             <div id="section-ticker" class="tab-content">
                 <div class="card">
                     <h2>🪙 ربات خودکار و هوشمند انتشار نرخ لحظه‌ای طلا</h2>
-                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/save-gold-settings'); ?>" method="POST" enctype="multipart/form-data">
+                    <form id="gold-settings-form" action="javascript:void(0);" onsubmit="saveGoldSettingsAjax(this)" enctype="multipart/form-data">
                         <?php echo $csrf_field; ?>
                         
                         <div class="form-row">
@@ -786,7 +786,7 @@
                             <textarea name="gold_template" id="g-template" rows="6" required><?php echo htmlspecialchars($tpl); ?></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-success">ذخیره تنظیمات ربات طلا 🪙</button>
+                        <button type="submit" class="btn btn-success" id="gold-save-btn">ذخیره تنظیمات ربات طلا 🪙</button>
                     </form>
                 </div>
 
@@ -1177,6 +1177,7 @@
                     $inbound_method = $adv_settings['inbound_method'] ?? 'polling';
                     $poll_interval = $adv_settings['poll_interval'] ?? 'every_1_minute';
                     
+                    $ai_provider = $adv_settings['ai_provider'] ?? 'openai';
                     $ai_key = $adv_settings['ai_api_key'] ?? '';
                     $ai_model = $adv_settings['ai_model'] ?? 'gpt-4o';
                     $ai_url = $adv_settings['ai_api_url'] ?? 'https://api.openai.com/v1/chat/completions';
@@ -1196,7 +1197,7 @@
                 ?>
                 <div class="card" style="border: 1px solid rgba(139, 92, 246, 0.25); background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(15, 23, 42, 0.6) 100%);">
                     <h2>⚙ تنظیمات پیشرفته و اتوماسیون پُست‌یار</h2>
-                    <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/save-advanced-settings'); ?>" method="POST">
+                    <form id="adv-settings-form" action="javascript:void(0);" onsubmit="saveAdvancedSettingsAjax(this)">
                         <?php echo $csrf_field; ?>
                         
                         <!-- ۳ لینک سراسری -->
@@ -1287,15 +1288,17 @@
                             <div class="form-row" style="margin-bottom: 1rem;">
                                 <div class="form-group">
                                     <label>سرویس هوش مصنوعی:</label>
-                                    <select id="whcm-ai-provider" onchange="onAiProviderChange(this.value)" style="border-radius:0.75rem;">
-                                        <option value="">-- انتخاب سرویس --</option>
-                                        <option value="openai">OpenAI (GPT)</option>
-                                        <option value="gemini">Google Gemini</option>
-                                        <option value="groq">Groq (سریع و رایگان)</option>
-                                        <option value="deepseek">DeepSeek</option>
-                                        <option value="mistral">Mistral</option>
-                                        <option value="together">Together AI</option>
-                                        <option value="ollama">Ollama (محلی)</option>
+                                    <select name="ai_provider" id="whcm-ai-provider" onchange="onAiProviderChange(this.value)" style="border-radius:0.75rem;">
+                                        <option value="" <?php echo empty($ai_provider) ? 'selected' : ''; ?>>-- انتخاب سرویس --</option>
+                                        <option value="openai" <?php echo $ai_provider === 'openai' ? 'selected' : ''; ?>>OpenAI (GPT)</option>
+                                        <option value="gemini" <?php echo $ai_provider === 'gemini' ? 'selected' : ''; ?>>Google Gemini</option>
+                                        <option value="groq" <?php echo $ai_provider === 'groq' ? 'selected' : ''; ?>>Groq (سریع و رایگان)</option>
+                                        <option value="deepseek" <?php echo $ai_provider === 'deepseek' ? 'selected' : ''; ?>>DeepSeek</option>
+                                        <option value="anthropic" <?php echo $ai_provider === 'anthropic' ? 'selected' : ''; ?>>Anthropic (Claude)</option>
+                                        <option value="openrouter" <?php echo $ai_provider === 'openrouter' ? 'selected' : ''; ?>>OpenRouter</option>
+                                        <option value="mistral" <?php echo $ai_provider === 'mistral' ? 'selected' : ''; ?>>Mistral</option>
+                                        <option value="together" <?php echo $ai_provider === 'together' ? 'selected' : ''; ?>>Together AI</option>
+                                        <option value="ollama" <?php echo $ai_provider === 'ollama' ? 'selected' : ''; ?>>Ollama (محلی)</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1337,7 +1340,7 @@
                             </button>
                         </div>
 
-                        <button type="submit" class="btn btn-success" style="width:100%; padding:1rem; background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); border:none;">ذخیره تنظیمات پیشرفته و اتوماسیون پُست‌یار 💾✔</button>
+                        <button type="submit" class="btn btn-success" id="adv-save-btn" style="width:100%; padding:1rem; background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%); border:none;">ذخیره تنظیمات پیشرفته و اتوماسیون پُست‌یار 💾✔</button>
                     </form>
                 </div>
             </div>
@@ -1413,15 +1416,22 @@
                                 $eligible_early = false;
                                 $final_price = $base_price;
                                 
+                                // بررسی نزدیکی به انقضا (برای دکمه تمدید)
+                                $is_near_expiry = false;
+                                $days_until_expiry = 999;
                                 $subStmt = \WHCM\Core\Bootstrap::getDB()->prepare("SELECT end_date FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY id DESC LIMIT 1");
                                 $subStmt->execute([$user['id']]);
                                 $activeSub = $subStmt->fetch();
-                                if ($activeSub && strtotime($activeSub['end_date']) > time() && $early_discount > 0) {
-                                    $eligible_early = true;
-                                    $final_price = $base_price * (1 - ($early_discount / 100));
+                                if ($activeSub && strtotime($activeSub['end_date']) > time()) {
+                                    $days_until_expiry = (int)round((strtotime($activeSub['end_date']) - time()) / 86400);
+                                    $is_near_expiry = $days_until_expiry <= 7;
+                                    if ($early_discount > 0) {
+                                        $eligible_early = true;
+                                        $final_price = $base_price * (1 - ($early_discount / 100));
+                                    }
                                 }
                             ?>
-                            <div class="plan-card <?php echo $is_current_plan ? 'current-plan-locked' : ($is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : '')); ?>" id="plan-card-<?php echo $p['id']; ?>" <?php echo $is_current_plan ? 'data-current-plan="1"' : ''; ?>>
+                            <div class="plan-card <?php echo $is_current_plan ? 'current-plan-locked' : ($is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : '')); ?>" id="plan-card-<?php echo $p['id']; ?>" <?php echo ($is_current_plan && !$is_near_expiry) ? 'data-current-plan="1"' : ''; ?>>
                                 <div>
                                     <div class="plan-card-img-wrapper">
                                         <img src="<?php echo \WHCM\Core\Bootstrap::getPlanImageUrl($p['image_url']); ?>" alt="<?php echo htmlspecialchars($p['title']); ?>" class="plan-card-img">
@@ -1475,10 +1485,12 @@
                                         <?php endif; ?>
                                     </ul>
                                 </div>
-                                <?php if ($is_current_plan): ?>
+                                <?php if ($is_current_plan && !$is_near_expiry): ?>
                                 <div style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; text-align:center; color:white; cursor:default; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
                                     🔒 اشتراک فعلی شما
                                 </div>
+                                <?php elseif ($is_current_plan && $is_near_expiry): ?>
+                                <button class="btn btn-success plan-select-btn" id="plan-btn-<?php echo $p['id']; ?>" onclick="selectPlan(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['title'])); ?>', <?php echo $final_price; ?>, '<?php echo htmlspecialchars(addslashes($p['payment_url'] ?? '')); ?>')" style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">🔄 تمدید این اشتراک (<?php echo \WHCM\Domain\TextFormat::fa_digits($days_until_expiry); ?> روز مانده)</button>
                                 <?php else: ?>
                                 <button class="btn btn-success plan-select-btn" id="plan-btn-<?php echo $p['id']; ?>" onclick="selectPlan(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['title'])); ?>', <?php echo $final_price; ?>, '<?php echo htmlspecialchars(addslashes($p['payment_url'] ?? '')); ?>')" style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">انتخاب این پلن</button>
                                 <?php endif; ?>
@@ -1559,6 +1571,31 @@
                 </div>
 
         
+
+                    <!-- سوابق اشتراک‌ها و پرداخت‌ها -->
+                    <?php if (!empty($subscription_history) || !empty($payment_history)): ?>
+                    <div class="card" style="margin-top:1.5rem;">
+                        <h2 style="margin-bottom:1rem;">📋 سوابق اشتراک‌ها و پرداخت‌ها</h2>
+                        <?php if (!empty($payment_history)): ?>
+                        <h3 style="font-size:0.9rem; color:#94a3b8; margin-bottom:0.75rem; border-bottom:1px dashed var(--border); padding-bottom:0.4rem;">💳 تراکش‌های پرداخت</h3>
+                        <div style="overflow-x:auto; max-height:300px; overflow-y:auto;">
+                        <table style="width:100%; font-size:0.8rem;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:0.5rem; text-align:right;">پلن</th><th style="padding:0.5rem; text-align:right;">مبلغ</th><th style="padding:0.5rem; text-align:right;">وضعت</th><th style="padding:0.5rem; text-align:right;">تاریخ</th></tr></thead><tbody>
+                                <?php foreach ($payment_history as $ph): ?>
+                                <tr style="border-bottom:1px solid rgba(51,65,85,0.3);"><td style="padding:0.5rem;"><?php echo htmlspecialchars($ph['plan_title'] ?? '-'); ?></td><td style="padding:0.5rem;"><?php echo \WHCM\Domain\TextFormat::fa_num($ph['amount']); ?> تومان</td><td style="padding:0.5rem;"><?php if ($ph['status']==='approved') echo '<span class="badge badge-success" style="font-size:0.7rem;">تاید شده ✔</span>'; elseif ($ph['status']==='rejected') echo '<span class="badge badge-failed" style="font-size:0.7rem;">رد شده ✖</span>'; else echo '<span class="badge badge-pending" style="font-size:0.7rem;">در انتظار تاید ⏳</span>'; ?></td><td style="padding:0.5rem; color:var(--text-muted); font-size:0.75rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($ph['created_at']); ?></td></tr>
+                                <?php endforeach; ?>
+                            </tbody></table></div>
+                        <?php endif; ?>
+                        <?php if (!empty($subscription_history)): ?>
+                        <h3 style="font-size:0.9rem; color:#94a3b8; margin:1.25rem 0 0.75rem; border-bottom:1px dashed var(--border); padding-bottom:0.4rem;">💎 سابق اشتراک‌ها</h3>
+                        <div style="overflow-x:auto; max-height:300px; overflow-y:auto;">
+                        <table style="width:100%; font-size:0.8rem;"><thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:0.5rem; text-align:right;">پلن</th><th style="padding:0.5rem; text-align:right;">شروع</th><th style="padding:0.5rem; text-align:right;">پاین</th><th style="padding:0.5rem; text-align:right;">وضعت</th></tr></thead><tbody>
+                                <?php foreach ($subscription_history as $sh): ?>
+                                <tr style="border-bottom:1px solid rgba(51,65,85,0.3);"><td style="padding:0.5rem;"><?php echo htmlspecialchars($sh['plan_title'] ?? '-'); ?></td><td style="padding:0.5rem; font-size:0.75rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($sh['start_date'], false); ?></td><td style="padding:0.5rem; font-size:0.75rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($sh['end_date'], false); ?></td><td style="padding:0.5rem;"><?php if ($sh['status']==='active') echo '<span class="badge badge-success" style="font-size:0.7rem;">فعال ✔</span>'; else echo '<span class="badge badge-failed" style="font-size:0.7rem;">منقضی ✖</span>'; ?></td></tr>
+                                <?php endforeach; ?>
+                            </tbody></table></div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
 </main>
     </div>
 
@@ -1571,6 +1608,13 @@
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js?v=12"></script>
     <script>
         window.__dashboardSavedCard = "<?php echo htmlspecialchars($saved_card); ?>";
+        // مقداردهی اولیه دراپ‌داون هوش مصنوعی
+        (function() {
+            var provSelect = document.getElementById('whcm-ai-provider');
+            if (provSelect && provSelect.value && typeof onAiProviderChange === 'function') {
+                onAiProviderChange(provSelect.value);
+            }
+        })();
         if (typeof jalaliDatepicker !== 'undefined') {
             try {
                 jalaliDatepicker.startWatch({

@@ -317,6 +317,15 @@ class MainController extends BaseController {
         // دریافت لیست پلن‌ها جهت خرید/ارتقا
         $plans = $db->query("SELECT * FROM plans ORDER BY price ASC")->fetchAll();
 
+        // دریافت سوابق اشتراک‌ها و پرداخت‌های کاربر
+        $stmt_sub_hist = $db->prepare("SELECT s.*, p.title as plan_title, p.price as plan_price FROM subscriptions s LEFT JOIN plans p ON s.plan_id = p.id WHERE s.user_id = ? ORDER BY s.id DESC LIMIT 20");
+        $stmt_sub_hist->execute([$tenant_id]);
+        $subscription_history = $stmt_sub_hist->fetchAll();
+
+        $stmt_pay_hist = $db->prepare("SELECT pay.*, p.title as plan_title FROM payments pay LEFT JOIN plans p ON pay.plan_id = p.id WHERE pay.user_id = ? ORDER BY pay.id DESC LIMIT 20");
+        $stmt_pay_hist->execute([$tenant_id]);
+        $payment_history = $stmt_pay_hist->fetchAll();
+
         $this->render('dashboard', [
             'title' => 'داشبورد کاربری',
             'user' => Auth::user(),
@@ -337,6 +346,8 @@ class MainController extends BaseController {
             'user_notifications' => $user_notifications,
             'unread_count' => $unread_count,
             'plans' => $plans,
+            'subscription_history' => $subscription_history,
+            'payment_history' => $payment_history,
             'csrf_field' => Csrf::field(),
             'message' => $this->getFlashMessage()
         ]);
@@ -843,6 +854,7 @@ class MainController extends BaseController {
     public function handleSaveGoldSettings() {
         $this->checkAuth();
         if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            if ($this->isAjax()) { echo json_encode(['success'=>false,'message'=>'خطای امنیتی'],JSON_UNESCAPED_UNICODE); return; }
             $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
             $this->redirect('/dashboard');
         }
@@ -878,6 +890,10 @@ class MainController extends BaseController {
 
         $this->saveSettingsBatch($tenant_id, $settings_to_save);
 
+        if ($this->isAjax()) {
+            echo json_encode(['success'=>true,'message'=>'تنظیمات ربات نرخ طلا با موفقیت ذخیره گردید. 🪙'],JSON_UNESCAPED_UNICODE);
+            return;
+        }
         $this->setFlashMessage('تنظیمات ربات نرخ طلا با موفقیت ذخیره گردید. 🪙');
         $this->redirect('/dashboard');
     }
@@ -1753,6 +1769,7 @@ class MainController extends BaseController {
     public function handleSaveAdvancedSettings() {
         $this->checkAuth();
         if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            if ($this->isAjax()) { echo json_encode(['success'=>false,'message'=>'خطای امنیتی'],JSON_UNESCAPED_UNICODE); return; }
             $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
             $this->redirect('/dashboard');
         }
@@ -1761,14 +1778,15 @@ class MainController extends BaseController {
 
         // ذخیره‌سازی فیلدهای دریافتی در جدول تنظیمات اختصاصی مستأجر
         $fields = [
+            'ai_provider' => trim($_POST['ai_provider'] ?? ''),
+            'ai_api_key' => trim($_POST['ai_api_key'] ?? ''),
+            'ai_model' => trim($_POST['ai_model'] ?? 'gpt-4o'),
+            'ai_api_url' => trim($_POST['ai_api_url'] ?? 'https://api.openai.com/v1/chat/completions'),
             'auto_publish_woo' => isset($_POST['auto_publish_woo']) ? 'yes' : 'no',
             'watermark_active' => isset($_POST['watermark_active']) ? 'yes' : 'no',
             'caption_format' => trim($_POST['caption_format'] ?? 'plain'),
             'inbound_method' => trim($_POST['inbound_method'] ?? 'polling'),
             'poll_interval' => trim($_POST['poll_interval'] ?? 'every_1_minute'),
-            'ai_api_key' => trim($_POST['ai_api_key'] ?? ''),
-            'ai_model' => trim($_POST['ai_model'] ?? 'gpt-4o'),
-            'ai_api_url' => trim($_POST['ai_api_url'] ?? 'https://api.openai.com/v1/chat/completions'),
             
             'link_1_name' => trim($_POST['link_1_name'] ?? '📢 کانال تلگرام'),
             'link_1_url' => trim($_POST['link_1_url'] ?? ''),
@@ -1786,6 +1804,10 @@ class MainController extends BaseController {
 
         $this->saveSettingsBatch($tenant_id, $fields);
 
+        if ($this->isAjax()) {
+            echo json_encode(['success'=>true,'message'=>'تنظیمات با موفقیت ذخیره شد! ✔🤖'],JSON_UNESCAPED_UNICODE);
+            return;
+        }
         $this->setFlashMessage('تنظیمات اتوماسیون و پیوند‌های اختصاصی با موفقیت بروزرسانی شد! ✔🤖');
         $this->redirect('/dashboard');
     }

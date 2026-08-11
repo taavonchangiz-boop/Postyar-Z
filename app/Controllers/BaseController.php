@@ -118,6 +118,14 @@ abstract class BaseController {
     }
 
     /**
+     * بررسی اینکه آیا درخواست AJAX است
+     */
+    protected function isAjax(): bool {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    }
+
+    /**
      * رندر کردن یک View با داده‌های مشخص
      */
     protected function render(string $viewName, array $data = []) {

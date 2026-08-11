@@ -616,6 +616,55 @@ function openAnnouncement(el) {
     xhr.send('csrf_token=' + encodeURIComponent(window.__csrfToken || ''));
 }
 
+/* ===== ذخیره تنظیمات طلا — AJAX (بدون رفرش صفحه) ===== */
+function saveGoldSettingsAjax(form) {
+    var btn = document.getElementById('gold-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ در حال ذخیره...'; }
+    
+    var fd = new FormData(form);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/save-gold-settings'), true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (btn) { btn.disabled = false; btn.textContent = 'ذخیره تنظیمات ربات طلا 🪙'; }
+            showToast('تنظیمات ربات طلا با موفقیت ذخیره شد. 🪙✔');
+        }
+    };
+    xhr.send(fd);
+}
+
+/* ===== ذخیره تنظیمات پیشرفته — AJAX (بدون رفرش صفحه) ===== */
+function saveAdvancedSettingsAjax(form) {
+    var btn = document.getElementById('adv-save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ در حال ذخیره...'; }
+    
+    var fd = new FormData(form);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/save-advanced-settings'), true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            if (btn) { btn.disabled = false; btn.textContent = 'ذخیره تنظیمات پیشرفته و اتوماسیون پُست‌یار 💾✔'; }
+            showToast('تنظیمات پیشرفته با موفقیت ذخیره شد. ✔🤖');
+        }
+    };
+    xhr.send(fd);
+}
+
+/* ===== توستر ساده ===== */
+function showToast(msg) {
+    var existing = document.getElementById('ajax-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'ajax-toast';
+    toast.textContent = msg;
+    toast.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:0.75rem 1.5rem;border-radius:12px;font-size:0.85rem;font-weight:700;z-index:99999;box-shadow:0 8px 25px rgba(0,0,0,0.5);opacity:0;transition:opacity 0.3s;font-family:inherit;';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.style.opacity = '1'; }, 10);
+    setTimeout(function(){ toast.style.opacity = '0'; setTimeout(function(){ toast.remove(); }, 300); }, 3000);
+}
+
 /* ===== تبدیل خودکار اعداد به فارسی ===== */
 if(typeof autoConvertToPersianDigits === 'function'){
     if(document.readyState === 'complete' || document.readyState === 'interactive'){

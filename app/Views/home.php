@@ -156,6 +156,11 @@
                 <!-- Hero Visual Showcase with Floating Badges -->
                 <div class="lg:col-span-5 relative reveal reveal-delay-2">
                     <div class="relative">
+                        <!-- Asovin Mascot -->
+                        <div style="text-align:center; margin-bottom:1rem;">
+                            <img src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/images/asovin.webp" alt="آسوین - پُست‌یار" style="height:200px; width:auto; filter:drop-shadow(0 12px 32px rgba(99,102,241,0.35));" class="mx-auto lg:mx-0">
+                        </div>
+
                         <div class="glass-light rounded-3xl p-5 sm:p-6 float-animation shadow-2xl">
                             <div class="bg-[#111116] rounded-2xl p-5 space-y-4 border border-neutral-800/80">
                                 <div class="flex items-center justify-between pb-3 border-b border-neutral-800">

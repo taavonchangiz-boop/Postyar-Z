@@ -65,6 +65,9 @@
 
         <!-- Hero -->
         <div style="text-align:center; margin-bottom:2rem;">
+            <div style="margin-bottom:1rem;">
+                <img src="<?php echo $baseUrl; ?>/assets/images/asovin.webp" alt="آسوین - پُست‌یار" style="height:140px; width:auto; filter:drop-shadow(0 8px 24px rgba(99,102,241,0.3));">
+            </div>
             <div style="display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); box-shadow:0 8px 32px rgba(99,102,241,0.3); margin-bottom:1rem;">📖</div>
             <h1 style="font-size:1.5rem; font-weight:900; color:#f8fafc; margin-bottom:0.4rem;">راهنمای استفاده از داشبورد</h1>
             <p style="font-size:0.88rem; color:#94a3b8; max-width:500px; margin:0 auto; line-height:1.8;">آموزش گام‌به‌گام تمام امکانات پنل مدیریت کانال‌های شما</p>

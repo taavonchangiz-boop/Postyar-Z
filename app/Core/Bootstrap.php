@@ -885,6 +885,23 @@ class Bootstrap {
                     )");
                 } catch (\Exception $e) {}
             },
+            'v12_notifications_table' => function($db) {
+                try {
+                    $db->exec("CREATE TABLE IF NOT EXISTS notifications (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        type VARCHAR(50) NOT NULL DEFAULT 'general',
+                        title TEXT NOT NULL,
+                        message TEXT DEFAULT '',
+                        target_section VARCHAR(100) DEFAULT '',
+                        is_read INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                    )");
+                    $db->exec("CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)");
+                    $db->exec("CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)");
+                } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

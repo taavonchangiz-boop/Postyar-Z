@@ -22,9 +22,9 @@
     <meta name="apple-mobile-web-app-title" content="پُست‌یار">
     <meta name="format-detection" content="telephone=no">
 
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css">
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
-    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css?v=12">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css?v=12">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css?v=12">
 </head>
 <body>
 
@@ -43,23 +43,38 @@
         </div>
         <div style="display:flex; align-items:center; gap:0.75rem;">
             <!-- دکمه زنگوله اعلان‌های کاربر -->
-            <div style="position:relative;">
-                <button type="button" id="bell-btn" onclick="var p=document.getElementById('user-bell-popup'); p.style.display=(p.style.display==='flex'?'none':'flex');" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+            <div style="position:relative;" id="bell-wrapper">
+                <button type="button" id="bell-btn" onclick="toggleBellPopup()" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
                     <span>🔔</span>
-                    <span id="bell-badge" style="<?php echo !empty($announcement_unread) ? '' : 'display:none;'; ?>position:absolute; top:0.125rem; right:0.125rem; width:0.625rem; height:0.625rem; background:#ef4444; border-radius:50%; border:2px solid #0f172a;"></span>
+                    <span id="bell-badge" style="position:absolute; top:0.125rem; right:0.125rem; min-width:1.1rem; height:1.1rem; background:#ef4444; border-radius:9999px; border:2px solid #0f172a; color:#fff; font-size:0.6rem; font-weight:900; align-items:center; justify-content:center; padding:0 0.2rem; <?php echo ($unread_count > 0) ? 'display:flex;' : 'display:none;'; ?>"><?php echo $unread_count > 0 ? \WHCM\Domain\TextFormat::fa_digits($unread_count) : ''; ?></span>
                 </button>
-                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:3.75rem; width:20rem; max-height:25rem; overflow-y:auto; background:#0f172a; border:1px solid #4f46e5; border-radius:1rem; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column; padding:1rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #334155; padding-bottom:0.6rem; margin-bottom:0.75rem;">
-                        <strong style="color:white; font-size:0.9rem;">🔔 صندوق اعلان‌ها و اخبار</strong>
+                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:3.75rem; width:22rem; max-height:28rem; overflow:hidden; background:#0f172a; border:1px solid #4f46e5; border-radius:1rem; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #334155; padding:0.75rem 1rem;">
+                        <strong style="color:white; font-size:0.9rem;">🔔 اعلان‌ها</strong>
+                        <?php if ($unread_count > 0): ?>
+                        <button type="button" onclick="markAllNotificationsRead(this)" style="background:none; border:1px solid #4f46e5; color:#818cf8; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:0.5rem; cursor:pointer;">خواندن همه ✔</button>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!empty($announcement)): ?>
-                        <div id="bell-ann-item" style="padding:0.75rem; background:#1e293b; border-radius:0.625rem; border-left:0.1875rem solid #6366f1; margin-bottom:0.5rem; cursor:pointer;" onclick="openAnnouncement(this)">
-                            <div style="font-weight:900; color:#38bdf8; font-size:0.85rem; margin-bottom:0.4rem;">📢 <?php echo htmlspecialchars($announcement['title']); ?></div>
-                            <div id="bell-ann-preview" style="font-size:0.78rem; color:#cbd5e1; line-height:1.6;"><?php echo nl2br(htmlspecialchars($announcement['message'])); ?></div>
-                        </div>
-                    <?php else: ?>
-                        <div style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:1rem 0;">اعلان جدیدی وجود ندارد ✔</div>
-                    <?php endif; ?>
+                    <div id="bell-notifications-list" style="overflow-y:auto; max-height:22rem; padding:0.5rem;">
+                        <?php if (!empty($user_notifications)): ?>
+                            <?php foreach ($user_notifications as $notif): ?>
+                                <div id="notif-item-<?php echo $notif['id']; ?>" class="notif-list-item" data-notif-id="<?php echo $notif['id']; ?>" data-target="<?php echo htmlspecialchars($notif['target_section'] ?? ''); ?>" style="padding:0.65rem 0.75rem; margin-bottom:0.35rem; background:<?php echo ($notif['is_read'] == 0) ? 'rgba(99, 102, 241, 0.12)' : 'transparent'; ?>; border-radius:0.625rem; border-right:3px solid <?php echo ($notif['is_read'] == 0) ? '#6366f1' : 'transparent'; ?>; cursor:pointer; transition:background 0.2s;" onclick="openNotification(<?php echo $notif['id']; ?>, '<?php echo htmlspecialchars(addslashes($notif['target_section'] ?? '')); ?>')">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
+                                        <div style="font-weight:<?php echo ($notif['is_read'] == 0) ? '800' : '400'; ?>; color:<?php echo ($notif['is_read'] == 0) ? '#e2e8f0' : '#94a3b8'; ?>; font-size:0.8rem; line-height:1.5;"><?php echo htmlspecialchars($notif['title']); ?></div>
+                                        <?php if ($notif['is_read'] == 0): ?>
+                                        <span style="width:0.45rem; height:0.45rem; background:#6366f1; border-radius:50%; flex-shrink:0; margin-top:0.35rem;"></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if (!empty($notif['message'])): ?>
+                                    <div style="font-size:0.72rem; color:#64748b; line-height:1.5; margin-top:0.2rem; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;"><?php echo htmlspecialchars(mb_substr($notif['message'], 0, 100)); ?></div>
+                                    <?php endif; ?>
+                                    <div style="font-size:0.65rem; color:#475569; margin-top:0.3rem;"><?php echo \WHCM\Domain\TextFormat::timeAgo($notif['created_at']); ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:1.5rem 0;">اعلان جدیدی وجود ندارد ✔</div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
@@ -1361,7 +1376,19 @@
             <div id="section-upgrade" class="tab-content">
                 <div class="card">
                     <h2>💎 ارتقا و تمدید اشتراک پنل کاربری</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">یکی از پلن‌های اشتراکی زیر را انتخاب کنید و رسید تراکنش واریزی خود را ثبت نمایید.</p>
+                    <?php if ($quota['has_active_sub']): ?>
+                    <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(16,185,129,0.1) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                        <div style="width:2.5rem; height:2.5rem; background:linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">💎</div>
+                        <div style="flex:1; min-width:200px;">
+                            <div style="font-weight:900; color:#e2e8f0; font-size:0.95rem;">اشتراک فعلی شما: <?php echo htmlspecialchars($quota['plan_title']); ?></div>
+                            <?php if ($quota['end_date']): ?>
+                            <div style="font-size:0.8rem; color:#94a3b8; margin-top:0.2rem;">اعتبار تا: <?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($quota['end_date'], false); ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div style="font-size:0.75rem; color:#10b981; font-weight:800; background:rgba(16,185,129,0.15); padding:0.35rem 0.75rem; border-radius:8px; white-space:nowrap;">✅ فعال</div>
+                    </div>
+                    <?php endif; ?>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;"><?php echo $quota['has_active_sub'] ? 'برای تمدید یا ارتقای اشتراک فعلی، پلن مورد نظر را انتخاب کنید:' : 'یکی از پلن‌های اشتراکی زیر را انتخاب کنید و رسید تراکنش واریزی خود را ثبت نمایید.'; ?></p>
                     
                     <?php
                         $stmt_occ = \WHCM\Core\Bootstrap::getDB()->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = 'occasion_discount_text'");
@@ -1539,9 +1566,9 @@
         window.postyarBaseUrl = '<?php echo $baseUrl; ?>';
         window.__csrfToken = '<?php echo \WHCM\Core\Csrf::getToken(); ?>';
     </script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js"></script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js?v=12"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js?v=12"></script>
+    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/jalalidatepicker.min.js?v=12"></script>
     <script>
         window.__dashboardSavedCard = "<?php echo htmlspecialchars($saved_card); ?>";
         if (typeof jalaliDatepicker !== 'undefined') {
@@ -1615,8 +1642,8 @@
         }
     })();
     </script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js"></script>
-    <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js"></script>
+    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js?v=12"></script>
+    <script defer src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js?v=12"></script>
     <script>
     /* اجرای قلب تپنده پس از بارگذاری */
     if (document.readyState === 'complete' || document.readyState === 'interactive') {

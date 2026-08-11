@@ -3,6 +3,7 @@ namespace WHCM\Modules\Billing\Controllers;
 
 use WHCM\Core\Bootstrap;
 use WHCM\Core\Csrf;
+use WHCM\Domain\Notification;
 use WHCM\Controllers\BaseController;
 
 /**
@@ -53,6 +54,11 @@ class PaymentController extends BaseController
             // ارسال نوتیفیکیشن پوش به کاربر
             try {
                 \WHCM\Controllers\MainController::sendPushToUser($user_id, '✅ اشتراک شما فعال شد!', 'پلن «' . $plan['title'] . '» با موفقیت فعال گردید. ✔', '/dashboard');
+            } catch (\Throwable $e) {}
+
+            // ثبت اعلان درون‌برنامه‌ای
+            try {
+                Notification::create($user_id, '✅ اشتراک شما فعال شد', 'پلن «' . $plan['title'] . '» با موفقیت فعال گردید و از همین لحظه قابل استفاده است.', 'subscription', 'upgrade');
             } catch (\Throwable $e) {}
 
             $this->setFlashMessage('پرداخت با موفقیت تایید و اشتراک کاربر بلافاصله فعال گردید. ✔');

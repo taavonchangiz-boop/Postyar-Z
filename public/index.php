@@ -58,6 +58,8 @@ try {
     Router::post('/dashboard/delete-auto-reply', 'MainController@handleDeleteAutoReply');
     Router::post('/dashboard/toggle-responder', 'MainController@handleToggleResponder');
 Router::post('/dashboard/mark-announcement-read', 'MainController@handleMarkAnnouncementRead');
+Router::post('/dashboard/mark-notification-read', 'MainController@handleMarkNotificationRead');
+Router::post('/dashboard/mark-all-notifications-read', 'MainController@handleMarkAllNotificationsRead');
     Router::post('/dashboard/add-ticket', 'MainController@handleCreateTicket');
     Router::post('/reset-password', 'MainController@handleResetPassword');
     Router::get('/reset-password', 'MainController@showResetPasswordForm');

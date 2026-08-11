@@ -209,6 +209,10 @@ class MainController extends BaseController {
 
         $db = Bootstrap::getDB();
 
+        // دریافت اعلان‌های کاربر از جدول notifications
+        $user_notifications = \WHCM\Domain\Notification::getRecentUnread($tenant_id, 20);
+        $unread_count = \WHCM\Domain\Notification::getUnreadCount($tenant_id);
+
         // دریافت اطلاعات یک کانال خاص جهت ویرایش در صورت انتخاب
         $edit_channel = null;
         $edit_channel_id = (int)($_GET['edit_channel'] ?? 0);
@@ -241,22 +245,35 @@ class MainController extends BaseController {
             }
         } catch (\Throwable $e) {}
 
-        // دریافت تاریخچه پست‌های ارسالی مستأجر — LIMIT 50 + LEFT JOIN بهینه (بدون N+1)
+        // دریافت تاریخچه پست‌های ارسالی مستأجر — LIMIT 50
         $stmt = $db->prepare("
-            SELECT p.*, 
-                   COALESCE(cl.clicks, 0) as clicks,
-                   COALESCE(cl.unique_clicks, 0) as unique_clicks
-            FROM posts p 
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) as clicks, COUNT(DISTINCT ip) as unique_clicks 
-                FROM clicks_log GROUP BY post_id
-            ) cl ON cl.post_id = p.id
+            SELECT p.* FROM posts p 
             WHERE p.tenant_id = ? 
             ORDER BY p.id DESC
             LIMIT 50
         ");
         $stmt->execute([$tenant_id]);
         $posts = $stmt->fetchAll();
+
+        // دریافت آمار کلیک فقط برای همین ۵۰ پست (بهینه‌تر از JOIN روی کل جدول)
+        $post_clicks = [];
+        if (!empty($posts)) {
+            $post_ids = array_column($posts, 'id');
+            $placeholders = implode(',', array_fill(0, count($post_ids), '?'));
+            $stmt_cl = $db->prepare("SELECT post_id, COUNT(*) as clicks, COUNT(DISTINCT ip) as unique_clicks FROM clicks_log WHERE post_id IN ($placeholders) GROUP BY post_id");
+            $stmt_cl->execute($post_ids);
+            $cl_rows = $stmt_cl->fetchAll();
+            foreach ($cl_rows as $cl) {
+                $post_clicks[(int)$cl['post_id']] = ['clicks' => (int)$cl['clicks'], 'unique_clicks' => (int)$cl['unique_clicks']];
+            }
+            // ادغام آمار کلیک با آرایه پست‌ها
+            foreach ($posts as &$post) {
+                $pid = (int)$post['id'];
+                $post['clicks'] = $post_clicks[$pid]['clicks'] ?? 0;
+                $post['unique_clicks'] = $post_clicks[$pid]['unique_clicks'] ?? 0;
+            }
+            unset($post);
+        }
 
         // دریافت کدهای تخفیف اختصاصی کاربر
         $stmt = $db->prepare("SELECT do.*, p.title as plan_title FROM discount_offers do JOIN plans p ON do.plan_id = p.id WHERE do.user_id = ? AND do.used = 0");
@@ -317,6 +334,8 @@ class MainController extends BaseController {
             'category_map' => $category_map,
             'announcement' => $announcement,
             'announcement_unread' => $announcement_unread,
+            'user_notifications' => $user_notifications,
+            'unread_count' => $unread_count,
             'plans' => $plans,
             'csrf_field' => Csrf::field(),
             'message' => $this->getFlashMessage()
@@ -1001,6 +1020,34 @@ class MainController extends BaseController {
     }
 
     /**
+     * علامت‌گذاری یک اعلان خاص به‌عنوان خوانده‌شده (AJAX)
+     */
+    public function handleMarkNotificationRead() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkAuth();
+        $tenant_id = Auth::tenantId();
+        $notification_id = (int)($_POST['notification_id'] ?? 0);
+        if ($notification_id <= 0) {
+            echo json_encode(['success' => false], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        $result = \WHCM\Domain\Notification::markAsRead($notification_id, $tenant_id);
+        $remaining = \WHCM\Domain\Notification::getUnreadCount($tenant_id);
+        echo json_encode(['success' => true, 'remaining' => $remaining], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * علامت‌گذاری تمام اعلان‌ها به‌عنوان خوانده‌شده (AJAX)
+     */
+    public function handleMarkAllNotificationsRead() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkAuth();
+        $tenant_id = Auth::tenantId();
+        \WHCM\Domain\Notification::markAllAsRead($tenant_id);
+        echo json_encode(['success' => true, 'remaining' => 0], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
      * تغییر وضعیت روشن/خاموش پاسخگوی خودکار کانال (AJAX)
      */
     public function handleToggleResponder() {
@@ -1251,13 +1298,16 @@ class MainController extends BaseController {
             // ۱. Polling پیام‌ها برای کانال‌های بدون وبهوک
             $tenant_id = Auth::tenantId();
             $db = Bootstrap::getDB();
-            $stmt = $db->prepare("SELECT * FROM channels WHERE tenant_id = ? AND webhook_active = 0");
-            $stmt->execute([$tenant_id]);
-            $channels = $stmt->fetchAll();
 
-            foreach ($channels as $ch) {
-                $quota = Quota::getTenantQuota((int)$ch['tenant_id']);
-                if ($quota['has_active_sub'] && !empty($quota['features']['auto_responder'])) {
+            // بررسی سهمیه فقط یک‌بار (رفع N+1)
+            $quota = Quota::getTenantQuota($tenant_id);
+            $can_auto_respond = $quota['has_active_sub'] && !empty($quota['features']['auto_responder']);
+
+            if ($can_auto_respond) {
+                $stmt = $db->prepare("SELECT * FROM channels WHERE tenant_id = ? AND webhook_active = 0");
+                $stmt->execute([$tenant_id]);
+                $channels = $stmt->fetchAll();
+                foreach ($channels as $ch) {
                     Inbox::pollChannelUpdates($ch);
                     $polled++;
                 }

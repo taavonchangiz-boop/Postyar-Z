@@ -157,4 +157,35 @@ class TextFormat {
         $i = date('i', $timestamp);
         return self::fa_digits($j[0] . '/' . str_pad($j[1], 2, '0', STR_PAD_LEFT) . '/' . str_pad($j[2], 2, '0', STR_PAD_LEFT) . ' - ' . $h . ':' . $i);
     }
+
+    /**
+     * نمایش زمان نسبی (مثلا «۲ دقیقه پیش»، «۱ ساعت پیش»)
+     */
+    public static function timeAgo(string $datetime): string {
+        if (empty($datetime)) return '';
+        try {
+            $dt = new \DateTime($datetime, new \DateTimeZone('Asia/Tehran'));
+            $now = new \DateTime('now', new \DateTimeZone('Asia/Tehran'));
+            $diff = $now->getTimestamp() - $dt->getTimestamp();
+            if ($diff < 0) $diff = 0;
+
+            if ($diff < 60) return 'همین الان';
+            if ($diff < 3600) {
+                $m = (int)($diff / 60);
+                return self::fa_digits($m) . ' دقیقه پیش';
+            }
+            if ($diff < 86400) {
+                $h = (int)($diff / 3600);
+                return self::fa_digits($h) . ' ساعت پیش';
+            }
+            if ($diff < 604800) {
+                $d = (int)($diff / 86400);
+                return self::fa_digits($d) . ' روز پیش';
+            }
+            // برای بازه‌های طولانی‌تر، تاریخ شمسی نمایش داده شود
+            return self::mysql_to_jalali($datetime, false);
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
 }

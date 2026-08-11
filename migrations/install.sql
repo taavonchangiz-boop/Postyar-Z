@@ -400,6 +400,19 @@ CREATE TABLE IF NOT EXISTS responder_logs (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- جدول اعلان‌های کاربر
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type VARCHAR(50) NOT NULL DEFAULT 'general',
+    title TEXT NOT NULL,
+    message TEXT DEFAULT '',
+    target_section VARCHAR(100) DEFAULT '',
+    is_read INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- ---- ایندکس‌های بهینه‌سازی ----
 CREATE INDEX IF NOT EXISTS idx_channels_tenant_id ON channels(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_channels_platform_cid ON channels(platform, channel_id);
@@ -428,3 +441,5 @@ CREATE INDEX IF NOT EXISTS idx_link_clicks_link ON link_clicks(link_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_user ON verification_codes(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_ticket_replies_ticket ON ticket_replies(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_responder_logs_tenant ON responder_logs(tenant_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);

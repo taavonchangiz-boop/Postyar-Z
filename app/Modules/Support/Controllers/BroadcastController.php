@@ -3,6 +3,7 @@ namespace WHCM\Modules\Support\Controllers;
 
 use WHCM\Core\Bootstrap;
 use WHCM\Core\Csrf;
+use WHCM\Domain\Notification;
 use WHCM\Domain\TextFormat;
 use WHCM\Controllers\BaseController;
 use WHCM\Controllers\MainController;
@@ -26,6 +27,7 @@ class BroadcastController extends BaseController
             $this->setFlashMessage('عنوان و متن اعلان الزامی هستند.');
             $this->redirect('/hnnh');
         }
+        // ذخیره در تنظیمات همگانی (برای سازگاری با سیستم قدیمی)
         $announcement_data = json_encode([
             'title' => $title,
             'message' => $message,
@@ -40,6 +42,15 @@ class BroadcastController extends BaseController
         } else {
             $stmt = $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (0, 'global_announcement', ?)");
             $stmt->execute([$announcement_data]);
+        }
+
+        // ایجاد اعلان در جدول notifications برای تمام کاربران
+        try {
+            // پاک کردن آخرین خوانده‌شده اعلان قبلی تا زنگوله دوباره فعال شود
+            $db->exec("DELETE FROM settings WHERE key_name = 'last_read_announcement_id'");
+            Notification::broadcast($title, $message, 'announcement', '');
+        } catch (\Throwable $e) {
+            error_log('[Postyar Broadcast Notification] ' . $e->getMessage());
         }
         // ارسال پوش ناتیفیکیشن همگانی
         try {

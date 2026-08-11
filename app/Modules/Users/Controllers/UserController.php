@@ -4,6 +4,7 @@ namespace WHCM\Modules\Users\Controllers;
 use WHCM\Core\Bootstrap;
 use WHCM\Core\Auth;
 use WHCM\Core\Csrf;
+use WHCM\Domain\Notification;
 use WHCM\Controllers\BaseController;
 
 /**
@@ -75,6 +76,15 @@ class UserController extends BaseController
             $stmt = $db->prepare("INSERT INTO subscriptions (user_id, plan_id, start_date, end_date, status) VALUES (?, ?, ?, ?, 'active')");
             $stmt->execute([$user_id, $plan_id, $now, $end_date]);
             $db->commit();
+
+            // ثبت اعلان درون‌برنامه‌ای برای کاربر
+            try {
+                $stmt_p = $db->prepare("SELECT title FROM plans WHERE id = ? LIMIT 1");
+                $stmt_p->execute([$plan_id]);
+                $plan_title = $stmt_p->fetchColumn() ?: 'پلن اشتراکی';
+                Notification::create($user_id, '💎 اشتراک جدید اعطا شد', 'اشتراک «' . $plan_title . '» به صورت دستی توسط مدیریت برای شما فعال گردید.', 'subscription', 'upgrade');
+            } catch (\Throwable $e) {}
+
             $this->setFlashMessage('اشتراک انتخابی با موفقیت به صورت دستی به کاربر اعطا و فعال گردید! ✔💎');
         } catch (\Exception $e) {
             $db->rollBack();

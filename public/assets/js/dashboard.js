@@ -524,15 +524,91 @@ function postyarHeartbeat() {
 }
 
 /* ===== باز کردن اعلان زنگوله + علامت‌گذاری خوانده‌شده ===== */
-function openAnnouncement(el) {
-    // نمایش کامل پیام اعلان (در صورت نیاز بسط دادن)
+function toggleBellPopup() {
+    var popup = document.getElementById('user-bell-popup');
+    var isOpen = popup.style.display === 'flex';
+    popup.style.display = isOpen ? 'none' : 'flex';
+}
+
+// بستن پاپ‌آپ زنگوله با کلیک در خارج
+window.addEventListener('click', function(event) {
+    var wrapper = document.getElementById('bell-wrapper');
+    var popup = document.getElementById('user-bell-popup');
+    if (wrapper && popup && !wrapper.contains(event.target)) {
+        popup.style.display = 'none';
+    }
+});
+
+function openNotification(notifId, targetSection) {
+    // علامت‌گذاری خوانده‌شده
+    var formData = 'notification_id=' + encodeURIComponent(notifId) + '&csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/mark-notification-read'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
+
+    // بروزرسانی ظاهری آیتم
+    var item = document.getElementById('notif-item-' + notifId);
+    if (item) {
+        item.style.background = 'transparent';
+        item.style.borderRightColor = 'transparent';
+        var dot = item.querySelector('span[style*="border-radius:50%"]');
+        if (dot) dot.style.display = 'none';
+        var titleDiv = item.querySelector('div > div:first-child');
+        if (titleDiv) titleDiv.style.fontWeight = '400';
+    }
+
+    // بستن پاپ‌آپ
     document.getElementById('user-bell-popup').style.display = 'none';
 
-    // حذف نقطه قرمز زنگوله
+    // بروزرسانی بج
+    var badge = document.getElementById('bell-badge');
+    if (badge) {
+        var currentCount = parseInt(badge.textContent.replace(/[^0-9]/g, '')) || 0;
+        if (currentCount <= 1) {
+            badge.style.display = 'none';
+        } else {
+            badge.textContent = (currentCount - 1).toLocaleString('fa-IR');
+        }
+    }
+
+    // ناوبری به بخش مربوطه
+    if (targetSection && targetSection.trim() !== '') {
+        switchSection(targetSection);
+    }
+}
+
+function markAllNotificationsRead(btnElement) {
+    if (btnElement) { btnElement.disabled = true; btnElement.textContent = '⏳'; }
+    var formData = 'csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/mark-all-notifications-read'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            // علامت‌گذاری بصری همه آیتم‌ها
+            var items = document.querySelectorAll('.notif-list-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.background = 'transparent';
+                items[i].style.borderRightColor = 'transparent';
+            }
+            // پاک کردن بج
+            var badge = document.getElementById('bell-badge');
+            if (badge) badge.style.display = 'none';
+            // مخفی کردن دکمه
+            if (btnElement) btnElement.style.display = 'none';
+        }
+    };
+    xhr.send(formData);
+}
+
+function openAnnouncement(el) {
+    document.getElementById('user-bell-popup').style.display = 'none';
     var badge = document.getElementById('bell-badge');
     if (badge) badge.style.display = 'none';
 
-    // ارسال درخواست علامت‌گذاری خوانده‌شده به سرور
     var xhr = new XMLHttpRequest();
     xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/mark-announcement-read'), true);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');

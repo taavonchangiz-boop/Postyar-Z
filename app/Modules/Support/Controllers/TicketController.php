@@ -196,8 +196,15 @@ class TicketController extends BaseController
         // ذخیره اولین پیام ادمین در فیلد message
         $full_message = "[پیام مدیر سیستم ({$admin_name}) در تاریخ " . TextFormat::now_jalali() . "]:\n" . $message;
 
-        $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, priority, assigned_to, attachment, created_by_admin) VALUES (?, ?, ?, ?, 'replied', ?, ?, ?, 1)");
-        $stmt->execute([$target_user_id, $subject, $category, $full_message, $priority, Auth::tenantId(), $attachment]);
+        $db = Bootstrap::getDB();
+        try {
+            $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, priority, assigned_to, attachment, created_by_admin) VALUES (?, ?, ?, ?, 'replied', ?, ?, ?, 1)");
+            $stmt->execute([$target_user_id, $subject, $category, $full_message, $priority, Auth::tenantId(), $attachment]);
+        } catch (\PDOException $e) {
+            // اگر ستون‌های جدید هنوز اضافه نشده‌اند، بدون آن‌ها ذخیره کنیم
+            $stmt = $db->prepare("INSERT INTO tickets (user_id, subject, category, message, status, assigned_to, attachment) VALUES (?, ?, ?, ?, 'replied', ?, ?)");
+            $stmt->execute([$target_user_id, $subject, $category, $full_message, Auth::tenantId(), $attachment]);
+        }
 
         $this->setFlashMessage('پیام شما با موفقیت به کاربر «' . htmlspecialchars($target_user['name']) . '» ارسال شد. ✔');
         $this->redirect('/hnnh');

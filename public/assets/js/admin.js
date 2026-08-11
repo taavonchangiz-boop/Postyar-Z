@@ -162,12 +162,30 @@ function openAdminTicketModal(t) {
             bubble.style.background = "#1e293b";
             bubble.style.border = "1px solid #334155";
             bubble.style.color = "#e2e8f0";
-            bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام کاربر (' + (t.user_name || "کاربر") + '):</div>' + text.replace(/\n/g, "<br>");
+            var adminMatch = text.match(/^\[پیام مدیر سیستم \(([^)]+)\) در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            if (adminMatch) {
+                bubble.innerHTML = '<div style="font-size:0.8rem; color:#fbbf24; font-weight:900; margin-bottom:0.4rem;">👑 پیام مدیر سیستم (' + adminMatch[1] + '):</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + adminMatch[2] + '</div>' + adminMatch[3].replace(/\n/g, "<br>");
+            } else {
+                bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام کاربر (' + (t.user_name || "کاربر") + '):</div>' + text.replace(/\n/g, "<br>");
+            }
         } else {
             bubble.style.background = "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)";
             bubble.style.border = "1px solid #6366f1";
             bubble.style.color = "#ffffff";
-            bubble.innerHTML = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div>' + text.replace(/\n/g, "<br>");
+            var supportMatch = text.match(/^\[پاسخ پشتیبان در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            var userReplyMatch = text.match(/^\[پاسخ کاربر در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            var headerHtml = '';
+            var bodyText = text;
+            if (supportMatch) {
+                headerHtml = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ پشتیبانی:</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + supportMatch[1] + '</div>';
+                bodyText = supportMatch[2];
+            } else if (userReplyMatch) {
+                headerHtml = '<div style="font-size:0.8rem; color:#818cf8; font-weight:900; margin-bottom:0.4rem;">👤 پاسخ کاربر:</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + userReplyMatch[1] + '</div>';
+                bodyText = userReplyMatch[2];
+            } else {
+                headerHtml = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ پشتیبانی:</div>';
+            }
+            bubble.innerHTML = headerHtml + bodyText.replace(/\n/g, "<br>");
         }
         bodyDiv.appendChild(bubble);
     }

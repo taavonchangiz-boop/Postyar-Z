@@ -1113,6 +1113,40 @@
             <!-- ۸. بخش تیکت‌های پشتیبانی — سیستم حرفه‌ای -->
             <!-- ========================================== -->
             <div id="section-tickets" class="tab-content">
+                <!-- مدیریت دسته‌بندی‌ها و پشتیبان‌ها -->
+                <?php if (!$is_support): ?>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+                    <div class="card">
+                        <h2 style="font-size:1rem; margin-bottom:1rem;">🏷️ مدیریت دسته‌بندی تیکت‌ها</h2>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;">دسته‌بندی‌ها در فرم ثبت تیکت کاربران نمایش داده می‌شوند. می‌توانید هر دسته را به یک پشتیبان اختصاص دهید.</p>
+                        <div id="cat-editor-area"></div>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+                            <button type="button" class="btn btn-sm" style="background:rgba(99,102,241,0.2); color:#a5b4fc; border:1px solid rgba(99,102,241,0.3);" onclick="addCategoryRow()">➕ افزودن دسته‌بندی</button>
+                            <button type="button" class="btn btn-sm" style="background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.3);" onclick="saveCategories()">💾 ذخیره تغییرات</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2 style="font-size:1rem; margin-bottom:1rem;">🎧 لیست کاربران پشتیبان</h2>
+                        <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;">کاربران با نقش «پشتیبان» فقط به بخش تیکت‌ها دسترسی دارند.</p>
+                        <?php if (empty($support_agents)): ?>
+                            <p style="color:#94a3b8; font-size:0.85rem; text-align:center; padding:1rem;">هیچ پشتیبانی ثبت نشده است. از بخش «مدیریت کاربران» با نقش «پشتیبان» بسازید.</p>
+                        <?php else: ?>
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <?php foreach ($support_agents as $agent): ?>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; border:1px solid #334155; border-radius:10px; padding:0.75rem 1rem;">
+                                        <div>
+                                            <strong style="color:white; font-size:0.9rem;"><?php echo htmlspecialchars($agent['name']); ?></strong>
+                                            <div style="color:#94a3b8; font-size:0.75rem;"><?php echo htmlspecialchars($agent['email']); ?></div>
+                                        </div>
+                                        <span style="background:rgba(99,102,241,0.2); color:#a5b4fc; padding:0.25rem 0.75rem; border-radius:8px; font-size:0.75rem; font-weight:700;">🎧 پشتیبان</span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- کارت آمار تیکت‌ها -->
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
                     <div style="background:linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.8) 100%); border:1px solid rgba(99,102,241,0.3); border-radius:16px; padding:1.25rem; text-align:center;">
@@ -1414,6 +1448,96 @@
         </div>
     </div>
 
+
+    <!-- مدیریت دسته‌بندی تیکت‌ها -->
+    <?php if (!$is_support): ?>
+    <script>
+    var __ticketCategories = <?php echo json_encode($ticket_categories ?? [], JSON_UNESCAPED_UNICODE); ?>;
+    var __supportAgents = <?php echo json_encode($support_agents ?? [], JSON_UNESCAPED_UNICODE); ?>;
+    var __adminCsrf = '<?php echo \WHCM\Core\Csrf::getToken(); ?>';
+
+    function renderCategoryRows() {
+        var area = document.getElementById('cat-editor-area');
+        if (!area) return;
+        area.innerHTML = '';
+        var rows = area.querySelectorAll('.cat-edit-row');
+        // If no rows exist yet, create from saved data
+        if (rows.length === 0 && __ticketCategories.length > 0) {
+            for (var i = 0; i < __ticketCategories.length; i++) {
+                createCatRow(__ticketCategories[i].slug, __ticketCategories[i].title, __ticketCategories[i].icon, __ticketCategories[i].assigned_agent_id || '');
+            }
+        }
+    }
+
+    function createCatRow(slug, title, icon, agentId) {
+        var area = document.getElementById('cat-editor-area');
+        var row = document.createElement('div');
+        row.className = 'cat-edit-row';
+        row.style.cssText = 'display:grid; grid-template-columns:1fr 2fr auto auto 40px; gap:0.5rem; align-items:center; margin-bottom:0.5rem;';
+
+        var agentOptions = '<option value="">بدون تخصیص</option>';
+        for (var a = 0; a < __supportAgents.length; a++) {
+            var sel = (__supportAgents[a].id == agentId) ? ' selected' : '';
+            agentOptions += '<option value="' + __supportAgents[a].id + '"' + sel + '>' + __supportAgents[a].name + '</option>';
+        }
+
+        row.innerHTML =
+            '<input type="text" placeholder="slug" value="' + (slug || '') + '" style="width:100%;background:#0f172a;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:0.5rem;font-size:0.8rem;direction:ltr;" class="cat-slug">' +
+            '<input type="text" placeholder="عنوان" value="' + (title || '') + '" style="width:100%;background:#0f172a;color:white;border:1px solid #334155;border-radius:8px;padding:0.5rem;" class="cat-title">' +
+            '<input type="text" placeholder="ایموجی" value="' + (icon || '🌐') + '" style="width:50px;text-align:center;background:#0f172a;color:white;border:1px solid #334155;border-radius:8px;padding:0.5rem;font-size:1.1rem;" class="cat-icon">' +
+            '<select style="background:#0f172a;color:white;border:1px solid #334155;border-radius:8px;padding:0.5rem;font-size:0.8rem;" class="cat-agent">' + agentOptions + '</select>' +
+            '<button type="button" onclick="this.closest(\'.cat-edit-row\').remove()" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:0.5rem 0.6rem;cursor:pointer;font-size:0.9rem;">✖</button>';
+        area.appendChild(row);
+    }
+
+    function addCategoryRow() {
+        createCatRow('', '', '🌐', '');
+    }
+
+    function saveCategories() {
+        var rows = document.querySelectorAll('.cat-edit-row');
+        var cats = [];
+        for (var i = 0; i < rows.length; i++) {
+            var slug = rows[i].querySelector('.cat-slug').value.trim();
+            var title = rows[i].querySelector('.cat-title').value.trim();
+            var icon = rows[i].querySelector('.cat-icon').value.trim() || '🌐';
+            var agent = rows[i].querySelector('.cat-agent').value;
+            if (slug && title) {
+                cats.push({slug: slug, title: title, icon: icon, assigned_agent: agent});
+            }
+        }
+        var formData = 'csrf_token=' + encodeURIComponent(__adminCsrf) + '&categories=' + encodeURIComponent(JSON.stringify(cats));
+        var xhr = new XMLHttpRequest();
+        var baseUrl = window.location.pathname;
+        xhr.open('POST', baseUrl + '?route=' + encodeURIComponent('/hnnh/save-ticket-categories'), true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                try {
+                    var res = JSON.parse(xhr.responseText);
+                    if (res.success) {
+                        alert(res.message);
+                        __ticketCategories = cats;
+                    } else {
+                        alert(res.message || 'خطا در ذخیره‌سازی');
+                    }
+                } catch(e) {
+                    alert('خطای سیستمی');
+                }
+            }
+        };
+        xhr.send(formData);
+    }
+
+    // مقداردهی اولیه
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderCategoryRows);
+    } else {
+        renderCategoryRows();
+    }
+    </script>
+    <?php endif; ?>
 
     <!-- پشتیبان: فقط بخش تیکت -->
     <?php if ($is_support): ?>

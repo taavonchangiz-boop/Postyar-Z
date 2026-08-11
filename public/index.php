@@ -22,6 +22,11 @@ try {
     // راه‌اندازی و بوت‌استرپ سامانه
     Bootstrap::run();
 
+    // فشرده‌سازی خروجی — بهبود سرعت بارگذاری صفحات
+    if (extension_loaded('zlib') && !ini_get('zlib.output_compression')) {
+        ob_start('ob_gzhandler');
+    }
+
     // قدم ۱ — بارگذاری اسکلت ماژولار (بدون تغییر رفتار — ایمن حتی اگر فایل روی هاست نباشد)
     $__moduleLoader = __DIR__ . '/../app/Modules/ModuleLoader.php';
     if (file_exists($__moduleLoader)) {
@@ -39,6 +44,7 @@ try {
 
     Router::get('/dashboard', 'MainController@dashboard');
     Router::post('/dashboard/add-post', 'MainController@handleCreatePost');
+    Router::post('/dashboard/cancel-post', 'MainController@handleCancelPost');
     Router::post('/dashboard/add-channel', 'MainController@handleAddChannel');
     Router::post('/dashboard/edit-channel', 'MainController@handleEditChannel');
     Router::post('/dashboard/delete-channel', 'MainController@handleDeleteChannel');
@@ -132,6 +138,12 @@ try {
     Router::post('/api/push/subscribe', 'MainController@handlePushSubscribe');
     Router::post('/api/push/unsubscribe', 'MainController@handlePushUnsubscribe');
     Router::get('/api/push/status', 'MainController@getPushStatus');
+
+    // پردازش صف پست‌ها (AJAX — فراخوانی از داشبورد)
+    Router::post('/api/process-post-queue', 'MainController@processPostQueue');
+
+    // مدیریت دسته‌بندی تیکت‌ها (AJAX)
+    Router::post('/hnnh/save-ticket-categories', 'MainController@handleSaveTicketCategories');
 
     // پردازش درخواست جاری
     Router::dispatch();

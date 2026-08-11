@@ -428,6 +428,55 @@
                     </form>
                 </div>
 
+                <!-- صف انتظار و پست‌های زمان‌بندی‌شده -->
+                <?php 
+                $queued_posts = array_filter($posts, function($p) { return $p['status'] === 'scheduled' || $p['status'] === 'queued' || $p['status'] === 'draft'; });
+                ?>
+                <?php if (!empty($queued_posts)): ?>
+                <div class="card" style="border-color: #f59e0b; background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%);">
+                    <h2>⏳ صف انتظار و پست‌های زمان‌بندی‌شده <span style="font-size:0.8rem; color:var(--text-muted);">(<?php echo \WHCM\Domain\TextFormat::fa_digits(count($queued_posts)); ?> پست)</span></h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">پست‌هایی که هنوز ارسال نشده‌اند. می‌توانید آنها را لغو کنید:</p>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>عنوان پست</th>
+                                    <th>وضعیت</th>
+                                    <th>زمان ارسال / زمان‌بندی</th>
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($queued_posts as $qp): ?>
+                                <tr id="queue-row-<?php echo $qp['id']; ?>">
+                                    <td data-label="عنوان پست"><strong><?php echo htmlspecialchars($qp['title']); ?></strong></td>
+                                    <td data-label="وضعیت">
+                                        <?php if ($qp['status'] === 'queued'): ?>
+                                            <span class="badge badge-pending">در صف ارسال ⏳</span>
+                                        <?php elseif ($qp['status'] === 'scheduled'): ?>
+                                            <span class="badge badge-scheduled">زمان‌بندی‌شده 📅</span>
+                                        <?php else: ?>
+                                            <span class="badge" style="background:rgba(255,255,255,0.05);">پیش‌نویس 📝</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="زمان">
+                                        <?php if ($qp['scheduled_at']): ?>
+                                            <span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($qp['scheduled_at']); ?></span>
+                                        <?php else: ?>
+                                            <span style="font-size:0.8rem; color:var(--text-muted);">آنی — در صف انتظار</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td data-label="عملیات">
+                                        <button type="button" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.78rem; background:rgba(239, 68, 68, 0.15); border:1px solid #ef4444; color:#ef4444;" onclick="cancelPost(<?php echo $qp['id']; ?>, this)">🗑 لغو و حذف</button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- تاریخچه پست‌های ارسالی -->
                 <div class="card">
                     <h2>📋 تاریخچه پست‌های ارسالی و زمان‌بندی شده شما</h2>
@@ -828,9 +877,15 @@
                             <div class="form-group">
                                 <label for="t-cat">دسته‌بندی تیکت:</label>
                                 <select name="category" id="t-cat" required>
-                                    <option value="technical">فنی و ربات‌ها 🤖</option>
-                                    <option value="billing">مالی و فیش واریزی 💳</option>
-                                    <option value="general">سوال عمومی 🌐</option>
+                                    <?php if (!empty($ticket_categories)): ?>
+                                        <?php foreach ($ticket_categories as $cat): ?>
+                                            <option value="<?php echo htmlspecialchars($cat['slug']); ?>"><?php echo htmlspecialchars($cat['title']); ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="technical">فنی و ربات‌ها 🤖</option>
+                                        <option value="billing">مالی و فیش واریزی 💳</option>
+                                        <option value="general">سوال عمومی 🌐</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                         </div>
@@ -872,7 +927,7 @@
                                             </td>
                                             <td data-label="دسته‌بندی">
                                                 <span class="badge" style="background:rgba(255,255,255,0.05);">
-                                                    <?php echo $t['category'] === 'technical' ? 'فنی' : ($t['category'] === 'billing' ? 'مالی' : 'عمومی'); ?>
+                                                    <?php echo isset($category_map[$t['category']]) ? $category_map[$t['category']] : htmlspecialchars($t['category']); ?>
                                                 </span>
                                             </td>
                                             <td data-label="وضعیت پاسخ">
@@ -1367,6 +1422,7 @@
 
     <script>
         window.postyarBaseUrl = '<?php echo $baseUrl; ?>';
+        window.__csrfToken = '<?php echo \WHCM\Core\Csrf::getToken(); ?>';
     </script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/utils.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/dashboard.js"></script>

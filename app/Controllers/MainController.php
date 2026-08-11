@@ -261,6 +261,14 @@ class MainController extends BaseController {
         $stmt->execute([$tenant_id]);
         $tickets = $stmt->fetchAll();
 
+        // دریافت دسته‌بندی‌های تیکت از دیتابیس (مرتب‌شده)
+        $ticket_categories = $db->query("SELECT * FROM ticket_categories ORDER BY sort_order ASC, id ASC")->fetchAll();
+        // ساخت مپ slug => title برای نمایش سریع در لیست
+        $category_map = [];
+        foreach ($ticket_categories as $cat) {
+            $category_map[$cat['slug']] = $cat['title'];
+        }
+
         // دریافت اعلان همگانی درون‌برنامه‌ای ادمین ارشد پُست‌یار
         $stmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = 'global_announcement' LIMIT 1");
         $stmt->execute();
@@ -282,6 +290,8 @@ class MainController extends BaseController {
             'offers' => $offers,
             'inbox' => $inbox,
             'tickets' => $tickets,
+            'ticket_categories' => $ticket_categories,
+            'category_map' => $category_map,
             'announcement' => $announcement,
             'plans' => $plans,
             'csrf_field' => Csrf::field(),
@@ -503,6 +513,7 @@ class MainController extends BaseController {
      */
     public function handlePaymentSubmit() {
         $this->checkAuth();
+        set_time_limit(60);
 
         if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
             $this->setFlashMessage('خطای امنیتی! توکن نامعتبر است.');
@@ -539,8 +550,14 @@ class MainController extends BaseController {
         $receipt_photo = $this->uploadAndConvertToWebp('receipt_photo', 'receipts');
 
         // ثبت پرداخت با وضعیت در انتظار تایید به همراه عکس رسید
-        $stmt = $db->prepare("INSERT INTO payments (user_id, plan_id, amount, reference_num, payment_method, status, receipt_photo) VALUES (?, ?, ?, ?, 'card_to_card', 'pending', ?)");
-        $stmt->execute([$tenant_id, $plan_id, $amount, $ref_num, $receipt_photo]);
+        try {
+            $stmt = $db->prepare("INSERT INTO payments (user_id, plan_id, amount, reference_num, payment_method, status, receipt_photo) VALUES (?, ?, ?, ?, 'card_to_card', 'pending', ?)");
+            $stmt->execute([$tenant_id, $plan_id, $amount, $ref_num, $receipt_photo]);
+        } catch (\PDOException $e) {
+            error_log('[Postyar] Payment insert failed for user #' . $tenant_id . ', plan #' . $plan_id . ': ' . $e->getMessage());
+            $this->setFlashMessage('خطا در ثبت رسید پرداخت. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.');
+            $this->redirect('/dashboard');
+        }
 
         $this->setFlashMessage('رسید پرداخت شما با موفقیت ثبت شد و در صف تایید مدیر قرار گرفت. پس از بررسی، اشتراک شما فعال خواهد شد.');
         $this->redirect('/dashboard');
@@ -570,7 +587,7 @@ class MainController extends BaseController {
         $current_page = max(1, (int)($_GET['page'] ?? 1));
         $offset = ($current_page - 1) * $per_page;
 
-        // ۱. لیست کاربران با JOIN بهینه (بدون N+1 subquery) + Pagination
+        // ۱. لیست کاربران با JOIN بهینه + Pagination
         $admin_id = Auth::tenantId() ?: 0;
         $stmt_users = $db->prepare("
             SELECT u.id, u.name, u.email, u.role, u.status, u.created_at,
@@ -586,8 +603,7 @@ class MainController extends BaseController {
             LEFT JOIN (SELECT tenant_id, COUNT(*) as cnt FROM posts GROUP BY tenant_id) pc ON pc.tenant_id = u.id
             LEFT JOIN (SELECT user_id, COUNT(*) as cnt FROM tickets GROUP BY user_id) tc ON tc.user_id = u.id
             LEFT JOIN (SELECT user_id, COALESCE(SUM(amount), 0) as total_spent FROM payments WHERE status = 'approved' GROUP BY user_id) ps ON ps.user_id = u.id
-            LEFT JOIN subscriptions s ON s.user_id = u.id AND s.status = 'active'
-                 AND s.id = (SELECT MAX(id) FROM subscriptions WHERE user_id = u.id AND status = 'active')
+            LEFT JOIN (SELECT user_id, plan_id, end_date FROM subscriptions WHERE status = 'active' GROUP BY user_id) s ON s.user_id = u.id
             LEFT JOIN plans p ON s.plan_id = p.id
             WHERE u.id != ?
             ORDER BY u.id DESC
@@ -671,6 +687,14 @@ class MainController extends BaseController {
         $total_channels = (int)$db->query("SELECT COUNT(*) FROM channels")->fetchColumn();
         $total_revenue = (float)$db->query("SELECT COALESCE(SUM(amount),0) FROM payments WHERE status = 'approved'")->fetchColumn();
 
+        // دریافت دسته‌بندی‌های تیکت و لیست پشتیبان‌ها
+        try {
+            $ticket_categories = $db->query("SELECT * FROM ticket_categories ORDER BY sort_order ASC, id ASC")->fetchAll();
+        } catch (\Throwable $e) { $ticket_categories = []; }
+        try {
+            $support_agents = $db->query("SELECT id, name, email FROM users WHERE role = 'support_agent' AND status = 'active' ORDER BY id ASC")->fetchAll();
+        } catch (\Throwable $e) { $support_agents = []; }
+
         $this->render('admin', [
             'title' => $is_support ? 'پنل پشتیبانی' : 'پنل مدیریت ارشد کل',
             'is_support' => $is_support,
@@ -681,6 +705,8 @@ class MainController extends BaseController {
             'plans' => $plans,
             'edit_plan' => $edit_plan,
             'tickets' => $tickets,
+            'ticket_categories' => $ticket_categories,
+            'support_agents' => $support_agents,
             'csrf_field' => Csrf::field(),
             'message' => $this->getFlashMessage(),
             'total_users' => $total_users,
@@ -1003,54 +1029,124 @@ class MainController extends BaseController {
         }
 
         if ($send_type === 'instant') {
-            // ارسال غیرمسدودکننده: ابتدا ریدایرکت کاربر، سپس ارسال در پس‌زمینه
-            // این از قطع اتصال مرورگر (Secure Connection Failed) هنگام تایم‌اوت API جلوگیری می‌کند
-            $db->prepare("UPDATE posts SET status = 'sending' WHERE id = ?")->execute([$post_id]);
+            // ذخیره وضعیت «در صف ارسال» و ریدایرکت فوری
+            // ارسال واقعی از طریق درخواست AJAX مجزا انجام می‌شود (پردازش صف)
+            $db->prepare("UPDATE posts SET status = 'queued' WHERE id = ?")->execute([$post_id]);
 
-            // تنظیم پیام و بستن سشن قبل از ریدایرکت
-            $this->setFlashMessage('پست شما در حال ارسال به کانال‌ها می‌باشد... ⚡');
-            session_write_close();
-
-            // ریدایرکت سریع — کاربر فوراً به داشبورد برمی‌گردد
-            header('Location: ' . Bootstrap::getRouteUrl('/dashboard'));
-            header('Content-Length: 0');
-            header('Connection: close');
-            flush();
-
-            // ادامه اجرا پس از ریدایرکت (غیرمسدودکننده)
-            if (function_exists('fastcgi_finish_request')) {
-                fastcgi_finish_request();
-            }
-            ignore_user_abort(true);
-            set_time_limit(120);
-
-            try {
-                $res = Sender::sendPostToChannels($tenant_id, $channel_ids, $title, $content, $media_url, $post_id);
-                
-                if ($res['success']) {
-                    $db->prepare("UPDATE posts SET status = 'sent' WHERE id = ?")->execute([$post_id]);
-                } else {
-                    $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
-                    $error_msgs = [];
-                    foreach ($res['channels'] ?? [] as $ch) {
-                        if (!$ch['success']) {
-                            $error_msgs[] = $ch['name'] . ': ' . ($ch['message'] ?? '');
-                        }
-                    }
-                    if (!empty($error_msgs)) {
-                        error_log('[Postyar] Send failed for post #' . $post_id . ': ' . implode(' | ', $error_msgs));
-                    }
-                }
-            } catch (\Throwable $e) {
-                $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
-                error_log('[Postyar] Exception sending post #' . $post_id . ': ' . $e->getMessage());
-            }
-            return;
+            $this->setFlashMessage('پست شما با موفقیت ثبت شد و در صف ارسال قرار گرفت. ارسال به کانال‌ها به‌زودی انجام خواهد شد. ⚡');
+            $this->redirect('/dashboard');
         } else {
             $this->setFlashMessage('پست شما با موفقیت برای تاریخ شمسی تعیین شده زمان‌بندی گردید. ⏰');
         }
 
         $this->redirect('/dashboard');
+    }
+
+    /**
+     * لغو/حذف پست زمان‌بندی‌شده یا در صف ارسال
+     */
+    public function handleCancelPost() {
+        $this->checkAuth();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'خطای امنیتی! توکن نامعتبر است.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $tenant_id = Auth::tenantId();
+        $post_id = (int)($_POST['post_id'] ?? 0);
+
+        if ($post_id <= 0) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'شناسه پست نامعتبر است.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $db = Bootstrap::getDB();
+
+        // بررسی وجود پست و تعلق آن به این مستأجر و وضعیت قابل لغو
+        $stmt = $db->prepare("SELECT id, status, title FROM posts WHERE id = ? AND tenant_id = ? AND status IN ('scheduled', 'queued', 'draft')");
+        $stmt->execute([$post_id, $tenant_id]);
+        $post = $stmt->fetch();
+
+        if (!$post) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['success' => false, 'message' => 'پست یافت نشد یا قبلاً ارسال شده و قابل لغو نیست.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $db->prepare("DELETE FROM posts WHERE id = ? AND tenant_id = ?")->execute([$post_id, $tenant_id]);
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => true, 'message' => 'پست «' . $post['title'] . '» با موفقیت لغو و حذف شد.'], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * پردازش صف پست‌های در انتظار ارسال (AJAX)
+     *
+     * این متد از طریق JavaScript در داشبورد فراخوانی می‌شود
+     * و در هر بار فقط یک پست را پردازش می‌کند تا از تایم‌اوت جلوگیری شود.
+     */
+    public function processPostQueue() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            $this->checkAuth();
+            $tenant_id = Auth::tenantId();
+
+            $db = Bootstrap::getDB();
+            set_time_limit(30);
+
+            // دریافت اولین پست در صف ارسال این مستأجر
+            $stmt = $db->prepare("SELECT id, title, content, media_url, target_channels, tenant_id FROM posts WHERE tenant_id = ? AND status = 'queued' ORDER BY id ASC LIMIT 1");
+            $stmt->execute([$tenant_id]);
+            $post = $stmt->fetch();
+
+            if (!$post) {
+                echo json_encode(['success' => true, 'message' => 'no_queued_posts'], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            $post_id = (int)$post['id'];
+            $channel_ids = json_decode($post['target_channels'], true) ?: [];
+
+            if (empty($channel_ids)) {
+                $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
+                echo json_encode(['success' => false, 'message' => 'کانال هدف یافت نشد'], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+
+            // تغییر وضعیت به sending
+            $db->prepare("UPDATE posts SET status = 'sending' WHERE id = ?")->execute([$post_id]);
+
+            $res = Sender::sendPostToChannels(
+                (int)$post['tenant_id'],
+                $channel_ids,
+                $post['title'],
+                $post['content'],
+                $post['media_url'] ?? '',
+                $post_id
+            );
+
+            if ($res['success']) {
+                $db->prepare("UPDATE posts SET status = 'sent' WHERE id = ?")->execute([$post_id]);
+                echo json_encode(['success' => true, 'post_id' => $post_id, 'message' => 'پست با موفقیت ارسال شد'], JSON_UNESCAPED_UNICODE);
+            } else {
+                $db->prepare("UPDATE posts SET status = 'failed' WHERE id = ?")->execute([$post_id]);
+                $errors = [];
+                foreach ($res['channels'] ?? [] as $ch) {
+                    if (!$ch['success']) {
+                        $errors[] = $ch['name'] . ': ' . ($ch['message'] ?? '');
+                    }
+                }
+                error_log('[Postyar] Queue send failed for post #' . $post_id . ': ' . implode(' | ', $errors));
+                echo json_encode(['success' => false, 'post_id' => $post_id, 'message' => 'خطا در ارسال به برخی کانال‌ها', 'errors' => $errors], JSON_UNESCAPED_UNICODE);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Postyar] Queue process error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'خطای سیستمی'], JSON_UNESCAPED_UNICODE);
+        }
     }
 
     public function handleEditPlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->edit(); }
@@ -2437,5 +2533,46 @@ class MainController extends BaseController {
         }
 
         return $results;
+    }
+
+    /**
+     * ذخیره دسته‌بندی‌های تیکت (AJAX از پنل مدیریت)
+     */
+    public function handleSaveTicketCategories() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkSuperAdmin();
+        if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+            echo json_encode(['success' => false, 'message' => 'خطای امنیتی'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        $db = Bootstrap::getDB();
+        $categories_raw = json_decode($_POST['categories'] ?? '[]', true);
+        if (!is_array($categories_raw)) {
+            echo json_encode(['success' => false, 'message' => 'داده نامعتبر'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        try {
+            // حذف همه دسته‌بندی‌های فعلی
+            $db->exec("DELETE FROM ticket_categories");
+
+            $sort_order = 1;
+            foreach ($categories_raw as $cat) {
+                $slug = trim($cat['slug'] ?? '');
+                $title = trim($cat['title'] ?? '');
+                $icon = trim($cat['icon'] ?? '🌐');
+                $assigned_agent = (int)($cat['assigned_agent'] ?? 0);
+                if (empty($slug) || empty($title)) continue;
+
+                $stmt = $db->prepare("INSERT INTO ticket_categories (slug, title, icon, assigned_agent_id, sort_order) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$slug, $title, $icon, $assigned_agent ?: null, $sort_order++]);
+            }
+
+            echo json_encode(['success' => true, 'message' => 'دسته‌بندی‌ها با موفقیت ذخیره شدند ✔'], JSON_UNESCAPED_UNICODE);
+        } catch (\Throwable $e) {
+            error_log('[Postyar] Save ticket categories error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'خطا در ذخیره‌سازی'], JSON_UNESCAPED_UNICODE);
+        }
     }
 }

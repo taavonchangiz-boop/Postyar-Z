@@ -255,12 +255,32 @@ function openTicketModal(t) {
             bubble.style.background = "#1e293b";
             bubble.style.border = "1px solid #334155";
             bubble.style.color = "#e2e8f0";
-            bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام شما:</div>' + text.replace(/\n/g, "<br>");
+            // بررسی پیام ادمین (تیکت ایجاد شده توسط ادمین)
+            var adminMatch = text.match(/^\[پیام مدیر سیستم \(([^)]+)\) در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            if (adminMatch) {
+                bubble.innerHTML = '<div style="font-size:0.8rem; color:#fbbf24; font-weight:900; margin-bottom:0.4rem;">👑 پیام مدیر سیستم (' + adminMatch[1] + '):</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + adminMatch[2] + '</div>' + adminMatch[3].replace(/\n/g, "<br>");
+            } else {
+                bubble.innerHTML = '<div style="font-size:0.75rem; color:#818cf8; font-weight:bold; margin-bottom:0.4rem;">👤 پیام شما:</div>' + text.replace(/\n/g, "<br>");
+            }
         } else {
             bubble.style.background = "linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%)";
             bubble.style.border = "1px solid #6366f1";
             bubble.style.color = "#ffffff";
-            bubble.innerHTML = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div>' + text.replace(/\n/g, "<br>");
+            // استخراج تاریخ و نوع پاسخ از براکت
+            var supportMatch = text.match(/^\[پاسخ پشتیبان در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            var userReplyMatch = text.match(/^\[پاسخ کاربر در تاریخ ([^\]]+)\]:\s*([\s\S]*)$/m);
+            var headerHtml = '';
+            var bodyText = text;
+            if (supportMatch) {
+                headerHtml = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + supportMatch[1] + '</div>';
+                bodyText = supportMatch[2];
+            } else if (userReplyMatch) {
+                headerHtml = '<div style="font-size:0.8rem; color:#818cf8; font-weight:900; margin-bottom:0.4rem;">👤 پاسخ شما:</div><div style="font-size:0.7rem; color:#64748b; margin-bottom:0.5rem;">📅 ' + userReplyMatch[1] + '</div>';
+                bodyText = userReplyMatch[2];
+            } else {
+                headerHtml = '<div style="font-size:0.8rem; color:#34d399; font-weight:900; margin-bottom:0.4rem;">👑 پاسخ کارشناس پشتیبانی پُست‌یار:</div>';
+            }
+            bubble.innerHTML = headerHtml + bodyText.replace(/\n/g, "<br>");
         }
         bodyDiv.appendChild(bubble);
     }
@@ -296,6 +316,95 @@ function openBluBank() {
     
     // اگر هیچ scheme‌ای کار نکرد
     alert('اپلیکیشن بلو بانک روی دستگاه شما نصب نیست. لطفاً ابتدا آن را از بازار یا گوگل‌پلی نصب کنید.');
+}
+
+/* ===== لغو/حذف پست زمان‌بندی‌شده ===== */
+function cancelPost(postId, btnElement) {
+    if (!confirm('آیا مطمئن هستید که می‌خواهید این پست را لغو و حذف کنید؟')) {
+        return;
+    }
+
+    // غیرفعال کردن دکمه حین پردازش
+    btnElement.disabled = true;
+    btnElement.textContent = '⏳ در حال لغو...';
+
+    var formData = 'post_id=' + encodeURIComponent(postId) + '&csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/cancel-post'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if (res.success) {
+                    var row = document.getElementById('queue-row-' + postId);
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s, transform 0.3s';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        setTimeout(function() {
+                            row.remove();
+                            // بررسی خالی بودن کارت صف
+                            var tbody = row.parentNode;
+                            if (tbody && tbody.rows.length === 0) {
+                                var card = tbody.closest('.card');
+                                if (card) {
+                                    card.style.transition = 'opacity 0.3s';
+                                    card.style.opacity = '0';
+                                    setTimeout(function() { card.remove(); }, 300);
+                                }
+                            }
+                        }, 300);
+                    }
+                } else {
+                    alert(res.message || 'خطا در لغو پست');
+                    btnElement.disabled = false;
+                    btnElement.textContent = '🗑 لغو و حذف';
+                }
+            } catch (e) {
+                alert('خطای سیستمی در ارتباط با سرور');
+                btnElement.disabled = false;
+                btnElement.textContent = '🗑 لغو و حذف';
+            }
+        }
+    };
+    xhr.send(formData);
+}
+
+/* ===== پردازش صف پست‌ها (AJAX) ===== */
+var postQueuePollTimer = null;
+var postQueuePollCount = 0;
+function processPostQueue() {
+    if (postQueuePollCount >= 5) return; // حداکثر ۵ بار تلاش
+    postQueuePollCount++;
+    var formData = 'csrf_token=' + encodeURIComponent(window.__csrfToken || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/api/process-post-queue'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if (res.success && res.message === 'no_queued_posts') {
+                    postQueuePollCount = 5; // توقف
+                } else {
+                    // اگر پست دیگری در صف بود، ۲ ثانیه بعد دوباره تلاش
+                    postQueuePollTimer = setTimeout(processPostQueue, 2000);
+                }
+            } catch (e) {
+                // خطا — متوقف
+            }
+        }
+    };
+    xhr.send(formData);
+}
+// اجرای خودکار پردازش صف هنگام لود داشبورد
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(processPostQueue, 1500);
+} else {
+    window.addEventListener('DOMContentLoaded', function() { setTimeout(processPostQueue, 1500); });
 }
 
 /* ===== تبدیل خودکار اعداد به فارسی ===== */

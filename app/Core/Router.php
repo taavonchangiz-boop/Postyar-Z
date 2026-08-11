@@ -118,8 +118,13 @@ class Router {
                 );
             } catch (\Throwable $ignored) {}
 
-            // نمایش جزئیات خطا — موقتاً برای دیباگ (بعد از رفع حذف شود)
-            self::abort(500, $errorDetail);
+            // نمایش خطای مناسب بر اساس محیط
+            $env = \WHCM\Core\Bootstrap::getConfig('app.env', 'production');
+            if ($env === 'development') {
+                self::abort(500, $errorDetail);
+            } else {
+                self::abort(500, 'خطای داخلی سرور. لطفاً چند لحظه بعد دوباره تلاش کنید. شناسه خطا: ' . substr(md5($errorDetail), 0, 8));
+            }
         }
     }
 

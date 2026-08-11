@@ -840,6 +840,35 @@ class Bootstrap {
                     }
                 } catch (\Exception $e) {}
             },
+
+            'v10_ticket_categories_and_agents' => function($db) {
+                // ایجاد جدول دسته‌بندی تیکت‌ها
+                try {
+                    $db->exec("CREATE TABLE IF NOT EXISTS ticket_categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        slug VARCHAR(100) NOT NULL UNIQUE,
+                        title VARCHAR(150) NOT NULL,
+                        icon VARCHAR(50) DEFAULT '🌐',
+                        assigned_agent_id INTEGER NULL,
+                        sort_order INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )");
+                } catch (\Exception $e) {}
+
+                // ستون‌های جدید tickets: priority و created_by_admin
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN priority VARCHAR(20) DEFAULT 'normal'"); } catch (\Exception $e) {}
+                try { $db->exec("ALTER TABLE tickets ADD COLUMN created_by_admin INTEGER DEFAULT 0"); } catch (\Exception $e) {}
+
+                // دسته‌بندی‌های پیش‌فرض اگر خالی بود
+                try {
+                    $count = $db->query("SELECT COUNT(*) FROM ticket_categories")->fetchColumn();
+                    if ($count == 0) {
+                        $db->exec("INSERT INTO ticket_categories (slug, title, icon, sort_order) VALUES ('technical', 'فنی و ربات‌ها 🤖', '🤖', 1)");
+                        $db->exec("INSERT INTO ticket_categories (slug, title, icon, sort_order) VALUES ('billing', 'مالی و فیش واریزی 💳', '💳', 2)");
+                        $db->exec("INSERT INTO ticket_categories (slug, title, icon, sort_order) VALUES ('general', 'سوال عمومی 🌐', '🌐', 3)");
+                    }
+                } catch (\Exception $e) {}
+            },
         ];
 
         foreach ($migrations as $version => $callback) {

@@ -10,11 +10,11 @@ android {
         applicationId "ir.asovin.postyar"
         minSdk 21
         targetSdk 35
-        versionCode 3
-        versionName "1.2.0"
+        versionCode 4
+        versionName "1.3.0"
 
-        buildConfigField "String", "APP_URL", "\"https://belitia.ir\""
-        buildConfigField "String", "DASHBOARD_URL", "\"https://belitia.ir/dashboard\""
+        buildConfigField "String", "APP_URL", "\"https://asovin.ir\""
+        buildConfigField "String", "DASHBOARD_URL", "\"https://asovin.ir/dashboard\""
     }
 
     signingConfigs {

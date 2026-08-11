@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.Postyar" parent="@android:style/Theme.DeviceDefault.NoActionBar">
-        <item name="android:statusBarColor">@color/bg_dark</item>
-        <item name="android:navigationBarColor">@color/bg_dark</item>
-        <item name="android:windowBackground">@color/bg_dark</item>
-        <item name="android:windowSplashScreenBackground">@color/bg_splash</item>
-        <!-- Animation: فید نرم هنگام لود صفحه -->
+    <style name="Theme.Postyar" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">#6366f1</item>
+        <item name="colorPrimaryDark">#4f46e5</item>
+        <item name="colorAccent">#f97316</item>
+        <item name="android:statusBarColor">#0a0a0a</item>
+        <item name="android:navigationBarColor">#0a0a0a</item>
+        <item name="android:windowBackground">#0a0a0a</item>
         <item name="android:windowActivityTransitions">true</item>
     </style>
-
 </resources>

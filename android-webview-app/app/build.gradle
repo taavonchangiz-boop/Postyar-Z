@@ -3,28 +3,26 @@ plugins {
 }
 
 android {
-    namespace 'ir.belitia.postyar'
+    namespace 'ir.asovin.postyar'
     compileSdk 35
 
     defaultConfig {
-        applicationId "ir.belitia.postyar"
-        minSdk 24
+        applicationId "ir.asovin.postyar"
+        minSdk 21
         targetSdk 35
-        versionCode 2
-        versionName "1.1.0"
+        versionCode 3
+        versionName "1.2.0"
 
-        // آدرس سامانه — بدون / انتهایی
         buildConfigField "String", "APP_URL", "\"https://belitia.ir\""
-        // آدرس ورود مستقیم داشبورد (ردایرکت خودکار به لاگین)
         buildConfigField "String", "DASHBOARD_URL", "\"https://belitia.ir/dashboard\""
     }
 
     signingConfigs {
         release {
             storeFile file('../postyar-release.jks')
-            storePassword 'postyar2024'
+            storePassword 'Postyar2024Secure'
             keyAlias 'postyar'
-            keyPassword 'postyar2024'
+            keyPassword 'Postyar2024Secure'
         }
     }
 
@@ -50,12 +48,9 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    // نام خروجی APK
     applicationVariants.all { variant ->
         variant.outputs.all {
-            def flavor = variant.flavorName
-            def buildType = variant.buildType.name
-            outputFileName = "postyar-v${variant.versionName}-${buildType}.apk"
+            outputFileName = "postyar-v${variant.versionName}-${variant.buildType.name}.apk"
         }
     }
 }

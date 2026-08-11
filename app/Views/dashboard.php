@@ -44,20 +44,18 @@
         <div style="display:flex; align-items:center; gap:0.75rem;">
             <!-- دکمه زنگوله اعلان‌های کاربر -->
             <div style="position:relative;">
-                <button type="button" onclick="var p=document.getElementById('user-bell-popup'); p.style.display=(p.style.display==='flex'?'none':'flex');" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
+                <button type="button" id="bell-btn" onclick="var p=document.getElementById('user-bell-popup'); p.style.display=(p.style.display==='flex'?'none':'flex');" style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.4); border-radius:50%; width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; color:white; font-size:1.15rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.4);">
                     <span>🔔</span>
-                    <?php if (!empty($announcement)): ?>
-                        <span style="position:absolute; top:0.125rem; right:0.125rem; width:0.625rem; height:0.625rem; background:#ef4444; border-radius:50%; border:2px solid #0f172a;"></span>
-                    <?php endif; ?>
+                    <span id="bell-badge" style="<?php echo !empty($announcement_unread) ? '' : 'display:none;'; ?>position:absolute; top:0.125rem; right:0.125rem; width:0.625rem; height:0.625rem; background:#ef4444; border-radius:50%; border:2px solid #0f172a;"></span>
                 </button>
-                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:3.75rem; width:18.125rem; background:#0f172a; border:1px solid #4f46e5; border-radius:1rem; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column; padding:1rem;">
+                <div id="user-bell-popup" style="display:none; position:absolute; left:0; top:3.75rem; width:20rem; max-height:25rem; overflow-y:auto; background:#0f172a; border:1px solid #4f46e5; border-radius:1rem; box-shadow:0 15px 35px rgba(0,0,0,0.85); z-index:9999; flex-direction:column; padding:1rem;">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #334155; padding-bottom:0.6rem; margin-bottom:0.75rem;">
                         <strong style="color:white; font-size:0.9rem;">🔔 صندوق اعلان‌ها و اخبار</strong>
                     </div>
                     <?php if (!empty($announcement)): ?>
-                        <div style="padding:0.65rem; background:#1e293b; border-radius:0.625rem; border-left:0.1875rem solid #6366f1; margin-bottom:0.5rem; cursor:pointer;" onclick="switchSection('dashboard'); document.getElementById('user-bell-popup').style.display='none';">
-                            <div style="font-weight:900; color:#38bdf8; font-size:0.85rem; margin-bottom:0.3rem;">📢 <?php echo htmlspecialchars($announcement['title']); ?></div>
-                            <div style="font-size:0.78rem; color:#cbd5e1;"><?php echo htmlspecialchars(mb_substr($announcement['message'], 0, 70)) . '...'; ?></div>
+                        <div id="bell-ann-item" style="padding:0.75rem; background:#1e293b; border-radius:0.625rem; border-left:0.1875rem solid #6366f1; margin-bottom:0.5rem; cursor:pointer;" onclick="openAnnouncement(this)">
+                            <div style="font-weight:900; color:#38bdf8; font-size:0.85rem; margin-bottom:0.4rem;">📢 <?php echo htmlspecialchars($announcement['title']); ?></div>
+                            <div id="bell-ann-preview" style="font-size:0.78rem; color:#cbd5e1; line-height:1.6;"><?php echo nl2br(htmlspecialchars($announcement['message'])); ?></div>
                         </div>
                     <?php else: ?>
                         <div style="color:#94a3b8; font-size:0.8rem; text-align:center; padding:1rem 0;">اعلان جدیدی وجود ندارد ✔</div>
@@ -272,7 +270,7 @@
                         <div class="card-stat-info">
                             <span class="title">تاریخ اتمام اشتراک</span>
                             <span class="value" style="font-size: 1.05rem; font-weight: bold;">
-                                <?php echo $quota['end_date'] ? \WHCM\Domain\TextFormat::mysql_to_jalali($quota['end_date']) : 'بدون انقضا'; ?>
+                                <?php echo $quota['end_date'] ? \WHCM\Domain\TextFormat::mysql_to_jalali($quota['end_date'], false) : 'بدون انقضا'; ?>
                             </span>
                         </div>
                     </div>
@@ -461,7 +459,7 @@
                                     </td>
                                     <td data-label="زمان">
                                         <?php if ($qp['scheduled_at']): ?>
-                                            <span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($qp['scheduled_at']); ?></span>
+                                            <span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($qp['scheduled_at'], false); ?></span>
                                         <?php else: ?>
                                             <span style="font-size:0.8rem; color:var(--text-muted);">آنی — در صف انتظار</span>
                                         <?php endif; ?>
@@ -513,7 +511,7 @@
                                                     <span class="badge badge-failed">خطا در ارسال ❌</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td data-label="زمان ثبت / ارسال"><span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($p['created_at']); ?></span></td>
+                                            <td data-label="زمان ثبت / ارسال"><span style="font-size:0.8rem;"><?php echo $p['scheduled_at'] ? \WHCM\Domain\TextFormat::mysql_to_jalali($p['scheduled_at'], false) : \WHCM\Domain\TextFormat::mysql_to_jalali($p['created_at']); ?></span></td>
                                             <td data-label="بازدید کل (کلیک)"><strong style="color:var(--primary);"><?php echo \WHCM\Domain\TextFormat::fa_digits($p['clicks']); ?> بازدید</strong></td>
                                             <td data-label="کلیک‌های یکتا"><strong><?php echo \WHCM\Domain\TextFormat::fa_digits($p['unique_clicks']); ?> کلیک</strong></td>
                                         </tr>
@@ -1057,8 +1055,16 @@
             <div id="section-inbox" class="tab-content">
                 <div class="card">
                     <h2>📩 صندوق پیام‌های دریافتی</h2>
+                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem; line-height: 1.7;">
+                        این بخش پیام‌هایی را نشان می‌دهد که کاربران از طریق ربات تلگرام یا بله به کانال‌های شما ارسال کرده‌اند.
+                        همچنین پاسخ‌های تیکت‌های پشتیبانی که توسط مدیریت پُست‌یار داده شده نیز اینجا نمایش داده می‌شود.
+                    </p>
                     <?php if (empty($inbox)): ?>
-                        <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">پیامی یافت نشد.</p>
+                        <div style="text-align: center; padding: 2rem 0;">
+                            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📭</div>
+                            <p style="color: var(--text-muted);">هنوز پیامی دریافت نشده است.</p>
+                            <p style="color: #64748b; font-size: 0.78rem; margin-top: 0.5rem;">پیام‌ها زمانی نمایش داده می‌شوند که کاربرانی در کانال‌های متصل شما به ربات پیام ارسال کنند.</p>
+                        </div>
                     <?php else: ?>
                         <div class="table-responsive">
                             <table>
@@ -1369,6 +1375,7 @@
                                 $is_featured = !empty($p['is_featured']);
                                 $gen_discount = (int)($p['general_discount'] ?? 0);
                                 $early_discount = (int)($p['early_renewal_discount'] ?? 0);
+                                $is_current_plan = !empty($quota['plan_id']) && (int)$quota['plan_id'] === (int)$p['id'];
                                 
                                 // محاسبه قیمت بر اساس تخفیف‌های عمومی و تمدید
                                 $base_price = $p['price'];
@@ -1387,7 +1394,7 @@
                                     $final_price = $base_price * (1 - ($early_discount / 100));
                                 }
                             ?>
-                            <div class="plan-card <?php echo $is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : ''); ?>" id="plan-card-<?php echo $p['id']; ?>">
+                            <div class="plan-card <?php echo $is_current_plan ? 'current-plan-locked' : ($is_featured ? 'featured-plan' : ($p['price'] > 500000 ? 'recommended' : '')); ?>" id="plan-card-<?php echo $p['id']; ?>" <?php echo $is_current_plan ? 'data-current-plan="1"' : ''; ?>>
                                 <div>
                                     <div class="plan-card-img-wrapper">
                                         <img src="<?php echo \WHCM\Core\Bootstrap::getPlanImageUrl($p['image_url']); ?>" alt="<?php echo htmlspecialchars($p['title']); ?>" class="plan-card-img">
@@ -1441,7 +1448,13 @@
                                         <?php endif; ?>
                                     </ul>
                                 </div>
+                                <?php if ($is_current_plan): ?>
+                                <div style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none; text-align:center; color:white; cursor:default; display:flex; align-items:center; justify-content:center; gap:0.5rem;">
+                                    🔒 اشتراک فعلی شما
+                                </div>
+                                <?php else: ?>
                                 <button class="btn btn-success plan-select-btn" id="plan-btn-<?php echo $p['id']; ?>" onclick="selectPlan(<?php echo $p['id']; ?>, '<?php echo htmlspecialchars(addslashes($p['title'])); ?>', <?php echo $final_price; ?>, '<?php echo htmlspecialchars(addslashes($p['payment_url'] ?? '')); ?>')" style="width: 100%; border-radius: 12px; padding: 0.65rem; font-size: 0.85rem; font-weight: 850; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">انتخاب این پلن</button>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -1604,5 +1617,14 @@
     </script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/push.js"></script>
     <script src="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/js/pwa-install.js"></script>
+    <script>
+    /* اجرای قلب تپنده پس از بارگذاری */
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(postyarHeartbeat, 2000);
+    } else {
+        window.addEventListener('DOMContentLoaded', function() { setTimeout(postyarHeartbeat, 2000); });
+    }
+    setInterval(postyarHeartbeat, 30000);
+    </script>
 </body>
 </html>

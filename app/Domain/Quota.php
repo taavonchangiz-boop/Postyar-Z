@@ -70,6 +70,7 @@ class Quota {
 
         return [
             'has_active_sub' => true,
+            'plan_id' => (int)$sub['plan_id'],
             'plan_title' => $sub['plan_title'],
             'end_date' => $sub['end_date'],
             'max_channels' => $max_channels,

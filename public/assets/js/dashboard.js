@@ -206,6 +206,11 @@ window.addEventListener('click', function(event) {
 
 /* ===== انتخاب پلن و نمایش فرم پرداخت ===== */
 function selectPlan(id, title, price, paymentUrl) {
+    // جلوگیری از انتخاب پلن فعلی
+    var card = document.getElementById('plan-card-' + id);
+    if (card && card.getAttribute('data-current-plan') === '1') {
+        return;
+    }
     // حذف حالت انتخاب از تمام کارت‌های پلن و بازگردانی دکمه‌ها
     var allCards = document.querySelectorAll('.plan-card');
     var allBtns = document.querySelectorAll('.plan-select-btn');
@@ -507,6 +512,32 @@ function toggleResponder(channelId, enabled) {
         }
     };
     xhr.send(formData);
+}
+
+/* ===== قلب تپنده: Polling پیام‌ها + پست زمان‌بندی ===== */
+function postyarHeartbeat() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/api/heartbeat'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send('csrf_token=' + encodeURIComponent(window.__csrfToken || ''));
+}
+
+/* ===== باز کردن اعلان زنگوله + علامت‌گذاری خوانده‌شده ===== */
+function openAnnouncement(el) {
+    // نمایش کامل پیام اعلان (در صورت نیاز بسط دادن)
+    document.getElementById('user-bell-popup').style.display = 'none';
+
+    // حذف نقطه قرمز زنگوله
+    var badge = document.getElementById('bell-badge');
+    if (badge) badge.style.display = 'none';
+
+    // ارسال درخواست علامت‌گذاری خوانده‌شده به سرور
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', window.postyarBaseUrl + '/index.php?route=' + encodeURIComponent('/dashboard/mark-announcement-read'), true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send('csrf_token=' + encodeURIComponent(window.__csrfToken || ''));
 }
 
 /* ===== تبدیل خودکار اعداد به فارسی ===== */

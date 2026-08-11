@@ -273,7 +273,7 @@
                                             <td data-label="اشتراک فعلی و اعتبار">
                                                 <?php if (!empty($u['plan_title'])): ?>
                                                     <span class="badge badge-success" style="font-size:0.75rem; margin-bottom:0.25rem; display:inline-block;">💎 <?php echo htmlspecialchars($u['plan_title']); ?></span><br>
-                                                    <span style="font-size:0.7rem; color: #a5b4fc;">اعتبار تا: <?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($u['end_date']); ?></span>
+                                                    <span style="font-size:0.7rem; color: #a5b4fc;">اعتبار تا: <?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($u['end_date'], false); ?></span>
                                                 <?php else: ?>
                                                     <span class="badge" style="background:rgba(255,255,255,0.08); color:#cbd5e1; font-size:0.75rem;">رایگان / بدون اشتراک</span>
                                                 <?php endif; ?>
@@ -477,8 +477,8 @@
                                         </td>
                                         <td data-label="کسب و کار"><strong><?php echo htmlspecialchars($s['business_name'] ?: 'ثبت نشده'); ?></strong></td>
                                         <td data-label="پلن اشتراک"><span class="badge badge-approved"><?php echo htmlspecialchars($s['plan_title']); ?></span></td>
-                                        <td data-label="شروع اشتراک"><span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($s['start_date']); ?></span></td>
-                                        <td data-label="اتمام اشتراک"><span style="font-size:0.8rem; color:#fca5a5;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($s['end_date']); ?></span></td>
+                                        <td data-label="شروع اشتراک"><span style="font-size:0.8rem;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($s['start_date'], false); ?></span></td>
+                                        <td data-label="اتمام اشتراک"><span style="font-size:0.8rem; color:#fca5a5;"><?php echo \WHCM\Domain\TextFormat::mysql_to_jalali($s['end_date'], false); ?></span></td>
                                         <td data-label="وضعیت نهایی">
                                             <span style="color: <?php echo $s['status'] === 'active' ? '#10b981' : '#ef4444'; ?>; font-weight:bold;">
                                                 <?php echo $s['status'] === 'active' ? 'فعال' : 'منقضی'; ?>

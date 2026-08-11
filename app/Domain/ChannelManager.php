@@ -122,6 +122,15 @@ class ChannelManager {
             ]);
 
             $db->commit();
+
+            // تلاش برای ثبت وبهوک (در صورت عدم موفقیت، Polling فعال خواهد بود)
+            $stmt_new = $db->prepare("SELECT * FROM channels WHERE tenant_id = ? AND platform = ? AND channel_id = ? ORDER BY id DESC LIMIT 1");
+            $stmt_new->execute([$tenant_id, $platform, $channel_id]);
+            $new_channel = $stmt_new->fetch();
+            if ($new_channel) {
+                self::tryActivateWebhook($new_channel);
+            }
+
             return ['success' => true, 'message' => 'کانال جدید با موفقیت به پنل شما متصل شد.' . $warning_msg];
 
         } catch (\Exception $e) {
@@ -223,15 +232,6 @@ class ChannelManager {
         $token = trim($channel['token']);
         $base_url = ($platform === 'bale') ? 'https://tapi.bale.ai/bot' : 'https://api.telegram.org/bot';
 
-        // بررسی اتصال HTTPS به عنوان الزام پلتفرم‌ها برای وبهوک
-        $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || ($_SERVER['SERVER_PORT'] ?? 80) == 443;
-        if (!$is_https) {
-            return [
-                'success' => false,
-                'message' => 'ثبت وبهوک نیازمند استفاده از پروتکل امن HTTPS بر روی دامنه شماست.'
-            ];
-        }
-
         // آدرس روت دریافت وبهوک در سیستم SaaS
         $app_url = Bootstrap::getConfig('app.url', 'http://localhost');
         $webhook_url = rtrim($app_url, '/') . '/api/webhook?channel_id=' . (int)$channel['id'];
@@ -256,6 +256,22 @@ class ChannelManager {
         }
 
         return ['success' => false, 'message' => $data['description'] ?? 'خطا در ثبت وبهوک ربات.'];
+    }
+
+    /**
+     * تلاش برای فعال‌سازی وبهوک روی یک کانال. در صورت عدم موفقیت، حالت Polling فعال می‌ماند.
+     */
+    public static function tryActivateWebhook(array $channel): void {
+        try {
+            $result = self::setWebhook($channel);
+            if ($result['success']) {
+                error_log('[Postyar] Webhook set for channel #' . (int)$channel['id'] . ' (' . $channel['platform'] . ')');
+            } else {
+                error_log('[Postyar] Webhook failed for channel #' . (int)$channel['id'] . ': ' . $result['message']);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Postyar] Webhook error for channel #' . (int)$channel['id'] . ': ' . $e->getMessage());
+        }
     }
 
     /**

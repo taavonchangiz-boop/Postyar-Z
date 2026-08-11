@@ -57,6 +57,7 @@ try {
     Router::post('/dashboard/add-auto-reply', 'MainController@handleAddAutoReply');
     Router::post('/dashboard/delete-auto-reply', 'MainController@handleDeleteAutoReply');
     Router::post('/dashboard/toggle-responder', 'MainController@handleToggleResponder');
+Router::post('/dashboard/mark-announcement-read', 'MainController@handleMarkAnnouncementRead');
     Router::post('/dashboard/add-ticket', 'MainController@handleCreateTicket');
     Router::post('/reset-password', 'MainController@handleResetPassword');
     Router::get('/reset-password', 'MainController@showResetPasswordForm');
@@ -142,6 +143,9 @@ try {
 
     // پردازش صف پست‌ها (AJAX — فراخوانی از داشبورد)
     Router::post('/api/process-post-queue', 'MainController@processPostQueue');
+
+    // قلب تپنده — Polling پیام‌ها + پست‌های زمان‌بندی (فراخوانی دوره‌ای از داشبورد)
+    Router::post('/api/heartbeat', 'MainController@handleHeartbeat');
 
     // مدیریت دسته‌بندی تیکت‌ها (AJAX)
     Router::post('/hnnh/save-ticket-categories', 'MainController@handleSaveTicketCategories');

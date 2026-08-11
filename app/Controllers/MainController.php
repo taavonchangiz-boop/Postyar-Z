@@ -17,6 +17,7 @@ use WHCM\Domain\VerificationCode;
 use WHCM\Domain\Referral;
 use WHCM\Domain\Wallet;
 use WHCM\Core\EmailTemplate;
+use WHCM\Domain\ScheduledPost;
 
 use WHCM\Core\WebPush;
 
@@ -286,6 +287,16 @@ class MainController extends BaseController {
         $announcement_json = $stmt->fetchColumn();
         $announcement = $announcement_json ? json_decode($announcement_json, true) : null;
 
+        // بررسی خوانده‌نشده بودن اعلان
+        $announcement_unread = false;
+        if ($announcement) {
+            $ann_id = $announcement['id'] ?? ($announcement['title'] ?? '');
+            $stmt_r = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = ? AND key_name = 'last_read_announcement_id' LIMIT 1");
+            $stmt_r->execute([$tenant_id]);
+            $last_read = $stmt_r->fetchColumn();
+            $announcement_unread = ($last_read !== $ann_id);
+        }
+
         // دریافت لیست پلن‌ها جهت خرید/ارتقا
         $plans = $db->query("SELECT * FROM plans ORDER BY price ASC")->fetchAll();
 
@@ -305,6 +316,7 @@ class MainController extends BaseController {
             'ticket_categories' => $ticket_categories,
             'category_map' => $category_map,
             'announcement' => $announcement,
+            'announcement_unread' => $announcement_unread,
             'plans' => $plans,
             'csrf_field' => Csrf::field(),
             'message' => $this->getFlashMessage()
@@ -631,7 +643,7 @@ class MainController extends BaseController {
         foreach ($users as &$u) {
             $u['created_at_fa'] = TextFormat::mysql_to_jalali($u['created_at']);
             $u['end_date_fa'] = (!empty($u['end_date']) && $u['end_date'] !== '2099-12-31 23:59:59')
-                ? TextFormat::mysql_to_jalali($u['end_date'])
+                ? TextFormat::mysql_to_jalali($u['end_date'], false)
                 : 'بدون انقضا / دائمی';
         }
         unset($u);
@@ -957,6 +969,38 @@ class MainController extends BaseController {
     }
 
     /**
+     * علامت‌گذاری اعلان همگانی به عنوان خوانده‌شده (AJAX)
+     */
+    public function handleMarkAnnouncementRead() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkAuth();
+        $tenant_id = Auth::tenantId();
+        $db = Bootstrap::getDB();
+
+        // ذخیره شناسه اعلان خوانده‌شده در تنظیمات کاربر
+        $stmt = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = ? AND key_name = 'last_read_announcement_id' LIMIT 1");
+        $stmt->execute([$tenant_id]);
+
+        // دریافت شناسه اعلان فعلی
+        $stmt_a = $db->prepare("SELECT key_value FROM settings WHERE tenant_id = 0 AND key_name = 'global_announcement' LIMIT 1");
+        $stmt_a->execute();
+        $ann_json = $stmt_a->fetchColumn();
+        $ann_id = '';
+        if ($ann_json) {
+            $ann = json_decode($ann_json, true);
+            $ann_id = $ann['id'] ?? ($ann['title'] ?? '');
+        }
+
+        if ($stmt->fetch()) {
+            $db->prepare("UPDATE settings SET key_value = ? WHERE tenant_id = ? AND key_name = 'last_read_announcement_id'")->execute([$ann_id, $tenant_id]);
+        } else {
+            $db->prepare("INSERT INTO settings (tenant_id, key_name, key_value) VALUES (?, 'last_read_announcement_id', ?)")->execute([$tenant_id, $ann_id]);
+        }
+
+        echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
      * تغییر وضعیت روشن/خاموش پاسخگوی خودکار کانال (AJAX)
      */
     public function handleToggleResponder() {
@@ -1188,6 +1232,45 @@ class MainController extends BaseController {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'خطای سیستمی'], JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    /**
+     * قلب تپنده — Polling پیام‌ها + پردازش پست‌های زمان‌بندی‌شده
+     * این متد از داشبورد کاربر فراخوانی می‌شود تا پیام‌های دریافتی بررسی و پست‌های زمان‌بندی ارسال شوند.
+     */
+    public function handleHeartbeat() {
+        header('Content-Type: application/json; charset=utf-8');
+        $this->checkAuth();
+
+        $polled = 0;
+        $sent = 0;
+
+        try {
+            set_time_limit(20);
+
+            // ۱. Polling پیام‌ها برای کانال‌های بدون وبهوک
+            $tenant_id = Auth::tenantId();
+            $db = Bootstrap::getDB();
+            $stmt = $db->prepare("SELECT * FROM channels WHERE tenant_id = ? AND webhook_active = 0");
+            $stmt->execute([$tenant_id]);
+            $channels = $stmt->fetchAll();
+
+            foreach ($channels as $ch) {
+                $quota = Quota::getTenantQuota((int)$ch['tenant_id']);
+                if ($quota['has_active_sub'] && !empty($quota['features']['auto_responder'])) {
+                    Inbox::pollChannelUpdates($ch);
+                    $polled++;
+                }
+            }
+
+            // ۲. پردازش پست‌های زمان‌بندی‌شده
+            $sent = ScheduledPost::processAll();
+
+        } catch (\Throwable $e) {
+            error_log('[Postyar Heartbeat] Error: ' . $e->getMessage());
+        }
+
+        echo json_encode(['success' => true, 'polled' => $polled, 'sent' => $sent], JSON_UNESCAPED_UNICODE);
     }
 
     public function handleEditPlan(){ return (new \WHCM\Modules\Billing\Controllers\PlanController)->edit(); }

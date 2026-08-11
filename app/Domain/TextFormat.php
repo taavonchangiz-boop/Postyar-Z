@@ -119,12 +119,33 @@ class TextFormat {
 
     /**
      * تبدیل رشته تاریخ میلادی MySQL به رشته تاریخ شمسی فارسی (سازگار و زیبا)
+     *
+     * @param string $mysql_date تاریخ ذخیره‌شده در دیتابیس
+     * @param bool $from_utc اگر true باشد، ورودی به عنوان UTC تفسیر و به Asia/Tehran تبدیل می‌شود
+     *                       (برای فیلدهایی مثل created_at که توسط CURRENT_TIMESTAMP که UTC هستند)
+     *                       اگر false باشد، ورودی مستقیماً بدون تبدیل منطقه زمانی استفاده می‌شود
+     *                       (برای فیلدهایی مثل scheduled_at, end_date که توسط PHP با منطقه Asia/Tehran ذخیره شده‌اند)
      */
-    public static function mysql_to_jalali(string $mysql_date): string {
+    public static function mysql_to_jalali(string $mysql_date, bool $from_utc = true): string {
         if (empty($mysql_date)) {
             return '';
         }
-        $timestamp = strtotime($mysql_date);
+
+        if ($from_utc) {
+            // فیلدهای تولیدشده توسط CURRENT_TIMESTAMP در SQLite همیشه UTC هستند.
+            // ابتدا به عنوان UTC پارس کرده، سپس به Asia/Tehran تبدیل می‌کنیم.
+            try {
+                $dt = new \DateTime($mysql_date, new \DateTimeZone('UTC'));
+                $dt->setTimezone(new \DateTimeZone('Asia/Tehran'));
+                $timestamp = $dt->getTimestamp();
+            } catch (\Throwable $e) {
+                $timestamp = strtotime($mysql_date);
+            }
+        } else {
+            // فیلدهای تنظیم‌شده توسط PHP (date()) که از قبل در Asia/Tehran هستند
+            $timestamp = strtotime($mysql_date);
+        }
+
         if (!$timestamp) {
             return $mysql_date;
         }

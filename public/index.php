@@ -19,8 +19,40 @@ use WHCM\Core\Bootstrap;
 use WHCM\Core\Router;
 
 try {
-    // راه‌اندازی و بوت‌استرپ سامانه
+    // راه‌اندازی و بوت‌استرپ سامانه (قبل از هر چیز — API و سایت هر دو نیاز دارند)
     Bootstrap::run();
+
+    // ═══════════════════════════════════════════════════════════════════
+    // لایه API موبایل — فقط برای درخواست‌های /api/v1/
+    // این بخش کاملاً مستقل از سایت است و هیچ تاثیری روی آن ندارد
+    // ═══════════════════════════════════════════════════════════════════
+    $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    if (strpos($requestUri, '/api/v1/') === 0) {
+        require_once __DIR__ . '/../app/Api/MobileApiResponse.php';
+        require_once __DIR__ . '/../app/Api/MobileApiAuth.php';
+        require_once __DIR__ . '/../app/Api/MobileApiRouter.php';
+        require_once __DIR__ . '/../app/Api/MobileApiController.php';
+
+        // بارگذاری تمام کنترلرهای API
+        $apiControllerFiles = glob(__DIR__ . '/../app/Api/Controllers/*.php');
+        foreach ($apiControllerFiles as $apiCtrlFile) {
+            require_once $apiCtrlFile;
+        }
+
+        // ثبت مسیرهای API
+        require_once __DIR__ . '/../app/Api/Routes/api.php';
+
+        // اجرای API و خروج (بدون ورود به Router سایت)
+        \WHCM\Api\MobileApiRouter::dispatch(
+            $_SERVER['REQUEST_METHOD'],
+            $requestUri
+        );
+        exit;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ادامه وب‌سایت فعلی (بدون هیچ تغییر)
+    // ═══════════════════════════════════════════════════════════════════
 
     // فشرده‌سازی خروجی — بهبود سرعت بارگذاری صفحات
     if (extension_loaded('zlib') && !ini_get('zlib.output_compression')) {

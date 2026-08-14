@@ -10,7 +10,7 @@ $tf = \WHCM\Domain\TextFormat::class;
     </p>
 
     <!-- موجودی کیف پول -->
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
+    <div class="resp-grid-3" style="margin-bottom:1.5rem;">
         <div style="background:linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.05) 100%); border:1px solid rgba(16,185,129,0.4); border-radius:16px; padding:1.25rem; text-align:center;">
             <div style="font-size:0.8rem; color:#6ee7b7; margin-bottom:0.3rem;">💰 موجودی کیف پول</div>
             <div style="font-size:2rem; font-weight:900; color:#34d399;"><?php echo $tf::fa_num($balance); ?></div>

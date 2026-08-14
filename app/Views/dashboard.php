@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title><?php echo htmlspecialchars($title); ?> | پُست‌یار</title>
 
     <?php $baseUrl = rtrim(str_replace(['/assets', '/public/assets'], '', \WHCM\Core\Bootstrap::getAssetsUrl()), '/'); ?>
@@ -24,6 +24,7 @@
 
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/dashboard.css?v=13">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css?v=13">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/mobile.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css?v=13">
 </head>
 <body>
@@ -396,7 +397,7 @@
                         <!-- زمان‌بندی ارسال شمسی با تقویم تصویری فوق جذاب و مدرن -->
                         <div class="form-group hidden" id="schedule-datetime-group">
                             <label style="color:#a5b4fc; font-weight:bold; display:block; margin-bottom:0.75rem;">📅 انتخاب تاریخ و ساعت دقیق ارسال:</label>
-                            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:1rem;">
+                            <div class="resp-grid-2-1-1" style="margin-bottom:0.5rem;">
                                 <div>
                                     <label style="font-size:0.75rem; color:var(--text-muted);">انتخاب روز از تقویم:</label>
                                     <input type="text" name="sched_date" id="sched_date_input" data-jdp placeholder="کلیک کنید تا تقویم باز شود..." style="background-color: rgba(15,23,42,0.6); color: #34d399; font-weight: bold; border: 2px solid #34d399; border-radius:0.75rem; padding:0.85rem 1rem; cursor: pointer;" readonly>
@@ -596,7 +597,7 @@
                                     <input type="text" name="link_url_2" value="<?php echo htmlspecialchars($links[1]['url'] ?? ''); ?>" placeholder="https://example.com/t.me">
                                 </div>
                             </div>
-                            <div class="form-group" style="max-width: 50%;">
+                            <div class="form-group" style="width: 100%;">
                                 <label>دکمه ۳ - عنوان (آدرس آن خودکار به ردیاب کلیک تبدیل می‌شود):</label>
                                 <input type="text" name="link_name_3" value="<?php echo htmlspecialchars($links[2]['name'] ?? ''); ?>" placeholder="مثلاً: ورود به فروشگاه">
                                 <input type="hidden" name="link_url_3" value="">
@@ -1202,7 +1203,7 @@
                         
                         <!-- ۳ لینک سراسری -->
                         <h3 style="font-size: 0.95rem; margin-top: 1rem; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.4rem; color:#a5b4fc;">🔗 پیش‌فرض سراسری ۳ لینک پایین محتوا</h3>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+                        <div class="resp-grid-3" style="margin-bottom: 1.5rem;">
                             <div class="form-group" style="background: rgba(15,23,42,0.4); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
                                 <label style="color:#38bdf8;">🔗 لینک ۱ (پیش‌فرض):</label>
                                 <input type="text" name="link_1_name" value="<?php echo htmlspecialchars($link_1_n); ?>" style="margin-bottom: 0.5rem;">
@@ -1222,7 +1223,7 @@
 
                         <!-- ۳ دکمه تعاملی سراسری -->
                         <h3 style="font-size: 0.95rem; margin-top: 1rem; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.4rem; color:#a5b4fc;">🎛️ پیش‌فرض سراسری دکمه‌های شیشه‌ای تعاملی</h3>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+                        <div class="resp-grid-3" style="margin-bottom: 1.5rem;">
                             <div class="form-group" style="background: rgba(15,23,42,0.4); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
                                 <label style="color:#38bdf8;">🎛️ دکمه ۱ (خرید):</label>
                                 <input type="text" name="btn_1_text" value="<?php echo htmlspecialchars($btn_1_t); ?>">
@@ -1256,7 +1257,7 @@
 
                         <!-- تنظیمات ارسال و دریافت -->
                         <h3 style="font-size: 0.95rem; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.4rem; color:#a5b4fc;">✉️ تنظیمات ارسال و دریافت پیام</h3>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+                        <div class="resp-grid-3" style="margin-bottom: 1.5rem;">
                             <div class="form-group">
                                 <label>قالب متن ارسالی به کانال‌ها:</label>
                                 <select name="caption_format" style="border-radius:0.75rem;">
@@ -1516,7 +1517,7 @@
                         <h3 id="sel-title" style="color:#a5b4fc; margin-bottom:0.25rem;">...</h3>
                         <p style="font-size:1.1rem; color:#10b981; font-weight:900; margin-bottom:1rem;">مبلغ: <span id="sel-price">۰</span> <span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">تومان</span></p>
                         
-                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: center;">
+                        <div class="resp-grid-payment" style="margin-top: 1.5rem;">
                             <div>
                                 <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom:0.75rem;">برای کپی سریع شماره کارت، روی کارت بانکی زیر ضربه بزنید:</p>
                                 <div class="credit-card" onclick="copyCardNumber()">
@@ -1542,7 +1543,7 @@
                             </div>
                         </div>
 
-                        <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/submit-payment'); ?>" method="POST" enctype="multipart/form-data" style="max-width: 480px; margin-top: 1.5rem;">
+                        <form action="<?php echo \WHCM\Core\Bootstrap::getRouteUrl('/dashboard/submit-payment'); ?>" method="POST" enctype="multipart/form-data" class="resp-grid-1-1" style="max-width: 480px; margin-top: 1.5rem;">
                             <?php echo $csrf_field; ?>
                             <input type="hidden" name="plan_id" id="form-plan-id">
                             <input type="hidden" name="amount" id="form-amount">

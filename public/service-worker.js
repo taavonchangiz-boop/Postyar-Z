@@ -11,10 +11,12 @@ function assetUrl(path) {
 
 // فایل‌های استاتیک برای پیش‌کش (نسبی)
 const STATIC_ASSETS = [
+<<<<<<< Updated upstream
     'css/admin.css',
     'css/dashboard.css',
     'css/home.css',
     'css/components.css',
+    'css/mobile.css',
     'js/admin.js',
     'js/dashboard.js',
     'js/home.js',

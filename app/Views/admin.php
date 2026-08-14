@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title><?php echo htmlspecialchars($title); ?> | پنل مدیریت ارشد پُست‌یار</title>
 
     <?php $baseUrl = rtrim(str_replace(['/assets', '/public/assets'], '', \WHCM\Core\Bootstrap::getAssetsUrl()), '/'); ?>
@@ -23,6 +23,7 @@
     <meta name="format-detection" content="telephone=no">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/admin.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/components.css">
+    <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/mobile.css">
     <link rel="stylesheet" href="<?php echo \WHCM\Core\Bootstrap::getAssetsUrl(); ?>/css/jalalidatepicker.min.css">
 </head>
 <body>
@@ -308,7 +309,7 @@
                 </div>
 
                 <!-- بخش عملیات پیشرفته دستی کاربران -->
-                <div class="grid-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                <div class="grid-content resp-grid-2" style="margin-top: 2rem;">
                     
                     <!-- کارت افزودن دستی کاربر -->
                     <div class="card">
@@ -1037,7 +1038,7 @@
 
                         <!-- تنظیمات پویای سایر روش‌های تماس با پشتیبانی -->
                         <h3 style="font-size: 0.95rem; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.4rem; color:#a5b4fc;">📞 تنظیمات راه‌های ارتباطی فرعی پشتیبانی کاربران</h3>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom: 1.5rem;">
+                        <div class="resp-grid-3" style="margin-bottom: 1.5rem;">
                             <div class="form-group">
                                 <label for="sup-tele">آدرس پشتیبانی تلگرام:</label>
                                 <input type="url" name="support_telegram_url" id="sup-tele" value="<?php echo htmlspecialchars($saved_tele); ?>" placeholder="https://t.me/...">
@@ -1314,7 +1315,7 @@
             </div>
 
             <!-- مشخصات کسب و کار -->
-            <div style="background:rgba(15, 23, 42, 0.7); border:1px solid #1e293b; border-radius:12px; padding:1rem; margin-bottom:1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="resp-grid-2" style="background:rgba(15, 23, 42, 0.7); border:1px solid #1e293b; border-radius:12px; padding:1rem; margin-bottom:1.25rem; gap:1rem;">
                 <div>
                     <span style="font-size:0.75rem; color:#94a3b8;">نام کسب و کار:</span>
                     <div id="up-biz-name" style="color:white; font-weight:bold; font-size:0.9rem;"></div>
@@ -1327,7 +1328,7 @@
 
             <!-- ۴ کارت آمار ۳۶۰ درجه عملکرد کاربر -->
             <h4 style="color:#a5b4fc; font-size:0.9rem; margin-bottom:0.75rem;">📊 آمار جامع و تفکیکی عملکرد ۳۶۰ درجه</h4>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.5rem;">
+            <div class="resp-grid-2" style="gap:0.75rem; margin-bottom:1.5rem;">
                 <div style="background:#1e293b; border-radius:10px; padding:0.85rem; text-align:center; border:1px solid #334155;">
                     <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:0.25rem;">📻 کانال‌های متصل شده</div>
                     <strong id="up-channels" style="color:#60a5fa; font-size:1.2rem;">۰</strong>
@@ -1421,7 +1422,7 @@
                     <label>موضوع پیام <span style="color:#ef4444;">*</span></label>
                     <input type="text" name="subject" required placeholder="موضوع پیام یا تیکت..." style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="resp-grid-2" style="gap:1rem;">
                     <div class="form-group">
                         <label>دسته‌بندی</label>
                         <select name="category" style="width:100%; padding:0.75rem; border-radius:10px; background:#1e293b; color:white; border:1px solid #334155;">

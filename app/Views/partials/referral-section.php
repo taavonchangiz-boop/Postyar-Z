@@ -17,7 +17,7 @@ $tf = \WHCM\Domain\TextFormat::class;
     <?php endif; ?>
 
     <!-- کد و لینک معرف -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+    <div class="resp-grid-2" style="margin-bottom:1.5rem;">
         <div class="form-group">
             <label style="color:#94a3b8; font-size:0.85rem;">کد معرف شما:</label>
             <div style="display:flex; align-items:center; gap:0.5rem;">

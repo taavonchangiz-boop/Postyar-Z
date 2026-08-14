@@ -1,0 +1,13 @@
+*.iml
+.gradle/
+local.properties
+build/
+buildOutputCleanup/
+reports/
+.kotlin/
+8.13/
+8.5/
+vcs-1/
+APK/build/
+APK/app/build/
+APK/.gradle/

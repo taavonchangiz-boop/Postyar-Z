@@ -3,6 +3,14 @@ package com.postyar.app.domain
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
+enum class AuthState {
+    IDLE, LOADING, AUTHENTICATED, UNAUTHENTICATED
+}
+
+enum class AuthProvider {
+    EMAIL, SMS
+}
+
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String? = null,

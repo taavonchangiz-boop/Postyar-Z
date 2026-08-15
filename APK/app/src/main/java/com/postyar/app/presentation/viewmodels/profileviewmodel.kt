@@ -1,16 +1,18 @@
 package com.postyar.app.presentation.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.postyar.app.data.remote.*
+import com.postyar.app.data.remote.ApiService
 import com.postyar.app.domain.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel(application: Application) : AndroidViewModel(application) {
-    private val tokenManager = TokenManager.getInstance(application)
-    private val api = RetrofitClient.getInstance(tokenManager).create(ApiService::class.java)
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val api: ApiService
+) : ViewModel() {
     val user = MutableStateFlow<User?>(null)
     val subscription = MutableStateFlow<Subscription?>(null)
     val isLoading = MutableStateFlow(false)
@@ -29,6 +31,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             } catch (_: Exception) {} finally { isLoading.value = false }
         }
     }
+
     fun updateProfile(name: String, email: String, birthday: String?) {
         viewModelScope.launch {
             isLoading.value = true; error.value = ""
@@ -40,6 +43,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             finally { isLoading.value = false }
         }
     }
+
     fun changePassword(current: String, newPass: String, confirm: String) {
         viewModelScope.launch {
             isLoading.value = true; error.value = ""
@@ -51,5 +55,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             finally { isLoading.value = false }
         }
     }
+
     fun clearMessages() { error.value = ""; actionSuccess.value = "" }
 }

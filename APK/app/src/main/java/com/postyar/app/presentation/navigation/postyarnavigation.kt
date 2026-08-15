@@ -70,8 +70,7 @@ fun PostyarNavigation(
             RegisterScreen(
                 viewModel = authViewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onRegisterSuccess = { navController.navigate("dashboard") { popUpTo("register") { inclusive = true } } },
-                onNavigateForgot = { navController.navigate("forgotPassword") }
+                onRegisterSuccess = { navController.navigate("dashboard") { popUpTo("register") { inclusive = true } } }
             )
         }
 

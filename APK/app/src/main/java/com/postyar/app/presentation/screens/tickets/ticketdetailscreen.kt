@@ -6,6 +6,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,10 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.postyar.app.domain.TicketReply
 import com.postyar.app.presentation.components.PostyarTopBar
+import com.postyar.app.presentation.components.StatusBadge
 import com.postyar.app.presentation.viewmodels.TicketViewModel
-import com.postyar.app.data.remote.dto.TicketDto
-import com.postyar.app.data.remote.dto.TicketReplyDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,11 +51,10 @@ fun TicketDetailScreen(
                 ticket?.let {
                     Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = it.subject ?: "", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = it.subject, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                it.category?.let { cat -> Badge { Text(cat) } }
-                                com.postyar.app.presentation.components.StatusBadge(status = it.status ?: "open")
+                                StatusBadge(status = it.status)
                             }
                         }
                     }
@@ -68,7 +70,7 @@ fun TicketDetailScreen(
                     }
                 }
 
-                Divider()
+                HorizontalDivider()
                 Row(
                     modifier = Modifier.padding(12.dp).fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -99,14 +101,14 @@ fun TicketDetailScreen(
 }
 
 @Composable
-private fun ReplyCard(reply: TicketReplyDto) {
+private fun ReplyCard(reply: TicketReply) {
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = reply.senderName ?: "", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Text(text = reply.sender_name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = reply.message ?: "", style = MaterialTheme.typography.bodyMedium)
+            Text(text = reply.message, style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = reply.createdAt ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text(text = reply.created_at ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
         }
     }
 }

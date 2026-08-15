@@ -1,10 +1,10 @@
 package com.postyar.app.presentation.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.postyar.app.data.remote.*
+import com.postyar.app.data.remote.ApiService
 import com.postyar.app.domain.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
@@ -12,10 +12,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import javax.inject.Inject
 
-class BillingViewModel(application: Application) : AndroidViewModel(application) {
-    private val tokenManager = TokenManager.getInstance(application)
-    private val api = RetrofitClient.getInstance(tokenManager).create(ApiService::class.java)
+@HiltViewModel
+class BillingViewModel @Inject constructor(
+    private val api: ApiService
+) : ViewModel() {
     val plans = MutableStateFlow<List<Plan>>(emptyList())
     val payments = MutableStateFlow<List<Payment>>(emptyList())
     val couponValidation = MutableStateFlow<CouponValidation?>(null)

@@ -112,9 +112,15 @@ interface ApiService {
     @GET("tickets/{id}")
     suspend fun getTicketDetail(@Path("id") id: Int): ApiResponse<TicketDetail>
 
+    @POST("tickets/{id}/close")
+    suspend fun closeTicket(@Path("id") id: Int): ApiResponse<Any?>
+
     @Multipart
     @POST("tickets/{id}/reply")
-    suspend fun replyTicket(@Path("id") id: Int, @PartMap params: Map<String, @JvmSuppressWildcards RequestBody>, @Part attachment: MultipartBody.Part? = null): ApiResponse<Any?>
+    suspend fun replyTicket(@Path("id") id: Int, @PartMap params: Map<String, @JvmSuppressWildcards okhttp3.RequestBody>, @Part attachment: MultipartBody.Part? = null): ApiResponse<Any?>
+
+    @GET("tickets/categories")
+    suspend fun getTicketCategories(): ApiResponse<List<TicketCategory>>
 
     // Settings
     @GET("settings")

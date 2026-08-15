@@ -14,30 +14,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.postyar.app.presentation.components.*
-import com.postyar.app.presentation.navigation.PostyarNavigationItem
 import com.postyar.app.presentation.viewmodels.BootstrapViewModel
 import com.postyar.app.presentation.viewmodels.SyncViewModel
-import com.postyar.app.data.remote.dto.PostDto
-import com.postyar.app.data.remote.dto.UserDto
+import com.postyar.app.domain.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigate: (String) -> Unit,
-    bootstrapViewModel: BootstrapViewModel = hiltViewModel(),
-    syncViewModel: SyncViewModel = hiltViewModel()
+    bootstrapViewModel: BootstrapViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    syncViewModel: SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
-    val bootstrapState by bootstrapViewModel.bootstrapData.collectAsStateWithLifecycle()
-    val syncState by syncViewModel.syncData.collectAsStateWithLifecycle()
+    val quota by bootstrapViewModel.quota.collectAsStateWithLifecycle()
+    val channels by bootstrapViewModel.channels.collectAsStateWithLifecycle()
+    val posts by bootstrapViewModel.posts.collectAsStateWithLifecycle()
     val unreadCount by bootstrapViewModel.unreadCount.collectAsStateWithLifecycle(initialValue = 0)
     val isLoading by bootstrapViewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
     val error by bootstrapViewModel.error.collectAsStateWithLifecycle()
-    val user = bootstrapState?.user
-    val quota = syncState?.quota ?: bootstrapState?.quota
-    val posts = syncState?.recentPosts ?: bootstrapState?.posts?.take(5) ?: emptyList()
+    val user by bootstrapViewModel.currentUser.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         bootstrapViewModel.loadBootstrap()
@@ -47,11 +43,13 @@ fun DashboardScreen(
         topBar = {
             PostyarTopBar(
                 title = "پُست‌یار",
+                onBackClick = null,
+                unreadCount = unreadCount,
                 actions = {
                     BadgedBox(
                         badge = {
                             if (unreadCount > 0) {
-                                Badge { PersianNumberText(text = unreadCount.toString()) }
+                                Badge { Text(unreadCount.toString()) }
                             }
                         }
                     ) {
@@ -108,21 +106,21 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun GreetingSection(user: UserDto?) {
+private fun GreetingSection(user: User?) {
     Column {
         Text(
             text = "سلام${user?.name?.let { " $it" } ?: ""} 👋",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
-        user?.businessName?.let {
+        user?.business_name?.let {
             Text(text = it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun QuotaSection(quota: com.postyar.app.data.remote.dto.QuotaDto?, onNavigate: (String) -> Unit) {
+private fun QuotaSection(quota: Quota?, onNavigate: (String) -> Unit) {
     if (quota == null) return
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -131,15 +129,15 @@ private fun QuotaSection(quota: com.postyar.app.data.remote.dto.QuotaDto?, onNav
         QuotaCard(
             modifier = Modifier.weight(1f),
             title = "پست‌ها",
-            used = quota.postsUsed,
-            limit = quota.postsLimit,
+            used = quota.posts_used,
+            limit = quota.posts_limit,
             icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
         )
         QuotaCard(
             modifier = Modifier.weight(1f),
             title = "کانال‌ها",
-            used = quota.channelsUsed,
-            limit = quota.channelsLimit,
+            used = quota.channels_used,
+            limit = quota.channels_limit,
             icon = { Icon(Icons.Default.Notifications, contentDescription = null) }
         )
     }
@@ -185,7 +183,7 @@ private fun QuickActionButton(modifier: Modifier = Modifier, text: String, onCli
 }
 
 @Composable
-private fun RecentPostCard(post: PostDto, onClick: () -> Unit) {
+private fun RecentPostCard(post: Post, onClick: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -193,11 +191,11 @@ private fun RecentPostCard(post: PostDto, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = post.title ?: "بدون عنوان", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                Text(text = post.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = post.createdAt ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = post.created_at ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            StatusBadge(status = post.status ?: "draft")
+            StatusBadge(status = post.status)
         }
     }
 }

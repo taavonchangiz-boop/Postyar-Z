@@ -14,29 +14,34 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostyarTopBar(
-    onNotificationClick: () -> Unit = {},
+    title: String = "پُست‌یار",
+    onBack: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
+    onNotificationClick: () -> Unit = {},
     unreadCount: Int = 0,
-    showNotification: Boolean = true
+    showNotification: Boolean = true,
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
+    val backHandler = onBackClick ?: onBack
     TopAppBar(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "پُست‌یار",
+                    text = title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
         },
         navigationIcon = {
-            if (onBackClick != null) {
-                IconButton(onClick = onBackClick) {
+            if (backHandler != null) {
+                IconButton(onClick = backHandler) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "بازگشت")
                 }
             }
         },
         actions = {
+            actions()
             if (showNotification) {
                 BadgedBox(
                     badge = {

@@ -10,9 +10,11 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun QuotaCard(
     label: String,
+    title: String = label,
     used: Int,
     limit: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    icon: @Composable (() -> Unit)? = null
 ) {
     val fraction = if (limit > 0) used.toFloat() / limit.toFloat() else 0f
     val color = when {
@@ -25,7 +27,10 @@ fun QuotaCard(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = label, style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                icon?.invoke()
+                Text(text = title, style = MaterialTheme.typography.bodyMedium)
+            }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { fraction.coerceIn(0f, 1f) },

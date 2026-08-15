@@ -1,22 +1,25 @@
 package com.postyar.app.presentation.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.postyar.app.data.remote.*
+import com.postyar.app.core.security.TokenManager
+import com.postyar.app.data.remote.ApiService
 import com.postyar.app.domain.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val api: ApiService,
+    private val tokenManager: TokenManager
+) : ViewModel() {
     val currentUser = MutableStateFlow<User?>(null)
     val authState = MutableStateFlow(AuthState.IDLE)
     val loginError = MutableStateFlow("")
     val registerError = MutableStateFlow("")
     val passwordResetSent = MutableStateFlow(false)
-
-    private val tokenManager = TokenManager.getInstance(application)
-    private val api = RetrofitClient.getInstance(tokenManager).create(ApiService::class.java)
 
     fun checkExistingSession() {
         viewModelScope.launch {
@@ -123,5 +126,3 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-
-enum class AuthState { IDLE, LOADING, AUTHENTICATED, UNAUTHENTICATED }

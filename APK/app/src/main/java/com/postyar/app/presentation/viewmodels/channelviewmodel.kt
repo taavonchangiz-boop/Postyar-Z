@@ -1,19 +1,23 @@
 package com.postyar.app.presentation.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.postyar.app.data.remote.*
+import com.postyar.app.data.remote.ApiService
 import com.postyar.app.domain.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ChannelViewModel(application: Application) : AndroidViewModel(application) {
-    private val tokenManager = TokenManager.getInstance(application)
-    private val api = RetrofitClient.getInstance(tokenManager).create(ApiService::class.java)
+@HiltViewModel
+class ChannelViewModel @Inject constructor(
+    private val api: ApiService
+) : ViewModel() {
     val channels = MutableStateFlow<List<Channel>>(emptyList())
     val selectedChannel = MutableStateFlow<Channel?>(null)
+    val channelDetail = MutableStateFlow<Channel?>(null)
     val isLoading = MutableStateFlow(false)
+    val isSubmitting = MutableStateFlow(false)
     val error = MutableStateFlow("")
     val actionSuccess = MutableStateFlow("")
     fun loadChannels() {
@@ -26,18 +30,18 @@ class ChannelViewModel(application: Application) : AndroidViewModel(application)
             finally { isLoading.value = false }
         }
     }
-    fun loadChannel(id: Int) {
+    fun loadChannelDetail(id: Int) {
         viewModelScope.launch {
             isLoading.value = true
             try {
                 val resp = api.getChannel(id)
-                if (resp.success && resp.data != null) selectedChannel.value = resp.data
+                if (resp.success && resp.data != null) channelDetail.value = resp.data
             } catch (_: Exception) {} finally { isLoading.value = false }
         }
     }
-    fun createChannel(name: String, platform: String, channelId: String, token: String) {
+    fun addChannel(name: String, platform: String, channelId: String, token: String) {
         viewModelScope.launch {
-            isLoading.value = true; error.value = ""
+            isSubmitting.value = true; error.value = ""
             try {
                 val resp = api.createChannel(mapOf(
                     "name" to name, "platform" to platform,
@@ -46,18 +50,18 @@ class ChannelViewModel(application: Application) : AndroidViewModel(application)
                 if (resp.success) { actionSuccess.value = "کانال اضافه شد"; loadChannels() }
                 else error.value = resp.message ?: "خطا"
             } catch (e: Exception) { error.value = "خطا در ارتباط با سرور" }
-            finally { isLoading.value = false }
+            finally { isSubmitting.value = false }
         }
     }
     fun updateChannel(id: Int, params: Map<String, Any>) {
         viewModelScope.launch {
-            isLoading.value = true; error.value = ""
+            isSubmitting.value = true; error.value = ""
             try {
                 val resp = api.updateChannel(id, params)
                 if (resp.success) { actionSuccess.value = "کانال بروزرسانی شد"; loadChannels() }
                 else error.value = resp.message ?: "خطا"
             } catch (e: Exception) { error.value = "خطا در ارتباط با سرور" }
-            finally { isLoading.value = false }
+            finally { isSubmitting.value = false }
         }
     }
     fun deleteChannel(id: Int) {

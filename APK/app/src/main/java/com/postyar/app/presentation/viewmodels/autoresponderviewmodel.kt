@@ -1,16 +1,18 @@
 package com.postyar.app.presentation.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.postyar.app.data.remote.*
+import com.postyar.app.data.remote.ApiService
 import com.postyar.app.domain.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AutoResponderViewModel(application: Application) : AndroidViewModel(application) {
-    private val tokenManager = TokenManager.getInstance(application)
-    private val api = RetrofitClient.getInstance(tokenManager).create(ApiService::class.java)
+@HiltViewModel
+class AutoResponderViewModel @Inject constructor(
+    private val api: ApiService
+) : ViewModel() {
     val rules = MutableStateFlow<List<AutoReplyRule>>(emptyList())
     val isLoading = MutableStateFlow(false)
     val error = MutableStateFlow("")
@@ -25,6 +27,7 @@ class AutoResponderViewModel(application: Application) : AndroidViewModel(applic
             } catch (_: Exception) {} finally { isLoading.value = false }
         }
     }
+
     fun addRule(channelId: Int, keyword: String, replyText: String) {
         viewModelScope.launch {
             try {
@@ -34,6 +37,7 @@ class AutoResponderViewModel(application: Application) : AndroidViewModel(applic
             } catch (e: Exception) { error.value = "خطا در ارتباط با سرور" }
         }
     }
+
     fun deleteRule(id: Int) {
         viewModelScope.launch {
             try {
@@ -43,11 +47,13 @@ class AutoResponderViewModel(application: Application) : AndroidViewModel(applic
             } catch (e: Exception) { error.value = "خطا در حذف" }
         }
     }
+
     fun toggle(channelId: Int, enabled: Int) {
         viewModelScope.launch {
             try { api.toggleAutoResponder(mapOf("channel_id" to channelId, "enabled" to enabled)) }
             catch (_: Exception) {}
         }
     }
+
     fun clearMessages() { error.value = ""; actionSuccess.value = "" }
 }
